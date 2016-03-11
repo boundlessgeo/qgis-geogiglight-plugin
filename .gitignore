@@ -1,0 +1,4 @@
+bin
+*.pyc
+ext-libs
+
