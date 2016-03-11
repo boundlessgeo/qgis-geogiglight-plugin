@@ -81,7 +81,7 @@ class GeoGigPlugin:
         try:
             from qgistester.tests import addTestModule
             from geogig.test import testplugin
-            addTestModule(testplugin, "GeoGig")
+            addTestModule(testplugin, "GeoGig Light")
         except:
             pass
 
