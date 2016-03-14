@@ -6,7 +6,7 @@ from geogig.tools.layertracking import updateTrackedLayers
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.executor import execute
-from geogig.tools.exporter import exportAndLoadVersion, exportVersionDiffs
+from geogig.tools.exporter import exportAndLoadVersion
 from geogig.gui.dialogs.htmldialog import HtmlDialog
 from geogig import config
 

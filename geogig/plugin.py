@@ -131,21 +131,13 @@ class GeoGigPlugin:
         self.qgisHook = sys.excepthook;
 
         def pluginHook(t, value, tb):
-            if isinstance(value, GeoGigException):
-                trace = "".join(traceback.format_exception(t, value, tb))
-                logger.error(trace)
-                self.setWarning(unicode(value))
-            elif isinstance(value, (Py4JConnectionException, Py4JNetworkError)):
-                dlg = GatewayNotAvailableDialog(self.iface.mainWindow())
+            trace = "".join(traceback.format_exception(t, value, tb))
+            if "geogig" in trace.lower():
+                QgsMessageLog.logMessage(trace, "GeoGig", QgsMessageLog.CRITICAL)
+                dlg = GeoGigErrorDialog(trace, self.iface.mainWindow())
                 dlg.exec_()
             else:
-                trace = "".join(traceback.format_exception(t, value, tb))
-                QgsMessageLog.logMessage(trace, "GeoGig", QgsMessageLog.CRITICAL)
-                if "geogig" in trace.lower():
-                    dlg = GeoGigErrorDialog(trace, self.iface.mainWindow())
-                    dlg.exec_()
-                else:
-                    self.qgisHook(t, value, tb)
+                self.qgisHook(t, value, tb)
         sys.excepthook = pluginHook
 
         self.mapTool = MapToolGeoGigInfo(self.iface.mapCanvas())

@@ -132,7 +132,8 @@ class NavigatorDialog(BASE, WIDGET):
             source = "%s|layername=%s" % (filename, layername)
             trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
             if trackedlayer is None or not os.path.exists(filename):
-                self.currentRepo.checkoutlayer(filename, layername, self.currentRepo.HEAD, bbox)
+                print bbox
+                self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
                 addTrackedLayer(source, self.currentRepo.url, self.currentRepo.revparse(self.currentRepo.HEAD))
             try:
                 resolveLayerFromSource(source)

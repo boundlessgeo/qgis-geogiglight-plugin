@@ -37,8 +37,9 @@ def exportVectorLayer(layer):
     else:
         return filename
 
-def exportFullRepo(repo, ref = geogig.HEAD):
+def exportFullRepo(repo, ref = None):
     trees = repo.trees
+    ref = ref or repo.HEAD
     ref = repo.revparse(ref)
     for tree in trees:
         trackedlayer = getTrackingInfoForGeogigLayer(repo.url, tree.path)
@@ -71,41 +72,6 @@ lineStyleBefore = os.path.join(resourcesPath, "line_before.qml")
 polygonStyleBefore = os.path.join(resourcesPath, "polygon_before.qml")
 styles = [(ptStyleBefore, ptStyleAfter), (lineStyleBefore, lineStyleAfter),
                   (polygonStyleBefore, polygonStyleAfter)]
-
-def exportVersionDiffs(commita, commitb = None):
-    layers = {}
-    if commitb is None:
-        commitb = commita
-        commita = commita.parent
-    layernames = commita.repo.difftreestats(commita, commitb).keys()
-    name = "%s_%s" % (commita.id[:8], commitb.id[:8])
-    for layername in layernames:
-        layers[layername] = []
-        filepath = os.path.join(tempFolder(), "diff_%s_%s_before.shp" % (layername, name))
-        try:
-            if not os.path.exists(filepath):
-                commita.repo.exportdiffs(commita, commitb, layername, filepath, True, True)
-            beforeLayer = loadLayerNoCrsDialog(filepath, layername + "_[%s][before]" % name, "ogr")
-            beforeLayer.setReadOnly(True)
-            vectorType = beforeLayer.geometryType()
-            styleBefore, _ = styles[vectorType]
-            beforeLayer.loadNamedStyle(styleBefore)
-            layers[layername].append(beforeLayer)
-        except GeoGigException:
-            layers[layername].append(None)
-        try:
-            filepath = os.path.join(tempFolder(), "diff_%s_%s_after.shp" % (layername, name))
-            if not os.path.exists(filepath):
-                commitb.repo.exportdiffs(commita, commitb, layername, filepath, False, True)
-            afterLayer = loadLayerNoCrsDialog(filepath, layername + "_[%s][after]" % name, "ogr")
-            afterLayer.setReadOnly(True)
-            vectorType = afterLayer.geometryType()
-            _, styleAfter = styles[vectorType]
-            afterLayer.loadNamedStyle(styleAfter)
-            layers[layername].append(afterLayer)
-        except GeoGigException:
-            layers[layername].append(None)
-    return layers
 
 
 def loadRepoExportedLayers(repo):

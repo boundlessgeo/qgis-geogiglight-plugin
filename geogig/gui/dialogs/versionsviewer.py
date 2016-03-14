@@ -2,7 +2,6 @@ from PyQt4 import QtGui, QtCore
 from qgis.core import *
 from qgis.gui import *
 from geogig.ui.versionsviewer import Ui_VersionViewer
-from geogigpy.geometry import Geometry
 from geogig import config
 from geogig.tools.utils import loadLayerNoCrsDialog
 import os

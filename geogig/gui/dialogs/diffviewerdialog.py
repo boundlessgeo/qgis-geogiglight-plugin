@@ -4,7 +4,6 @@ from qgis.core import *
 from qgis.gui import *
 from geogig.gui.dialogs.geogigref import RefPanel
 from geogig import config
-from geogig.tools.exporter import exportVersionDiffs
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 import sys
