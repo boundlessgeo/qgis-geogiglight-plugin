@@ -13,6 +13,9 @@ from geogig.gui.executor import execute
 import shutil
 from qgis.core import *
 import sqlite3
+from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject
+from PyQt4.QtGui import QApplication
+from PyQt4.Qt import QCursor
 
 def _resolveref(ref):
     '''
@@ -53,22 +56,18 @@ class Repository(object):
         if transaction:
             r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
             r.raise_for_status()
-            print r.text
             transactionId = r.json()["response"]["Transaction"]["ID"]
             payload["output_format"] = "json"
             payload["transactionId"] = transactionId
             r = requests.get(self.url + command, params = payload)
-            print r.url
             r.raise_for_status()
             resp = json.loads(r.text.replace(r"\/", "/"))["response"]
             r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
-            print r.url
             r.raise_for_status()
             return resp
         else:
             payload["output_format"] = "json"
             r = requests.get(self.url + command, params = payload)
-            print r.url
             r.raise_for_status()
             j = json.loads(r.text.replace(r"\/", "/"))
             return j["response"]
@@ -179,32 +178,68 @@ class Repository(object):
         else:
             return self._apicall("refparse", {"name": rev})["Ref"]["objectId"]
 
-    def _checkoutlayer(self, filename, layername, bbox = None, ref = None):
-            ref = _resolveref(ref) or self.HEAD
-            params = {"table": layername, "path": layername, "interchange":True}
-            if bbox is not None:
-                trans = QgsCoordinateTransform(bbox[1], QgsCoordinateReferenceSystem("EPSG:4326"))
-                bbox4326 = trans.transform(bbox[0])
-                sbbox = ",".join([bbox4326.xMinimum(), bbox4326.xMaximum(),
-                                 bbox4326.yMinimum(), bbox4326.yMaximum(), "EPSG:4326"])
-                params["bbox"] = sbbox
-            url  = self.url + "geopkg/export"
-            r = requests.get(url, stream=True, params=params)
-            print r.url
-            r.raise_for_status()
-            with open(filename, 'wb') as f:
-                r.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f)
+    def _preparelayerdownload(self, layername, bbox = None, ref = None):
+        ref = _resolveref(ref) or self.HEAD
+        params = {"root": ref, "format": "gpkg", "table": layername,
+                  "path": layername, "interchange":True}
+        print bbox
+        if bbox is not None:
+            trans = QgsCoordinateTransform(QgsCoordinateReferenceSystem(bbox[1]),
+                                            QgsCoordinateReferenceSystem("EPSG:4326"))
+            bbox4326 = trans.transform(bbox[0])
+            sbbox = ",".join([bbox4326.xMinimum(), bbox4326.xMaximum(),
+                             bbox4326.yMinimum(), bbox4326.yMaximum(), "EPSG:4326"])
+            params["bbox"] = sbbox
+        url  = self.url + "export.json"
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        print r.json()
+        return r.json()["task"]["id"]
 
-            con = sqlite3.connect(filename)
-            cursor = con.cursor()
-            cursor.execute("DELETE FROM %s_audit;" % layername)
-            cursor.close()
-            con.commit()
+    def _downloadlayer(self, taskid, filename, layername):
+        url  = self.url + "tasks/%s/download" % str(taskid)
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
+        with open(filename, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+
+        con = sqlite3.connect(filename)
+        cursor = con.cursor()
+        cursor.execute("DELETE FROM %s_audit;" % layername)
+        cursor.close()
+        con.commit()
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
-        execute(lambda: self._checkoutlayer(filename, layername, ref))
 
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        taskid = self._preparelayerdownload(layername, bbox, ref)
+
+        class taskChecker(QObject):
+            downloadIsReady = pyqtSignal()
+            def __init__(self, url, taskid):
+                QObject.__init__(self)
+                self.taskid = taskid
+                self.url = url
+            def start(self):
+                self.checkTask()
+            def checkTask(self):
+                url  = self.url + "tasks/%s.json" % str(self.taskid)
+                r = requests.get(url, stream=True)
+                r.raise_for_status()
+                ret = r.json()
+                if ret["task"]["status"] == "FINISHED":
+                    self.downloadIsReady.emit()
+                else:
+                    QTimer.singleShot(500, self.checkTask)
+
+        checker = taskChecker(self.url, taskid)
+        loop = QEventLoop()
+        checker.downloadIsReady.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        self._downloadlayer(taskid, filename, layername)
+        QApplication.restoreOverrideCursor()
 
     def fullDescription(self):
         def _prepareDescription():
