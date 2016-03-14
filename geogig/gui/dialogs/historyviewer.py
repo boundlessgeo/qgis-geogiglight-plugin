@@ -2,10 +2,6 @@ import os
 from collections import defaultdict
 from qgis.core import *
 from PyQt4 import QtGui, QtCore
-from geogigpy.commitish import Commitish
-from geogigpy.commit import Commit
-from geogigpy import geogig
-from geogigpy.geogigexception import GeoGigException, GeoGigConflictException
 from geogig.tools.layertracking import updateTrackedLayers
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog

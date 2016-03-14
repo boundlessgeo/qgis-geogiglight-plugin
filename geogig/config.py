@@ -1,7 +1,5 @@
 import os
 from PyQt4 import QtCore
-from geogigpy import geogig
-from geogigpy.py4jconnector import Py4JCLIConnector
 
 iface = None
 explorer = None

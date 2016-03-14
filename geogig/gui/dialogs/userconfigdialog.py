@@ -1,6 +1,5 @@
 from PyQt4 import QtGui
 from geogig import config
-from geogigpy import geogig
 
 
 class UserConfigDialog(QtGui.QDialog):
@@ -58,20 +57,3 @@ class UserConfigDialog(QtGui.QDialog):
         self.user = None
         self.email = None
         self.close()
-
-def configureUser():
-    user = config.getConfigValue(config.GENERAL, config.USERNAME)
-    email = config.getConfigValue(config.GENERAL, config.EMAIL)
-    if not (user and email):
-        configdlg = UserConfigDialog(config.iface.mainWindow())
-        configdlg.exec_()
-        if configdlg.user is not None:
-            user = configdlg.user
-            email = configdlg.email
-            config.setConfigValue(config.GENERAL, config.USERNAME, user)
-            config.setConfigValue(config.GENERAL, config.EMAIL, email)
-        else:
-            return
-    con = PyQtConnectorDecorator()
-    con.configglobal(geogig.USER_NAME, user)
-    con.configglobal(geogig.USER_EMAIL, email)

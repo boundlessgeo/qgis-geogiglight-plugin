@@ -3,9 +3,6 @@ from qgis.gui import *
 from PyQt4 import QtGui, QtCore
 from geogig.tools.layers import *
 import os
-from geogigpy.geogigexception import GeoGigException, UnconfiguredUserException
-from geogigpy import geogig
-from geogig.gui.dialogs.userconfigdialog import configureUser
 from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.utils import *
 from geogig.tools.gpkgsync import addGeoGigTablesAndTriggers

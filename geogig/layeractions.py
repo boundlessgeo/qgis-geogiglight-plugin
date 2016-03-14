@@ -7,7 +7,6 @@ from geogig.tools.utils import *
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
-from geogig.gui.executor import execute
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from geogig.tools.exporter import exportVectorLayer

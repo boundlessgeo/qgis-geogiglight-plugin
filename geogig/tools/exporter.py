@@ -11,10 +11,8 @@ from qgis.core import *
 from geogig.tools.layertracking import (addTrackedLayer,
                 getTrackingInfoForGeogigLayer, setRef, getTrackedPathsForRepo)
 import os
-from geogigpy import geogig
 from geogig.tools.utils import tempFolder, ownerFromRepoPath, userFromRepoPath, \
     nameFromRepoPath, loadLayerNoCrsDialog
-from geogigpy.geogigexception import GeoGigException
 from geogig.tools.layers import resolveLayerFromSource, WrongLayerSourceException
 import re
 from PyQt4 import QtCore

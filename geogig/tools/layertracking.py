@@ -6,8 +6,6 @@ from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
 from geogig.tools.layers import  resolveLayerFromSource, \
     WrongLayerSourceException
-from geogigpy.repo import Repository
-from geogigpy import geogig
 from PyQt4 import QtGui
 from geogig import config
 from geogig.tools.utils import loadLayerNoCrsDialog

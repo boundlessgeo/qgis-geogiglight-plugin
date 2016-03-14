@@ -1,7 +1,6 @@
 import os
 import sys
 import inspect
-import sqlite3
 from geogig import config
 import traceback
 import logging
@@ -10,17 +9,11 @@ from qgis.gui import *
 from geogig.tools.utils import *
 from gui.dialogs.configdialog import ConfigDialog
 from geogig.gui.dialogs.geogigerrordialog import GeoGigErrorDialog
-from geogigpy.py4jconnector import Py4JConnectionException
-from geogigpy.geogigexception import GeoGigException, UnconfiguredUserException
-from geogigpy import geogig
 from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import *
-from py4j.protocol import Py4JNetworkError
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
-from geogigpy.repo import Repository
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
-from geogig.gui.executor import execute
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
 from PyQt4 import QtGui, QtCore

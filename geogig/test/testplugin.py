@@ -7,10 +7,7 @@ import tempfile
 from qgis.core import *
 from geogig.tools.layertracking import getTrackingInfo, removeTrackedLayer
 from geogig.gui.pyqtconnectordecorator import PyQtConnectorDecorator
-from geogigpy.repo import Repository
-from geogigpy import geogig
 from tools.exporter import exportFullRepo
-from geogigpy.commitish import Commitish
 import uuid
 from gui.dialogs.navigatordialog import navigatorInstance
 from PyQt4 import QtCore
