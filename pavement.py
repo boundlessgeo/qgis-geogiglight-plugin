@@ -17,11 +17,11 @@ options(
         ext_src = path('geogig/ext-src'),
         source_dir = path('geogig'),
         package_dir = path('.'),
+        tests = ['test'],
         excludes = [
             'metadata.*',
             'test-output',
             'ext-src',
-            'test',
             'coverage*.*',
             'nose*.*',
             '*.pyc'
@@ -106,10 +106,15 @@ def install(options):
 
 
 @task
+@cmdopts([
+    ('tests', 't', 'Package tests with plugin'),
+])
 def package(options):
     '''create package for plugin'''
     package_file = options.plugin.package_dir / ('%s.zip' % options.plugin.name)
     with zipfile.ZipFile(package_file, "w", zipfile.ZIP_DEFLATED) as zip:
+        if not hasattr(options.package, 'tests'):
+            options.plugin.excludes.extend(options.plugin.tests)
         make_zip(zip, options)
     return package_file
 
