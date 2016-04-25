@@ -162,7 +162,8 @@ class NavigatorDialog(BASE, WIDGET):
             try:
                 item = RepoItem(repo)
                 self.reposItem.addChild(item)
-            except ConnectionError:
+            except:
+                #TODO: inform of failed repos
                 pass
 
         if self.reposItem.childCount():
@@ -191,9 +192,12 @@ class NavigatorDialog(BASE, WIDGET):
             addAction = QtGui.QAction(addIcon, "Add layer to repository...", None)
             addAction.triggered.connect(self.addLayer)
             menu.addAction(addAction)
-            deleteAction = QtGui.QAction(deleteIcon, "Remove this repository", None)
-            deleteAction.triggered.connect(lambda: self.deleteRepo(item))
+            deleteAction = QtGui.QAction(deleteIcon, "Remove this repository (do not delete upstream)", None)
+            deleteAction.triggered.connect(lambda: self.deleteRepo(item, False  ))
             menu.addAction(deleteAction)
+            deleteUpstreamAction = QtGui.QAction(deleteIcon, "Remove this repository (delete upstream)", None)
+            deleteUpstreamAction.triggered.connect(lambda: self.deleteRepo(item, True))
+            menu.addAction(deleteUpstreamAction)
             point = self.repoTree.mapToGlobal(point)
             menu.exec_(point)
 
@@ -215,7 +219,7 @@ class NavigatorDialog(BASE, WIDGET):
                 "Open the layers in QGIS before trying to add them.",
                 QtGui.QMessageBox.Ok)
 
-    def deleteRepo(self, item):
+    def deleteRepo(self, item, deleteUpstream):
         ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
                         "Are you sure you want to remove this repository?",
                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
@@ -223,6 +227,8 @@ class NavigatorDialog(BASE, WIDGET):
         if ret == QtGui.QMessageBox.No:
             return
         removeRepo(item.repo)
+        if deleteUpstream:
+            item.repo.delete()
         self.lastSelectedRepoItem.parent().removeChild(self.lastSelectedRepoItem)
         self.updateCurrentRepo(None, None)
 
@@ -285,14 +291,20 @@ class NavigatorDialog(BASE, WIDGET):
         dlg = CreateRepoDialog()
         dlg.exec_()
         if dlg.title is not None:
-            repo = Repository(dlg.url, dlg.title)
-            item = RepoItem(repo)
-            addRepo(repo)
-            self.reposItem.addChild(item)
-            self.repoTree.addTopLevelItem(self.reposItem)
-            self.reposItem.setExpanded(True)
-            self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
-            return repo
+            try:
+                repos = repositoriesFromUrl(dlg.url, dlg.title)
+                for repo in repos:
+                    item = RepoItem(repo)
+                    addRepo(repo)
+                    self.reposItem.addChild(item)
+                    self.repoTree.addTopLevelItem(self.reposItem)
+                    self.reposItem.setExpanded(True)
+                    self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
+                    return repo
+            except:
+                QtGui.QMessageBox.warning(self, 'Add repositories',
+                    "No repositories found at the specified url.",
+                    QtGui.QMessageBox.Ok)
 
 
 class OrderedParentItem(QtGui.QTreeWidgetItem):

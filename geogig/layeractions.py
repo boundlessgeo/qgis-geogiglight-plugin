@@ -106,14 +106,4 @@ def removeLayer(layer):
     setAsNonRepoLayer(layer)
     repoWatcher.repoChanged.emit(repo)
 
-def commitLayer(layer):
-    trackedLayer = getTrackingInfo(layer)
-    repo = Repository(trackedLayer.repoUrl)
-
-    headid = repo.revparse(geogig.HEAD)
-    setRef(layer, headid)
-    config.iface.messageBar().pushMessage("Repository correctly updated",
-                                              level = QgsMessageBar.INFO, duration = 4)
-    repoWatcher.repoChanged.emit(repo)
-
 

@@ -1,12 +1,13 @@
 from qgis.core import *
 from qgis.gui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from geogig.tools.layers import *
 import os
 from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.utils import *
 from geogig.tools.gpkgsync import addGeoGigTablesAndTriggers
 from geogig.geogigwebapi import repository
+from geogig.tools.gpkgsync import getUserInfo
 
 class ImportDialog(QtGui.QDialog):
 
@@ -23,11 +24,10 @@ class ImportDialog(QtGui.QDialog):
 
         if self.repo is None:
             repos = repository.repos
-            self.repos = {r.title:r.url for r in repos.values()}
             layerLabel = QtGui.QLabel('Repository')
             verticalLayout.addWidget(layerLabel)
             self.repoCombo = QtGui.QComboBox()
-            self.repoCombo.addItems(self.repos.keys())
+            self.repoCombo.addItems(repos.keys())
             verticalLayout.addWidget(self.repoCombo)
         if self.layer is None:
             layerLabel = QtGui.QLabel('Layer')
@@ -64,39 +64,21 @@ class ImportDialog(QtGui.QDialog):
 
     def importClicked(self):
         if self.repo is None:
-            connector = PyQtConnectorDecorator()
-            connector.checkIsAlive()
-            self.repo = Repository(self.repos[self.repoCombo.currentText()], connector)
+            self.repo = repository.repos[self.repoCombo.currentText()]
         if self.layer is None:
             text = self.layerCombo.currentText()
             self.layer = resolveLayer(text)
 
         addGeoGigTablesAndTriggers(self.layer)
-        source = self.layer.source()
-        filename, layername = source.split("|")
-        layername = layername.split("=")[-1]
-        self.repo.importgeopkg(filename, layername, layername)
-        message = self.messageBox.toPlainText()
-        self.repo.add()
-        try:
-            self.repo.commit(message)
-        except UnconfiguredUserException, e:
-            configureUser()
-            self.repo.commit(message)
-        except GeoGigException, e:
-            if "Nothing to commit" in e.args[0]:
-                    config.iface.messageBar().pushMessage("No version has been created. Repository is already up to date",
-                                                          level = QgsMessageBar.INFO, duration = 4)
+        user, email = getUserInfo()
+        if user is None:
             self.close()
             return
-        except:
-            self.close()
-            raise
+        message = self.messageBox.toPlainText()
+        self.repo.importgeopkg(self.layer, message, user, email)
 
-        self.repo.exportgeopkg(geogig.HEAD, layername, filename, overwrite = True)
-
-        ref = self.repo.revparse(geogig.HEAD)
-        addTrackedLayer(source, self.repo.url, self.layer.name(), ref)
+        commitid =  self.repo.revparse(self.repo.HEAD)
+        addTrackedLayer(self.layer().source, self.repo.url, commitid)
         self.ok = True
         config.iface.messageBar().pushMessage("Layer was correctly added to repository",
                                                   level = QgsMessageBar.INFO, duration = 4)

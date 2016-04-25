@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Create Repository</string>
+   <string>Add repositories</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

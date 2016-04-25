@@ -181,3 +181,19 @@ def isGeoGigGeopackage(layer):
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = [t[0] for t in cursor.fetchall()]
     return "geogig_audited_tables" in tables
+
+def getUserInfo():
+    user = config.getConfigValue(config.GENERAL, config.USERNAME).strip()
+    email = config.getConfigValue(config.GENERAL, config.EMAIL).strip()
+    if not (user and email):
+        configdlg = UserConfigDialog(config.iface.mainWindow())
+        configdlg.exec_()
+        if configdlg.user is not None:
+            user = configdlg.user
+            email = configdlg.email
+            config.setConfigValue(config.GENERAL, config.USERNAME, user)
+            config.setConfigValue(config.GENERAL, config.EMAIL, email)
+            return user, email
+        else:
+            return None
+    return user, email

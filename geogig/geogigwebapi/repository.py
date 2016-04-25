@@ -16,6 +16,8 @@ import sqlite3
 from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
+from geogig.tools.layertracking import isRepoLayer
+import xml.etree.ElementTree as ET
 
 def _resolveref(ref):
     '''
@@ -60,6 +62,7 @@ class Repository(object):
             payload["output_format"] = "json"
             payload["transactionId"] = transactionId
             r = requests.get(self.url + command, params = payload)
+            print r.url
             r.raise_for_status()
             resp = json.loads(r.text.replace(r"\/", "/"))["response"]
             r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
@@ -68,6 +71,7 @@ class Repository(object):
         else:
             payload["output_format"] = "json"
             r = requests.get(self.url + command, params = payload)
+            print r.url
             r.raise_for_status()
             j = json.loads(r.text.replace(r"\/", "/"))
             return j["response"]
@@ -241,6 +245,20 @@ class Repository(object):
         self._downloadlayer(taskid, filename, layername)
         QApplication.restoreOverrideCursor()
 
+
+    def importgeopkg(self, layer, message, authorName, authorEmail):
+        source = layer.source()
+        filename, layername = source.split("|")
+        layername = layername.split("=")[-1]
+        payload = {"authorEmail": authorEmail, "authorName": authorName,
+                   "message": message, 'destPath':layername, "format": "gpkg"}
+        if isRepoLayer(layer):
+            payload["interchange=true"]
+        files = {'fileUpload': open(source, 'rb')}
+        r = requests.post(self.url + "import.json", params = payload, files=files)
+        r.raise_for_status()
+
+
     def fullDescription(self):
         def _prepareDescription():
             try:
@@ -264,6 +282,8 @@ class Repository(object):
             return s
         return(execute(_prepareDescription))
 
+    def delete(self):
+        self._apicall("delete")
 
 repos = {}
 
@@ -294,3 +314,17 @@ def readRepos():
 readRepos()
 
 
+def repositoriesFromUrl(url, title):
+    if not url.endswith("/"):
+        url = url + "/"
+    r = requests.get(url + "repos")
+    r.raise_for_status()
+
+    root = ET.fromstring(r.text)
+
+    repos = []
+    for country in root.findall('repo'):
+        name = country.find('name').text
+        repos.append(Repository(url + "repos/%s/" % name, "%s - %s" % (title, name)))
+
+    return repos
