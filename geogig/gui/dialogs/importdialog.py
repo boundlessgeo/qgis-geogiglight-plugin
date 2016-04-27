@@ -78,7 +78,7 @@ class ImportDialog(QtGui.QDialog):
         self.repo.importgeopkg(self.layer, message, user, email)
 
         commitid =  self.repo.revparse(self.repo.HEAD)
-        addTrackedLayer(self.layer().source, self.repo.url, commitid)
+        addTrackedLayer(self.layer.source(), self.repo.url, commitid)
         self.ok = True
         config.iface.messageBar().pushMessage("Layer was correctly added to repository",
                                                   level = QgsMessageBar.INFO, duration = 4)

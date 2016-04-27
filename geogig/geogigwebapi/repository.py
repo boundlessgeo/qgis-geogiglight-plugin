@@ -52,6 +52,7 @@ class Repository(object):
 
     def __init__(self, url, title = ""):
         self.url = url
+        self.rootUrl = url.split("/repos")[0] + "/"
         self.title = title
 
     def __apicall(self, command, payload = {}, transaction = False):
@@ -197,11 +198,10 @@ class Repository(object):
         url  = self.url + "export.json"
         r = requests.get(url, params=params)
         r.raise_for_status()
-        print r.json()
         return r.json()["task"]["id"]
 
     def _downloadlayer(self, taskid, filename, layername):
-        url  = self.url + "tasks/%s/download" % str(taskid)
+        url  = self.rootUrl + "tasks/%s/download" % str(taskid)
         r = requests.get(url, stream=True)
         r.raise_for_status()
         with open(filename, 'wb') as f:
@@ -224,12 +224,11 @@ class Repository(object):
             def __init__(self, url, taskid):
                 QObject.__init__(self)
                 self.taskid = taskid
-                self.url = url
+                self.url = url + "tasks/%s.json" % str(self.taskid)
             def start(self):
                 self.checkTask()
             def checkTask(self):
-                url  = self.url + "tasks/%s.json" % str(self.taskid)
-                r = requests.get(url, stream=True)
+                r = requests.get(self.url, stream=True)
                 r.raise_for_status()
                 ret = r.json()
                 if ret["task"]["status"] == "FINISHED":
@@ -237,7 +236,7 @@ class Repository(object):
                 else:
                     QTimer.singleShot(500, self.checkTask)
 
-        checker = taskChecker(self.url, taskid)
+        checker = taskChecker(self.rootUrl, taskid)
         loop = QEventLoop()
         checker.downloadIsReady.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
@@ -254,7 +253,7 @@ class Repository(object):
                    "message": message, 'destPath':layername, "format": "gpkg"}
         if isRepoLayer(layer):
             payload["interchange=true"]
-        files = {'fileUpload': open(source, 'rb')}
+        files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
         r.raise_for_status()
 
