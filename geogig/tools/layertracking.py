@@ -27,15 +27,12 @@ __revision__ = '$Format:%H$'
 
 import os
 from qgis.core import *
-from geogig.tools.utils import userFolder, repoFolder
+from geogig.tools.utils import userFolder, loadLayerNoCrsDialog
 import json
 from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
-from geogig.tools.layers import  resolveLayerFromSource, \
-    WrongLayerSourceException
-from PyQt4 import QtGui
+from geogig.tools.layers import  resolveLayerFromSource, WrongLayerSourceException
 from geogig import config
-from geogig.tools.utils import loadLayerNoCrsDialog
 
 
 tracked = []
