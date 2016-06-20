@@ -29,7 +29,6 @@ import os
 from collections import defaultdict
 from qgis.core import *
 from PyQt4 import QtGui, QtCore
-from geogig.tools.layertracking import updateTrackedLayers
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.executor import execute
@@ -202,9 +201,8 @@ class HistoryViewer(QtGui.QTreeWidget):
     def updateCurrentBranchItem(self):
         for i in xrange(self.topLevelItemCount()):
             item = self.topLevelItem(i)
-            if item.isCurrentBranch:
-                item.takeChildren()
-                item.populate()
+            item.takeChildren()
+            item.populate()
 
 
 class BranchTreeItem(QtGui.QTreeWidgetItem):
