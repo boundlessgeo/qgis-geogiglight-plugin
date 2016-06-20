@@ -70,26 +70,18 @@ def syncLayer(layer):
         elif solved == ConflictDialog.THEIRS:
             pass
         elif solved == ConflictDialog.MANUAL:
-
+            applyRemoteChanges(remote, commitid)
             updateLocalVersionAfterConflicts(resolvedConflicts, layer, layername, cursor)
             syncLayer(layer)
     else:
 
-        user = config.getConfigValue(config.GENERAL, config.USERNAME).strip()
-        email = config.getConfigValue(config.GENERAL, config.EMAIL).strip()
-        if not (user and email):
-            configdlg = UserConfigDialog(config.iface.mainWindow())
-            configdlg.exec_()
-            if configdlg.user is not None:
-                user = configdlg.user
-                email = configdlg.email
-                config.setConfigValue(config.GENERAL, config.USERNAME, user)
-                config.setConfigValue(config.GENERAL, config.EMAIL, email)
-            else:
-                return
+        user, email = getUserInfo()
+        if user is None:
+            cursor.close()
+            return
 
         applyRemoteChanges(remote, commitid)
-        pushLocalChanges(repo, filename, layer, layername, cursor)
+        pushLocalChanges(repo, filename, layer, layername, cursor, user, email)
 
         layer.reload()
         layer.triggerRepaint()
