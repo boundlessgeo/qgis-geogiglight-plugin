@@ -25,6 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
+import sqlite3
 from geogig import config
 from qgis.core import *
 from qgis.gui import *
@@ -41,6 +42,7 @@ from geogig.tools.gpkgsync import syncLayer, localChanges
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
+from geogig.tools.gpkgsync import getCommitId
 
 
 class RepoWatcher(QObject):
@@ -106,7 +108,14 @@ def addLayer(layer):
                 QtGui.QMessageBox.Ok)
 
 def revertLocalChanges(layer):
-    pass
+    tracking = getTrackingInfo(layer)
+    con = sqlite3.connect(tracking.geopkg)
+    cursor = con.cursor()
+    repo = Repository(tracking.repoUrl)
+    commitid = getCommitId(cursor, tracking.layername)
+    repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
+    config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
+                                                  level=QgsMessageBar.INFO)
 
 def showLocalChanges(layer):
     dlg = LocalDiffViewerDialog(iface.mainWindow(), layer)
