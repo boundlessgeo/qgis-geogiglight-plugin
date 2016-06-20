@@ -33,6 +33,8 @@ from geogig.gui.dialogs.blamedialog import BlameDialog
 from geogig.gui.dialogs.versionsviewer import VersionViewerDialog
 from geogig import config
 from geogig.geogigwebapi.repository import Repository
+from geogig.tools.layers import geogigFidFromGpkgFid
+
 
 class MapToolGeoGigInfo(QgsMapTool):
 
@@ -67,6 +69,9 @@ class MapToolGeoGigInfo(QgsMapTool):
         try:
             feature = fit.next()
             fid = feature.id()
+            fid = geogigFidFromGpkgFid(trackedlayer, fid)
+            if fid is None:
+                return
         except StopIteration, e:
             return
         repo = Repository(trackedlayer.repoUrl)

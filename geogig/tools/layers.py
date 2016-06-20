@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+import sqlite3
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,8 +27,6 @@ __revision__ = '$Format:%H$'
 
 
 from qgis.core import *
-from PyQt4 import QtCore
-import uuid
 import os
 from qgis.utils import iface
 
@@ -79,4 +78,11 @@ def getGroups():
     return groups
 
 
-
+def geogigFidFromGpkgFid(trackedlayer, fid):
+    con = sqlite3.connect(trackedlayer.gpkg)
+    tablename = trackedlayer.layername + "_fids"
+    cursor = con.cursor()
+    cursor.execute("SELECT geogig_fid FROM %s WHERE geopkg_fid = %s;" % (tablename, fid))
+    geogigFid = cursor.fetchone()[0]
+    cursor.close()
+    return geogigFid
