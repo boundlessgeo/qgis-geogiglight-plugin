@@ -172,10 +172,13 @@ def _localChanges(cursor, layername, layer):
         changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
     return changesdict
 
+def getCommitId(cursor, layername):
+    cursor.execute("SELECT root_tree_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
+    return cursor.fetchone()[0]
 
 def _remoteChanges(cursor, repo, layername):
-    cursor.execute("SELECT root_tree_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
-    commitid = cursor.fetchone()[0]
+    commitid = getCommitId(cursor, layername)
+
     changes = repo.diff(commitid, repo.HEAD, layername)
     return changes
 
