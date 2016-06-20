@@ -26,13 +26,11 @@ __revision__ = '$Format:%H$'
 
 
 import os
-import logging
 from PyQt4 import QtGui, QtCore, uic
 from qgis.core import *
 from qgis.gui import *
 from geogig import config
 from geogig.gui.executor import execute
-from geogig.tools.exporter import loadRepoExportedLayers, exportFullRepo
 from geogig.tools.layertracking import *
 from geogig.tools.utils import *
 from geogig.gui.dialogs.historyviewer import HistoryViewer
@@ -44,8 +42,8 @@ from geogig.layeractions import setAsRepoLayer, repoWatcher, setAsNonRepoLayer
 import sys
 from geogig.geogigwebapi.repository import *
 from geogig.geogigwebapi import repository
-from requests.exceptions import ConnectionError
 from geogig.gui.dialogs.createrepodialog import CreateRepoDialog
+from collections import defaultdict
 
 
 def icon(f):
@@ -56,15 +54,12 @@ addIcon = icon("new-repo.png")
 resetIcon = icon("reset.png")
 refreshIcon = icon("refresh.png")
 privateReposIcon = icon("your-repos.png")
-sharedReposIcon = icon("shared-repos.png")
 repoIcon = icon("repo-downloaded.png")
-disabledRepoIcon = QtGui.QIcon(repoIcon.pixmap(16, 16, mode = QtGui.QIcon.Disabled))
 searchIcon = icon("search-repos.png")
 newBranchIcon = icon("create_branch.png")
 deleteIcon = icon("delete.gif")
 syncIcon = icon("sync-repo.png")
 
-logger = logging.getLogger("geogigpy")
 
 # Adding so that our UI files can find resources_rc.py
 sys.path.append(os.path.dirname(__file__))
@@ -155,27 +150,27 @@ class NavigatorDialog(BASE, WIDGET):
 
 
     def _checkoutLayer(self, layername, bbox):
-            filename = layerGeopackageFilename(layername, self.currentRepoName)
-            source = "%s|layername=%s" % (filename, layername)
-            trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
-            if trackedlayer is None or not os.path.exists(filename):
-                print bbox
-                self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
-                addTrackedLayer(source, self.currentRepo.url, self.currentRepo.revparse(self.currentRepo.HEAD))
-            try:
-                resolveLayerFromSource(source)
-                config.iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
-                                      level=QgsMessageBar.INFO)
-            except WrongLayerSourceException:
-                layer = loadLayerNoCrsDialog("%s|layername=%s" % (filename, layername), layername, "ogr")
-                QgsMapLayerRegistry.instance().addMapLayers([layer])
-                config.iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
-                                                      level=QgsMessageBar.INFO)
+        filename = layerGeopackageFilename(layername, self.currentRepoName)
+        source = "%s|layername=%s" % (filename, layername)
+        trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
+        if trackedlayer is None or not os.path.exists(filename):
+            print bbox
+            self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
+            addTrackedLayer(source, self.currentRepo.url, self.currentRepo.revparse(self.currentRepo.HEAD))
+        try:
+            resolveLayerFromSource(source)
+            config.iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
+                                  level=QgsMessageBar.INFO)
+        except WrongLayerSourceException:
+            layer = loadLayerNoCrsDialog("%s|layername=%s" % (filename, layername), layername, "ogr")
+            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            config.iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
+                                                  level=QgsMessageBar.INFO)
 
 
 
     def updateCurrentRepoDescription(self):
-        self.repoDescription.setText(self.currentRepo.fullDescription)
+        self.repoDescription.setText(self.currentRepo.fullDescription())
 
     def fillTree(self):
         self.updateCurrentRepo(None, None)
@@ -184,14 +179,24 @@ class NavigatorDialog(BASE, WIDGET):
         repos = repository.repos
 
         self.reposItem = OrderedParentItem("Repositories", 0)
-        self.reposItem.setIcon(0, privateReposIcon)
-        for repo in repos.values():
-            try:
-                item = RepoItem(repo)
-                self.reposItem.addChild(item)
-            except:
-                #TODO: inform of failed repos
-                pass
+        self.reposItem.setIcon(0, repoIcon)
+        groupedRepos = defaultdict(list)
+        for repo in repos:
+            groupedRepos[repo.group].append(repo)
+
+        for groupName, groupRepos in groupedRepos.iteritems():
+            groupItem = QtGui.QTreeWidgetItem()
+            groupItem.setText(0, groupName)
+            groupItem.setIcon(0, repoIcon)
+            for repo in groupRepos:
+                try:
+                    item = RepoItem(repo)
+                    groupItem.addChild(item)
+                except:
+                    #TODO: inform of failed repos
+                    pass
+            if groupItem.childCount():
+                self.reposItem.addChild(groupItem)
 
         if self.reposItem.childCount():
             self.repoTree.addTopLevelItem(self.reposItem)
@@ -256,7 +261,12 @@ class NavigatorDialog(BASE, WIDGET):
         removeRepo(item.repo)
         if deleteUpstream:
             item.repo.delete()
-        self.lastSelectedRepoItem.parent().removeChild(self.lastSelectedRepoItem)
+
+        parent = self.lastSelectedRepoItem.parent()
+        parent.removeChild(self.lastSelectedRepoItem)
+        if parent.childCount() == 0:
+            parent.parent().removeChild(parent)
+
         self.updateCurrentRepo(None, None)
 
         tracked = getTrackedPathsForRepo(item.repo)
@@ -286,8 +296,11 @@ class NavigatorDialog(BASE, WIDGET):
             self.updateCurrentRepo(item.repo, item.text(0))
         else:
             self.updateCurrentRepo(None, None)
-            url = QtCore.QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
-            self.repoDescription.setSource(url)
+            if item.parent() == self.repoTree.invisibleRootItem():
+                url = QtCore.QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
+                self.repoDescription.setSource(url)
+            else:
+                self.repoDescription.setText("")
 
 
     def updateCurrentRepo(self, repo, name):
@@ -320,15 +333,19 @@ class NavigatorDialog(BASE, WIDGET):
         if dlg.title is not None:
             try:
                 repos = repositoriesFromUrl(dlg.url, dlg.title)
+                groupItem = QtGui.QTreeWidgetItem()
+                groupItem.setText(0, dlg.title)
+                groupItem.setIcon(0, repoIcon)
                 for repo in repos:
                     item = RepoItem(repo)
                     addRepo(repo)
-                    self.reposItem.addChild(item)
-                    self.repoTree.addTopLevelItem(self.reposItem)
+                    groupItem.addChild(item)
+                if groupItem.childCount():
+                    self.reposItem.addChild(groupItem)
                     self.reposItem.setExpanded(True)
                     self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
-                    return repo
             except:
+                raise
                 QtGui.QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
                     QtGui.QMessageBox.Ok)
