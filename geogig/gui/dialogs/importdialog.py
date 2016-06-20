@@ -27,6 +27,7 @@ __revision__ = '$Format:%H$'
 
 from qgis.core import *
 from qgis.gui import *
+from qgis.utils import *
 from PyQt4 import QtGui
 from geogig.tools.layers import *
 import os
@@ -34,6 +35,7 @@ from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.utils import *
 from geogig.tools.gpkgsync import addGeoGigTablesAndTriggers
 from geogig.geogigwebapi import repository
+from geogig.geogigwebapi.repository import GeoGigException
 from geogig.tools.gpkgsync import getUserInfo
 
 class ImportDialog(QtGui.QDialog):
@@ -54,7 +56,7 @@ class ImportDialog(QtGui.QDialog):
             layerLabel = QtGui.QLabel('Repository')
             verticalLayout.addWidget(layerLabel)
             self.repoCombo = QtGui.QComboBox()
-            self.repoCombo.addItems(repos.keys())
+            self.repoCombo.addItems(["%s - %s" % (r.group, r.title) for r in repos])
             verticalLayout.addWidget(self.repoCombo)
         if self.layer is None:
             layerLabel = QtGui.QLabel('Layer')
@@ -96,16 +98,23 @@ class ImportDialog(QtGui.QDialog):
             text = self.layerCombo.currentText()
             self.layer = resolveLayer(text)
 
-        addGeoGigTablesAndTriggers(self.layer)
         user, email = getUserInfo()
         if user is None:
             self.close()
             return
         message = self.messageBox.toPlainText()
-        self.repo.importgeopkg(self.layer, message, user, email)
-
+        try:
+            self.repo.importgeopkg(self.layer, message, user, email)
+        except GeoGigException, e:
+            iface.messageBar().pushMessage("Error", str(e), level=QgsMessageBar.CRITICAL)
+            self.close()
+            return
+        #WARNING: the commitid should be returned by the import op. Now it can
+        #be wrong if there have been other commits pushed to the repo between
+        #these 2 calls
         commitid =  self.repo.revparse(self.repo.HEAD)
         addTrackedLayer(self.layer.source(), self.repo.url, commitid)
+        addGeoGigTablesAndTriggers(self.layer)
         self.ok = True
         config.iface.messageBar().pushMessage("Layer was correctly added to repository",
                                                   level = QgsMessageBar.INFO, duration = 4)

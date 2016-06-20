@@ -46,6 +46,9 @@ from PyQt4.Qt import QCursor
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 
+class GeoGigException(Exception):
+    pass
+
 def _resolveref(ref):
     '''
     Tries to resolve the pased object into a string representing a commit reference
@@ -77,10 +80,11 @@ class Repository(object):
     WORK_HEAD = 'WORK_HEAD'
     STAGE_HEAD = 'STAGE_HEAD'
 
-    def __init__(self, url, title = ""):
+    def __init__(self, url, group="", title = ""):
         self.url = url
         self.rootUrl = url.split("/repos")[0] + "/"
         self.title = title
+        self.group = group
 
     def __apicall(self, command, payload = {}, transaction = False):
         if transaction:
@@ -90,7 +94,6 @@ class Repository(object):
             payload["output_format"] = "json"
             payload["transactionId"] = transactionId
             r = requests.get(self.url + command, params = payload)
-            print r.url
             r.raise_for_status()
             resp = json.loads(r.text.replace(r"\/", "/"))["response"]
             r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
@@ -99,7 +102,6 @@ class Repository(object):
         else:
             payload["output_format"] = "json"
             r = requests.get(self.url + command, params = payload)
-            print r.url
             r.raise_for_status()
             j = json.loads(r.text.replace(r"\/", "/"))
             return j["response"]
@@ -187,7 +189,11 @@ class Repository(object):
         return commits
 
     def lastupdated(self):
-        return self.log(limit = 1)[0].committerdate
+        try:
+            return self.log(limit = 1)[0].committerdate
+        except IndexError:
+            return ""
+
 
     def trees(self, commit=None):
         commit = commit or self.HEAD
@@ -242,30 +248,11 @@ class Repository(object):
         con.commit()
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
-
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         taskid = self._preparelayerdownload(layername, bbox, ref)
-
-        class taskChecker(QObject):
-            downloadIsReady = pyqtSignal()
-            def __init__(self, url, taskid):
-                QObject.__init__(self)
-                self.taskid = taskid
-                self.url = url + "tasks/%s.json" % str(self.taskid)
-            def start(self):
-                self.checkTask()
-            def checkTask(self):
-                r = requests.get(self.url, stream=True)
-                r.raise_for_status()
-                ret = r.json()
-                if ret["task"]["status"] == "FINISHED":
-                    self.downloadIsReady.emit()
-                else:
-                    QTimer.singleShot(500, self.checkTask)
-
-        checker = taskChecker(self.rootUrl, taskid)
+        checker = TaskChecker(self.rootUrl, taskid)
         loop = QEventLoop()
-        checker.downloadIsReady.connect(loop.exit, Qt.QueuedConnection)
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
         self._downloadlayer(taskid, filename, layername)
@@ -273,6 +260,7 @@ class Repository(object):
 
 
     def importgeopkg(self, layer, message, authorName, authorEmail):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         source = layer.source()
         filename, layername = source.split("|")
         layername = layername.split("=")[-1]
@@ -283,6 +271,16 @@ class Repository(object):
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
         r.raise_for_status()
+        root = ET.fromstring(r.text)
+        taskid = root.findall('id')[0].text
+        checker = TaskChecker(self.rootUrl, taskid)
+        loop = QEventLoop()
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        QApplication.restoreOverrideCursor()
+        if not checker.ok:
+            raise GeoGigException("Cannot import layer: %s" % checker.errorMessage)
 
 
     def fullDescription(self):
@@ -311,31 +309,52 @@ class Repository(object):
     def delete(self):
         self._apicall("delete")
 
+class TaskChecker(QObject):
+    taskIsFinished = pyqtSignal()
+    def __init__(self, url, taskid):
+        QObject.__init__(self)
+        self.taskid = taskid
+        self.url = url + "tasks/%s.json" % str(self.taskid)
+    def start(self):
+        self.checkTask()
+    def checkTask(self):
+        r = requests.get(self.url, stream=True)
+        r.raise_for_status()
+        ret = r.json()
+        if ret["task"]["status"] == "FINISHED":
+            self.ok = True
+            self.taskIsFinished.emit()
+        elif ret["task"]["status"] == "FAILED":
+            self.ok = False
+            self.errorMessage = ret["task"]["error"]["message"]
+            self.taskIsFinished.emit()
+        else:
+            QTimer.singleShot(500, self.checkTask)
+
 repos = {}
 
 def addRepo(repo):
     global repos
-    repos[repo.title] = repo
+    repos.append(repo)
     saveRepos()
 
 def removeRepo(repo):
     global repos
-    del repos[repo.title]
+    repos.remove(repo)
     saveRepos()
-
 
 def saveRepos():
     filename = os.path.join(userFolder(), "repositories")
+    towrite=[{"url": r.url, "group":r.group, "title": r.title} for r in repos]
     with open(filename, "w") as f:
-        towrite = {r.title: r.url for r in repos.values()}
         f.write(json.dumps(towrite))
 
 def readRepos():
     global repos
     filename = os.path.join(userFolder(), "repositories")
     if os.path.exists(filename):
-        urls = json.load(open(filename))
-        repos = {name: Repository(url, name) for name, url in urls.iteritems()}
+        repoDescs = json.load(open(filename))
+    repos = [Repository(r["url"], r["group"], r["title"]) for r in repoDescs]
 
 readRepos()
 
@@ -351,6 +370,6 @@ def repositoriesFromUrl(url, title):
     repos = []
     for country in root.findall('repo'):
         name = country.find('name').text
-        repos.append(Repository(url + "repos/%s/" % name, "%s - %s" % (title, name)))
+        repos.append(Repository(url + "repos/%s/" % name, title, name))
 
     return repos

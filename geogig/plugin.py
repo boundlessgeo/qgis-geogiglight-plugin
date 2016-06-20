@@ -95,8 +95,7 @@ class GeoGigPlugin:
 
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
         for layer in layers:
-            if layer not in trackers:
-                trackLayer(layer)
+            trackLayer(layer)
         try:
             from qgistester.tests import addTestModule
             from geogig.tests import testplugin
