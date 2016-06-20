@@ -133,6 +133,12 @@ def getTrackingInfo(layer):
     for obj in tracked:
         if obj.source == source:
             return obj
+    layername = os.path.splitext(os.path.basename(source))[0]
+    source = source + "|layername=" + layername
+    print source
+    for obj in tracked:
+        if obj.source == source:
+            return obj
 
 def getTrackingInfoForGeogigLayer(repoUrl, layername):
     for t in tracked:
@@ -145,73 +151,10 @@ def getTrackedPathsForRepo(repo):
                 if repo.url == layer.repoUrl and layer.layername in repoLayers]
     return trackedPaths
 
-def updateTrackedLayers(repo):
-    head = repo.revparse(geogig.HEAD)
-    repoLayers = [tree.path for tree in repo.trees]
-    repoLayersInProject = False
-    notLoaded = []
-    toUnload = []
-    for trackedlayer in tracked:
-        if trackedlayer.repoUrl == repo.url:
-            if trackedlayer.layername in repoLayers:
-                if (trackedlayer.ref != head
-                            or not os.path.exists(trackedlayer.source)):
-                    repo.exportgeopkg(geogig.HEAD, trackedlayer.layername, trackedlayer.geopkg)
-                    try:
-                        layer = resolveLayerFromSource(trackedlayer.source)
-                        layer.reload()
-                        layer.triggerRepaint()
-                        repoLayersInProject = True
-                    except WrongLayerSourceException:
-                        notLoaded.append(trackedlayer)
-                    trackedlayer.ref = head
-                else:
-                    try:
-                        layer = resolveLayerFromSource(trackedlayer.source)
-                        repoLayersInProject = True
-                    except WrongLayerSourceException:
-                        notLoaded.append(trackedlayer)
-            else:
-                try:
-                    layer = resolveLayerFromSource(trackedlayer.source)
-                    toUnload.append(layer)
-                except WrongLayerSourceException:
-                    pass
-    saveTracked()
-    if repoLayersInProject:
-        if notLoaded:
-            ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Update layers",
-                        "The current QGIS project only contains certain layers from the\n"
-                        "current version of the repository.\n"
-                        "Do you want to load the remaining ones?",
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                        QtGui.QMessageBox.Yes);
-            if ret == QtGui.QMessageBox.Yes:
-                layersToLoad = []
-                for layer in notLoaded:
-                    layersToLoad.append(loadLayerNoCrsDialog(layer.source, layer.layername, "ogr"))
-                QgsMapLayerRegistry.instance().addMapLayers(layersToLoad)
-        if toUnload:
-            ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Update layers",
-                        "The following layers are not present anymore in the repository:\n"
-                        "\t- " + "\n\t- ".join([layer.name() for layer in toUnload]) +
-                        "\nDo you want to remove them from the current QGIS project?",
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                        QtGui.QMessageBox.Yes);
-            if ret == QtGui.QMessageBox.Yes:
-                for layer in toUnload:
-                    QgsMapLayerRegistry.instance().removeMapLayer(layer.id())
-        config.iface.mapCanvas().refresh()
-
-def formatSource(obj):
-    if isinstance(obj, QgsVectorLayer):
-        if obj.dataProvider().name() == "postgres":
-            uri = QgsDataSourceURI(obj.dataProvider().dataSourceUri())
-            return " ".join([uri.database(), uri.schema(), uri.table()])
-        else:
-            return os.path.normcase(obj.source())
-    else:
-        return os.path.normcase(unicode(obj))
+def formatSource(source):
+    if isinstance(source, QgsVectorLayer):
+        source = source.source()
+    return os.path.normcase(source)
 
 
 
