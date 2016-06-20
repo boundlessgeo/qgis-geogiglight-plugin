@@ -149,7 +149,7 @@ class NavigatorDialog(BASE, WIDGET):
 
 
     def _checkoutLayer(self, layername, bbox):
-        filename = layerGeopackageFilename(layername, self.currentRepoName)
+        filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
         source = "%s|layername=%s" % (filename, layername)
         trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
         if trackedlayer is None or not os.path.exists(filename):

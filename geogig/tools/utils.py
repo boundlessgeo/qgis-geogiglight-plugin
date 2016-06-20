@@ -48,13 +48,18 @@ def parentReposFolder():
     mkdir(folder)
     return folder
 
-def repoFolder(reponame):
-    folder = os.path.join(parentReposFolder(), reponame)
+def groupRepoFolder(group):
+    folder = os.path.join(parentReposFolder(), group)
     mkdir(folder)
     return folder
 
-def layerGeopackageFilename(layername, reponame):
-    return os.path.join(repoFolder(reponame), layername + ".gpkg")
+def repoFolder(repogroup, reponame):
+    folder = os.path.join(groupRepoFolder(repogroup), reponame)
+    mkdir(folder)
+    return folder
+
+def layerGeopackageFilename(layername, reponame, repogroup):
+    return os.path.join(repoFolder(repogroup, reponame), layername + ".gpkg")
 
 _tempFolder = None
 def tempFolder():
