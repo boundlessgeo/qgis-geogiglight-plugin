@@ -34,7 +34,6 @@ from geogig.gui.executor import execute
 from geogig.tools.layertracking import *
 from geogig.tools.utils import *
 from geogig.gui.dialogs.historyviewer import HistoryViewer
-from geogig.gui.dialogs.layerfilter import LayersFilterDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.tools.layers import getAllLayers, getVectorLayers, resolveLayerFromSource, WrongLayerSourceException
 from geogig.tools.repowrapper import *
@@ -154,7 +153,6 @@ class NavigatorDialog(BASE, WIDGET):
         source = "%s|layername=%s" % (filename, layername)
         trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
         if trackedlayer is None or not os.path.exists(filename):
-            print bbox
             self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
             addTrackedLayer(source, self.currentRepo.url, self.currentRepo.revparse(self.currentRepo.HEAD))
         try:
@@ -198,8 +196,8 @@ class NavigatorDialog(BASE, WIDGET):
             if groupItem.childCount():
                 self.reposItem.addChild(groupItem)
 
+        self.repoTree.addTopLevelItem(self.reposItem)
         if self.reposItem.childCount():
-            self.repoTree.addTopLevelItem(self.reposItem)
             self.filterRepos()
             self.reposItem.setExpanded(True)
         self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
