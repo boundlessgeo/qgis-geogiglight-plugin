@@ -40,7 +40,6 @@ from geogig.tools.layertracking import *
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
-from geogig.gui.dialogs.commitdialog import CommitDialog
 from layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
 from PyQt4 import QtGui, QtCore
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
@@ -93,6 +92,8 @@ class GeoGigPlugin:
 
         config.initConfigParams()
 
+        QgsMapLayerRegistry.instance().layerWasAdded.connect(trackLayer)
+        QgsMapLayerRegistry.instance().layerRemoved.connect(layerRemoved)
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
         for layer in layers:
             trackLayer(layer)

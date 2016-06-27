@@ -28,27 +28,29 @@ __revision__ = '$Format:%H$'
 import sqlite3
 from geogig.geogigwebapi.repository import Repository
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
+from geogig.gui.dialogs.commitdialog import CommitDialog
 from qgis.core import *
 from geogig.tools.layertracking import getTrackingInfo
 from PyQt4 import QtGui
 from qgis.utils import iface
 from geogig.geogigwebapi.diff import LocalDiff
+from geogig.geogigwebapi.repository import GeoGigException
 from geogig import config
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 from geogig.tools.layertracking import setRef
+from geogig.tools.layers import namesFromLayer
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
-def syncLayer(layer):
-    filename, layername = layer.source().split("|")
-    layername = layername.split("=")[-1]
+def syncLayer(layer, message = None):
+    filename, layername = namesFromLayer(layer)
     con = sqlite3.connect(filename)
     cursor = con.cursor()
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
     commitid =  repo.revparse(repo.HEAD)
     local = _localChanges(cursor, layername, layer)
-    remote = {d.path.split("/")[-1]:d for d in _remoteChanges(cursor, repo, layername)}
+    remote = {d.path.split("/")[-1]:d for d in _remoteChanges(layer, repo, layername)}
     conflicts = {}
     #TODO consider the case of a feature being edited in one part an deleted in the other
     for fid in local:
@@ -66,34 +68,49 @@ def syncLayer(layer):
             cursor.close()
             return
         elif solved == ConflictDialog.OURS:
-            pass
+            pass#TODO
         elif solved == ConflictDialog.THEIRS:
-            pass
+            pass#TODO
         elif solved == ConflictDialog.MANUAL:
             applyRemoteChanges(remote, commitid)
             updateLocalVersionAfterConflicts(resolvedConflicts, layer, layername, cursor)
             syncLayer(layer)
     else:
-
         user, email = getUserInfo()
         if user is None:
             cursor.close()
             return
 
+        if message is None:
+            dlg = CommitDialog(repo)
+            dlg.exec_()
+            message = dlg.message
+            if message is None:
+                cursor.close()
+                return
         applyRemoteChanges(remote, commitid)
-        pushLocalChanges(repo, filename, layer, layername, cursor, user, email)
-
-        layer.reload()
-        layer.triggerRepaint()
 
         cursor.close()
         con.commit()
 
-def pushLocalChanges(repo, filename, layer, layername, cursor):
-    #TODO push changes
-    cursor.execute("DELETE FROM %s_audit;" % layername)
-    commitid =  repo.revparse(repo.HEAD)
-    cursor.execute("UPDATE geogig_audited_tables SET root_tree_id='%s' WHERE table_name='%s'" % (commitid, layername))
+        try:
+            pushLocalChanges(repo, layer, user, email, message)
+            layer.reload()
+            layer.triggerRepaint()
+        except GeoGigException:
+            syncLayer(layer, message)
+
+
+
+
+def pushLocalChanges(repo, layer, user, email, message):
+    repo.importgeopkg(layer, message, user, email)
+    commitid = getCommitId(layer)
+    #===========================================================================
+    # cursor.execute("DELETE FROM %s_audit;" % layername)
+    # commitid =  repo.revparse(repo.HEAD)
+    # cursor.execute("UPDATE geogig_audited_tables SET root_tree_id='%s' WHERE table_name='%s'" % (commitid, layername))
+    #===========================================================================
     setRef(layer, commitid)
 
 def applyRemoteChanges(remote, commitid, layer, layername, cursor):
@@ -137,8 +154,7 @@ def updateLocalVersionAfterConflicts(solved, layer, layername, cursor):
         cursor.execute(sql)
 
 def localChanges(layer):
-    filename, layername = layer.source().split("|")
-    layername = layername.split("=")[-1]
+    filename, layername = namesFromLayer(layer)
     con = sqlite3.connect(filename)
     cursor = con.cursor()
     return _localChanges(cursor, layername, layer)
@@ -172,26 +188,27 @@ def _localChanges(cursor, layername, layer):
         changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
     return changesdict
 
-def getCommitId(cursor, layername):
+def getCommitId(layer):
+    filename, layername = namesFromLayer(layer)
+    con = sqlite3.connect(filename)
+    cursor = con.cursor()
     cursor.execute("SELECT root_tree_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
-    return cursor.fetchone()[0]
+    commitid = cursor.fetchone()[0]
+    cursor.close()
+    return commitid
 
-def _remoteChanges(cursor, repo, layername):
-    commitid = getCommitId(cursor, layername)
-
+def _remoteChanges(layer, repo, layername):
+    commitid = getCommitId(layer)
     changes = repo.diff(commitid, repo.HEAD, layername)
     return changes
-
 
 def solveConflicts(conflicts, layername):
     dlg = ConflictDialog(conflicts, layername)
     dlg.exec_()
     return dlg.solved, dlg.resolvedConflicts
 
-
 def addGeoGigTablesAndTriggers(layer):
     pass
-
 
 def isGeoGigGeopackage(layer):
     filename = layer.source().split("|")[0]

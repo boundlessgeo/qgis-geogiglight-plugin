@@ -33,6 +33,7 @@ from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
 from geogig.tools.layers import  resolveLayerFromSource, WrongLayerSourceException
 from geogig import config
+from geogig.tools.layers import formatSource
 
 
 tracked = []
@@ -130,12 +131,7 @@ def getTrackingInfo(layer):
     for obj in tracked:
         if obj.source == source:
             return obj
-    layername = os.path.splitext(os.path.basename(source))[0]
-    source = source + "|layername=" + layername
-    print source
-    for obj in tracked:
-        if obj.source == source:
-            return obj
+
 
 def getTrackingInfoForGeogigLayer(repoUrl, layername):
     for t in tracked:
@@ -148,10 +144,7 @@ def getTrackedPathsForRepo(repo):
                 if repo.url == layer.repoUrl and layer.layername in repoLayers]
     return trackedPaths
 
-def formatSource(source):
-    if isinstance(source, QgsVectorLayer):
-        source = source.source()
-    return os.path.normcase(source)
+
 
 
 

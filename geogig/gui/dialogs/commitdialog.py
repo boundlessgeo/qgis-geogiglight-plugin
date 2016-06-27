@@ -32,6 +32,7 @@ class CommitDialog(QtGui.QDialog):
     def __init__(self, repo, parent = None):
         super(CommitDialog, self).__init__(parent)
         self.repo = repo
+        self.message = None
         self._closing = False
         self.initGui()
 
@@ -63,18 +64,9 @@ class CommitDialog(QtGui.QDialog):
     def textHasChanged(self):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "")
 
-    def getMessage(self):
-        return self.text.toPlainText()
-
     def okPressed(self):
-        self.closeDialog()
-
-    def closeDialog(self):
-        self._closing = True
+        self.message = self.text.toPlainText()
         self.close()
 
-    def closeEvent(self, evnt):
-        if self._closing:
-            super(CommitDialog, self).closeEvent(evnt)
-        else:
-            evnt.ignore()
+
+

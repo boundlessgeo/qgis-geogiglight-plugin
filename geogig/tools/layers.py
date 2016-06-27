@@ -86,3 +86,20 @@ def geogigFidFromGpkgFid(trackedlayer, fid):
     geogigFid = cursor.fetchone()[0]
     cursor.close()
     return geogigFid
+
+def formatSource(source):
+    if isinstance(source, QgsVectorLayer):
+        source = source.source()
+    source = os.path.normcase(source)
+
+    if "|" not in source:
+        layername = os.path.splitext(os.path.basename(source))[0]
+        source = source + "|layername=" + layername
+
+    return source
+
+def namesFromLayer(layer):
+    source = formatSource(layer.source())
+    filename, layername = source.split("|")
+    layername = layername.split("=")[-1]
+    return filename, layername

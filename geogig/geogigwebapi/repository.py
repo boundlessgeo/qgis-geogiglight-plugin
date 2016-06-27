@@ -45,8 +45,12 @@ from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
+from geogig.tools.layers import formatSource, namesFromLayer
 
 class GeoGigException(Exception):
+    pass
+
+class MergeConflictsException(GeoGigException):
     pass
 
 def _resolveref(ref):
@@ -220,7 +224,6 @@ class Repository(object):
         ref = _resolveref(ref) or self.HEAD
         params = {"root": ref, "format": "gpkg", "table": layername,
                   "path": layername, "interchange":True}
-        print bbox
         if bbox is not None:
             trans = QgsCoordinateTransform(QgsCoordinateReferenceSystem(bbox[1]),
                                             QgsCoordinateReferenceSystem("EPSG:4326"))
@@ -261,26 +264,34 @@ class Repository(object):
 
     def importgeopkg(self, layer, message, authorName, authorEmail):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        source = layer.source()
-        filename, layername = source.split("|")
-        layername = layername.split("=")[-1]
+        filename, layername = namesFromLayer(layer)
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
         payload = {"authorEmail": authorEmail, "authorName": authorName,
-                   "message": message, 'destPath':layername, "format": "gpkg"}
+                   "message": message, 'destPath':layername, "format": "gpkg",
+                   "transactionId": transactionId}
         if isRepoLayer(layer):
             payload["interchange=true"]
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
         r.raise_for_status()
         root = ET.fromstring(r.text)
-        taskid = root.findall('id')[0].text
-        checker = TaskChecker(self.rootUrl, taskid)
+        taskId = root.find("task").find("id").text
+        checker = TaskChecker(self.rootUrl, taskId)
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
-        QApplication.restoreOverrideCursor()
         if not checker.ok:
-            raise GeoGigException("Cannot import layer: %s" % checker.errorMessage)
+            if "conflicts" in checker.errorMessage.lower():
+                raise MergeConflictsException()
+            else:
+                raise GeoGigException("Cannot import layer: %s" % checker.errorMessage)
+        r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
+        r.raise_for_status()
+        QApplication.restoreOverrideCursor()
+
 
 
     def fullDescription(self):

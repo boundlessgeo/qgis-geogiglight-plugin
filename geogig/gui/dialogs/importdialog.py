@@ -37,6 +37,8 @@ from geogig.tools.gpkgsync import addGeoGigTablesAndTriggers
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException
 from geogig.tools.gpkgsync import getUserInfo
+from geogig.tools.gpkgsync import getCommitId
+
 
 class ImportDialog(QtGui.QDialog):
 
@@ -93,7 +95,7 @@ class ImportDialog(QtGui.QDialog):
 
     def importClicked(self):
         if self.repo is None:
-            self.repo = repository.repos[self.repoCombo.currentText()]
+            self.repo = repository.repos[self.repoCombo.currentIndex()]
         if self.layer is None:
             text = self.layerCombo.currentText()
             self.layer = resolveLayer(text)
@@ -105,18 +107,25 @@ class ImportDialog(QtGui.QDialog):
         message = self.messageBox.toPlainText()
         try:
             self.repo.importgeopkg(self.layer, message, user, email)
+            filename, layername = namesFromLayer(self.layer)
+            self.repo.checkoutlayer(filename, layername)
         except GeoGigException, e:
             iface.messageBar().pushMessage("Error", str(e), level=QgsMessageBar.CRITICAL)
             self.close()
             return
-        #WARNING: the commitid should be returned by the import op. Now it can
-        #be wrong if there have been other commits pushed to the repo between
-        #these 2 calls
-        commitid =  self.repo.revparse(self.repo.HEAD)
-        addTrackedLayer(self.layer.source(), self.repo.url, commitid)
-        addGeoGigTablesAndTriggers(self.layer)
+
+        #=======================================================================
+        # #WARNING: the commitid should be returned by the import op. Now it can
+        # #be wrong if there have been other commits pushed to the repo between
+        # #these 2 calls
+        # commitid =  self.repo.revparse(self.repo.HEAD)
+        # addGeoGigTablesAndTriggers(self.layer)
+        #=======================================================================
+        commitid = getCommitId(self.layer)
+        addTrackedLayer(source, self.repo.url, commitid)
+
         self.ok = True
-        config.iface.messageBar().pushMessage("Layer was correctly added to repository",
+        iface.messageBar().pushMessage("Layer was correctly added to repository",
                                                   level = QgsMessageBar.INFO, duration = 4)
         self.close()
 
