@@ -149,6 +149,29 @@ class Repository(object):
 
         return changes
 
+    def _downloadfile(self, taskid, filename):
+        url  = self.rootUrl + "tasks/%s/download" % str(taskid)
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
+        with open(filename, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+
+    def exportdiff(self, layername, oldRef, newRef, filename):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        params = {"oldRef": oldRef, "newRef": newRef, "format": "gpkg"}
+        url  = self.url + "export-diff.json"
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        taskid = r.json()["task"]["id"]
+        checker = TaskChecker(self.rootUrl, taskid)
+        loop = QEventLoop()
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        self._downloadfile(taskid, filename)
+        QApplication.restoreOverrideCursor()
+
     def featurediff(self, oldTreeish, newTreeish, path, allAttrs = True):
         payload = {"oldTreeish": _resolveref(oldTreeish), "newTreeish": _resolveref(newTreeish),
                    "path": path, "all": allAttrs}
@@ -236,19 +259,6 @@ class Repository(object):
         r.raise_for_status()
         return r.json()["task"]["id"]
 
-    def _downloadlayer(self, taskid, filename, layername):
-        url  = self.rootUrl + "tasks/%s/download" % str(taskid)
-        r = requests.get(url, stream=True)
-        r.raise_for_status()
-        with open(filename, 'wb') as f:
-            r.raw.decode_content = True
-            shutil.copyfileobj(r.raw, f)
-
-        con = sqlite3.connect(filename)
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM %s_audit;" % layername)
-        cursor.close()
-        con.commit()
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -258,7 +268,7 @@ class Repository(object):
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
-        self._downloadlayer(taskid, filename, layername)
+        self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
 
 
