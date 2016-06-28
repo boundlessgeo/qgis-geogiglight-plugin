@@ -114,7 +114,7 @@ class ImportDialog(QtGui.QDialog):
             return
 
         commitid = getCommitId(self.layer)
-        addTrackedLayer(source, self.repo.url, commitid)
+        addTrackedLayer(self.layer, self.repo.url, commitid)
 
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",
