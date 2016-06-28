@@ -30,6 +30,7 @@ from geogig.geogigwebapi.repository import Repository
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from qgis.core import *
+from qgis.gui import *
 from geogig.tools.layertracking import getTrackingInfo
 from PyQt4 import QtGui
 from qgis.utils import iface
@@ -56,7 +57,6 @@ def syncLayer(layer, message = None):
     if changes:
         user, email = getUserInfo()
         if user is None:
-
             return
 
         if message is None:
@@ -64,10 +64,8 @@ def syncLayer(layer, message = None):
             dlg.exec_()
             message = dlg.message
             if message is None:
-                cursor.close()
                 return
         mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, message, user, email)
-
 
         if conflicts:
             ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
@@ -100,15 +98,16 @@ def syncLayer(layer, message = None):
     layer.reload()
     layer.triggerRepaint()
 
+    iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
+                                                  level=QgsMessageBar.INFO)
+
 
 def updateFeatureIds(repo, layer, featureIds):
-    pass
-
-def quote(val):
-    if isinstance(val, basestring):
-        return "'%s'" % val
-    else:
-        return str(val)
+    filename, layername = namesFromLayer(layer)
+    con = sqlite3.connect(filename)
+    cursor = con.cursor()
+    for ids in featureIds:
+        cursor.execute('INSERT INTO "%s_fids" VALUES ("%s", "%s")' % (layername, ids[0], ids[1]))
 
 def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, geogigfid))
@@ -152,8 +151,6 @@ def applyRemoteChanges(repo, layer, beforeCommitId, afterCommitId):
         cols = ', '.join('"%s"' % col for col in attrs.keys())
         vals = ', '.join('?' for val in attrs.values())
         cursor.execute('INSERT INTO "%s" (%s) VALUES (%s)' % (layername, cols, vals), attrs.values())
-        cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="%s"' % layername)
-        gpkgfid = cursor.fetchone()[0]
         gpkgfid = cursor.lastrowid
         cursor.execute('INSERT INTO "%s_fids" VALUES ("%s", "%s")' % (layername, gpkgfid, geogigfid))
 
@@ -212,41 +209,6 @@ def updateLocalVersionAfterConflicts(solved, layer, layername, cursor):
         sql = "UPDATE %s_audit SET %s WHERE %s='%s'" % (layername, svalues, pkName, path)
         cursor.execute(sql)
 
-def localChanges(layer):
-    filename, layername = namesFromLayer(layer)
-    con = sqlite3.connect(filename)
-    cursor = con.cursor()
-    return _localChanges(cursor, layername, layer)
-
-def getFidColName(cursor, layername):
-    tableInfo = cursor.execute("PRAGMA table_info('%s');" % layername)
-    for col in tableInfo:
-        if col[-1] == 1:
-            return col[1]
-
-def _localChanges(cursor, layername, layer):
-    attributes = [v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername)]
-    fidColName = getFidColName(cursor, layername)
-    cursor.execute("SELECT * FROM %s_audit;" % layername)
-    changes = cursor.fetchall()
-    changesdict = {}
-    tracking = getTrackingInfo(layer)
-    repo = Repository(tracking.repoUrl)
-    cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
-    commitid = cursor.fetchone()[0]
-    for c in changes:
-        featurechanges = {attr: c[attributes.index(attr)] for attr in [f.name() for f in layer.pendingFields()]}
-        path = str(c[attributes.index(fidColName)])
-        try:
-            request = QgsFeatureRequest()
-            request.setFilterFid(int(path.split("/")[-1]))
-            feature = layer.getFeatures(request).next()
-            featurechanges["the_geom"] = feature.geometry().exportToWkt()
-        except:
-            featurechanges["the_geom"] = None
-        changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
-    return changesdict
-
 def getCommitId(layer):
     filename, layername = namesFromLayer(layer)
     con = sqlite3.connect(filename)
@@ -256,18 +218,10 @@ def getCommitId(layer):
     cursor.close()
     return commitid
 
-def _remoteChanges(layer, repo, layername):
-    commitid = getCommitId(layer)
-    changes = repo.diff(commitid, repo.HEAD, layername)
-    return changes
-
 def solveConflicts(conflicts, layername):
     dlg = ConflictDialog(conflicts, layername)
     dlg.exec_()
     return dlg.solved, dlg.resolvedConflicts
-
-def addGeoGigTablesAndTriggers(layer):
-    pass
 
 def isGeoGigGeopackage(layer):
     filename = layer.source().split("|")[0]

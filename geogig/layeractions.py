@@ -37,7 +37,7 @@ from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from PyQt4 import QtGui
 from PyQt4.QtCore import pyqtSignal, QObject
-from geogig.tools.gpkgsync import syncLayer, localChanges
+from geogig.tools.gpkgsync import syncLayer
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog

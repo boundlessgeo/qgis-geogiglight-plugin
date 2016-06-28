@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -36,7 +37,11 @@ from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 import sys
 from geogig.geogigwebapi.diff import *
 from geogig.geogigwebapi.commit import Commit
-from geogig.tools.gpkgsync import localChanges
+from geogig.tools.layers import namesFromLayer
+import sqlite3
+from geogig.tools.layertracking import getTrackingInfo
+from geogig.geogigwebapi.repository import Repository
+from geogig.geogigwebapi.diff import LocalDiff
 
 MODIFIED, ADDED, REMOVED = "M", "A", "R"
 
@@ -124,7 +129,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
 
     def computeDiffs(self):
         self.featuresTree.clear()
-        self.changes = localChanges(self.layer)
+        self.changes = self.localChanges(self.layer)
         layerItem = QtGui.QTreeWidgetItem()
         layerItem.setText(0, self.layer.name())
         layerItem.setIcon(0, layerIcon)
@@ -159,6 +164,31 @@ class LocalDiffViewerDialog(WIDGET, BASE):
 
     def reject(self):
         QtGui.QDialog.reject(self)
+
+    def localChanges(self, layer):
+        filename, layername = namesFromLayer(layer)
+        con = sqlite3.connect(filename)
+        cursor = con.cursor()
+        attributes = [v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername)]
+        cursor.execute("SELECT * FROM %s_audit;" % layername)
+        changes = cursor.fetchall()
+        changesdict = {}
+        tracking = getTrackingInfo(layer)
+        repo = Repository(tracking.repoUrl)
+        cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
+        commitid = cursor.fetchone()[0]
+        for c in changes:
+            featurechanges = {attr: c[attributes.index(attr)] for attr in [f.name() for f in layer.pendingFields()]}
+            path = str(c[attributes.index("fid")])
+            try:
+                request = QgsFeatureRequest()
+                request.setFilterFid(int(path.split("/")[-1]))
+                feature = layer.getFeatures(request).next()
+                featurechanges["the_geom"] = feature.geometry().exportToWkt()
+            except:
+                featurechanges["the_geom"] = None
+            changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
+        return changesdict
 
 
 class DiffItem(QtGui.QTableWidgetItem):

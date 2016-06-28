@@ -33,7 +33,6 @@ from geogig.tools.layers import *
 import os
 from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.utils import *
-from geogig.tools.gpkgsync import addGeoGigTablesAndTriggers
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException
 from geogig.tools.gpkgsync import getUserInfo
@@ -114,13 +113,6 @@ class ImportDialog(QtGui.QDialog):
             self.close()
             return
 
-        #=======================================================================
-        # #WARNING: the commitid should be returned by the import op. Now it can
-        # #be wrong if there have been other commits pushed to the repo between
-        # #these 2 calls
-        # commitid =  self.repo.revparse(self.repo.HEAD)
-        # addGeoGigTablesAndTriggers(self.layer)
-        #=======================================================================
         commitid = getCommitId(self.layer)
         addTrackedLayer(source, self.repo.url, commitid)
 
