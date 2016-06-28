@@ -58,8 +58,7 @@ class CommitDialog(QtGui.QDialog):
         self.buttonBox.accepted.connect(self.okPressed)
 
         self.text.textChanged.connect(self.textHasChanged)
-        if self.repo.ismerging():
-            self.text.setPlainText(self.repo.mergemessage())
+
 
     def textHasChanged(self):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "")
