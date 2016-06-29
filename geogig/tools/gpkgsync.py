@@ -229,6 +229,7 @@ def getCommitId(layer):
     cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
     commitid = cursor.fetchone()[0]
     cursor.close()
+    con.close()
     return commitid
 
 def solveConflicts(conflicts, layername):
