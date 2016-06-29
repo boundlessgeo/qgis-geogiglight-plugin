@@ -31,6 +31,7 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import iface
 from geogig.tools.utils import *
+from geogig.tools.layers import namesFromLayer
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
@@ -112,14 +113,23 @@ def addLayer(layer):
                 QtGui.QMessageBox.Ok)
 
 def revertLocalChanges(layer):
-    tracking = getTrackingInfo(layer)
-    con = sqlite3.connect(tracking.geopkg)
+    filename, layername = namesFromLayer(layer)
+    con = sqlite3.connect(filename)
     cursor = con.cursor()
-    repo = Repository(tracking.repoUrl)
-    commitid = getCommitId(cursor, tracking.layername)
-    repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
-    config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
-                                                  level=QgsMessageBar.INFO)
+    cursor.execute("SELECT * FROM %s_audit;" % layername)
+    changes = cursor.fetchall()
+    cursor.close()
+    con.close()
+    if changes:
+        tracking = getTrackingInfo(layer)
+        repo = Repository(tracking.repoUrl)
+        commitid = getCommitId(layer)
+        repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
+        config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
+                                                      level=QgsMessageBar.INFO)
+    else:
+        config.iface.messageBar().pushMessage("GeoGig", "No local changes were found",
+                                                      level=QgsMessageBar.INFO)
 
 def showLocalChanges(layer):
     dlg = LocalDiffViewerDialog(iface.mainWindow(), layer)
