@@ -175,7 +175,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.reposItem = None
         repos = repository.repos
 
-        self.reposItem = OrderedParentItem("Repositories", 0)
+        self.reposItem = RepositoriesItem()
         self.reposItem.setIcon(0, repoIcon)
         groupedRepos = defaultdict(list)
         for repo in repos:
@@ -227,6 +227,13 @@ class NavigatorDialog(BASE, WIDGET):
             deleteUpstreamAction = QtGui.QAction(deleteIcon, "Remove this repository (delete upstream)", None)
             deleteUpstreamAction.triggered.connect(lambda: self.deleteRepo(item, True))
             menu.addAction(deleteUpstreamAction)
+            point = self.repoTree.mapToGlobal(point)
+            menu.exec_(point)
+        elif isinstance(item, RepositoriesItem):
+            menu = QtGui.QMenu()
+            refreshAction = QtGui.QAction(refreshIcon, "Refresh", None)
+            refreshAction.triggered.connect(self.updateNavigator)
+            menu.addAction(refreshAction)
             point = self.repoTree.mapToGlobal(point)
             menu.exec_(point)
 
@@ -348,21 +355,11 @@ class NavigatorDialog(BASE, WIDGET):
                     QtGui.QMessageBox.Ok)
 
 
-class OrderedParentItem(QtGui.QTreeWidgetItem):
-    def __init__(self, text, order):
+class RepositoriesItem(QtGui.QTreeWidgetItem):
+    def __init__(self):
         QtGui.QTreeWidgetItem.__init__(self)
-        self.setText(0, text)
-        self.order = order
-        self.setSizeHint(0, QtCore.QSize(self.sizeHint(0).width(), 25))
+        self.setText(0, "Repositories")
 
-    def __lt__(self, o):
-        if isinstance(o, OrderedParentItem):
-            return o.order > self.order
-        else:
-            return True
-
-    def __gt__(self, o):
-        return not self.__lt__(o)
 
 class RepoItem(QtGui.QTreeWidgetItem):
     def __init__(self, repo):
