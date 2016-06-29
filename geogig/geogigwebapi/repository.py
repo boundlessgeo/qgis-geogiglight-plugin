@@ -197,23 +197,26 @@ class Repository(object):
             resp = self._apicall("log", payload)
             if "commit" in resp:
                 for c in _ensurelist(resp["commit"]):
-                    parentslist = _ensurelist(c["parents"])
-                    if parentslist == [""]:
-                        parents = [NULL_ID]
-                    else:
-                        parents = [p["id"] for p in _ensurelist(c["parents"])]
-                    committerdate = datetime.fromtimestamp((c["committer"]["timestamp"] - c["committer"]["timeZoneOffset"]) /1e3)
-                    authordate = datetime.fromtimestamp((c["author"]["timestamp"] - c["author"]["timeZoneOffset"]) / 1e3)
-                    commits.append(Commit(self, c["id"], c["tree"],
-                             parents, c["message"],
-                             c["author"]["name"], authordate,
-                             c["committer"]["name"], committerdate,
-                             c["adds"], c["removes"], c["modifies"]))
+                    commits.append(self._parseCommit(c))
                 payload["page"] += 1
             else:
                 break
 
         return commits
+
+    def _parseCommit(self, c):
+        parentslist = _ensurelist(c["parents"])
+        if parentslist == [""]:
+            parents = [NULL_ID]
+        else:
+            parents = [p["id"] for p in _ensurelist(c["parents"])]
+        committerdate = datetime.fromtimestamp((c["committer"]["timestamp"] - c["committer"]["timeZoneOffset"]) /1e3)
+        authordate = datetime.fromtimestamp((c["author"]["timestamp"] - c["author"]["timeZoneOffset"]) / 1e3)
+        return Commit(self, c["id"], c["tree"],
+                 parents, c["message"],
+                 c["author"]["name"], authordate,
+                 c["committer"]["name"], committerdate,
+                 c.get("adds", 0), c.get("removes", 0), c.get("modifies", 0))
 
     def lastupdated(self):
         try:
@@ -221,6 +224,15 @@ class Repository(object):
         except IndexError:
             return ""
 
+
+    def blame(self, path):
+        resp = self._apicall("blame", {"path":path})
+        attrs = resp["Blame"]["Attribute"]
+        blame = {}
+        for a in attrs:
+            blame[a["name"]] = (a["value"], self._parseCommit(a["commit"]))
+
+        return blame
 
     def trees(self, commit=None):
         commit = commit or self.HEAD

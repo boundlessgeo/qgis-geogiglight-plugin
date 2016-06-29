@@ -50,13 +50,11 @@ class BlameDialog(QtGui.QDialog):
         self.table.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtGui.QAbstractItemView.SingleSelection);
         self.table.selectionModel().selectionChanged.connect(self.selectionChanged)
-        idx = 0
-        for name in self.blamedata:
+        for i, name in enumerate(self.blamedata.keys()):
             values = self.blamedata[name]
-            self.table.setItem(idx, 0, QtGui.QTableWidgetItem(name));
-            self.table.setItem(idx, 2, QtGui.QTableWidgetItem(values[0]));
-            self.table.setItem(idx, 1, QtGui.QTableWidgetItem(values[2]));
-            idx += 1
+            self.table.setItem(i, 0, QtGui.QTableWidgetItem(name));
+            self.table.setItem(i, 1, QtGui.QTableWidgetItem(values[1].authorname));
+            self.table.setItem(i, 2, QtGui.QTableWidgetItem(values[0]));
         self.table.resizeRowsToContents()
         self.table.horizontalHeader().setMinimumSectionSize(250)
         self.table.horizontalHeader().setStretchLastSection(True)
@@ -67,12 +65,7 @@ class BlameDialog(QtGui.QDialog):
 
     def selectionChanged(self):
         idx = self.table.currentRow()
-        commitid = self.blamedata[self.table.item(idx, 0).text()][1]
-        if commitid in self.commitText:
-            text = self.commitText[commitid]
-        else:
-            text = self.repo.show(commitid)
-        self.text.setText(text)
-        self.commitText[commitid] = text
+        commit = self.blamedata[self.table.item(idx, 0).text()][1]
+        self.text.setText(str(commit))
 
 
