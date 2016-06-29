@@ -141,12 +141,12 @@ class Repository(object):
             resp = self._apicall("diff", payload)
             if "diff" in resp:
                 for d in _ensurelist(resp["diff"]):
+                    path = d["newPath"] or d["path"]
                     changes.append(Diffentry(self, oldRefSpec, newRefSpec,
-                                                d["newPath"], d["changeType"]))
+                                                path, d["changeType"]))
                 payload["page"] += 1
             else:
                 break
-
         return changes
 
     def _downloadfile(self, taskid, filename):
@@ -175,12 +175,12 @@ class Repository(object):
     def featurediff(self, oldTreeish, newTreeish, path, allAttrs = True):
         payload = {"oldTreeish": _resolveref(oldTreeish), "newTreeish": _resolveref(newTreeish),
                    "path": path, "all": allAttrs}
-        resp = self._apicall("FeatureDiff", payload)
+        resp = self._apicall("featurediff", payload)
         return _ensurelist(resp["diff"])
 
     def feature(self, path, ref):
         payload = {"oldTreeish": _resolveref(ref), "newTreeish": _resolveref(ref), "path": path, "all": True}
-        resp = self._apicall("FeatureDiff", payload)
+        resp = self._apicall("featurediff", payload)
         featurediff = _ensurelist(resp["diff"])
         return {f["attributename"]: f.get("oldvalue", None) for f in featurediff}
 
