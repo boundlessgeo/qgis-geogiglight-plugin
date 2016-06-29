@@ -79,10 +79,10 @@ def getGroups():
 
 
 def geogigFidFromGpkgFid(trackedlayer, fid):
-    con = sqlite3.connect(trackedlayer.gpkg)
+    con = sqlite3.connect(trackedlayer.geopkg)
     tablename = trackedlayer.layername + "_fids"
     cursor = con.cursor()
-    cursor.execute("SELECT geogig_fid FROM %s WHERE geopkg_fid = %s;" % (tablename, fid))
+    cursor.execute("SELECT geogig_fid FROM %s WHERE gpkg_fid = %s;" % (tablename, fid))
     geogigFid = cursor.fetchone()[0]
     cursor.close()
     return geogigFid
