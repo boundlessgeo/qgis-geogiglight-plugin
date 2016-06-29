@@ -27,6 +27,7 @@ __revision__ = '$Format:%H$'
 
 import sqlite3
 from geogig.geogigwebapi.repository import Repository
+from geogig.gui.dialogs.geogigref import RefDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from qgis.core import *
@@ -87,12 +88,12 @@ def syncLayer(layer, message = None):
 
 
         updateFeatureIds(repo, layer, featureIds)
-        applyRemoteChanges(repo, layer, importCommitId, mergeCommitId)
+        applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
         setRef(layer, mergeCommitId)
     else:
         commitId = getCommitId(layer)
         headCommitId = repo.revparse(repo.HEAD)
-        applyRemoteChanges(repo, layer, commitId, headCommitId)
+        applyLayerChanges(repo, layer, commitId, headCommitId)
         setRef(layer, commitId)
 
     layer.reload()
@@ -101,6 +102,18 @@ def syncLayer(layer, message = None):
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
                                                   level=QgsMessageBar.INFO)
 
+
+def changeVersionForLayer(layer):
+    tracking = getTrackingInfo(layer)
+    repo = Repository(tracking.repoUrl)
+    currentCommitId = getCommitId(layer)
+    dlg = RefDialog(repo)
+    dlg.exec_()
+    if dlg.ref is not None:
+        applyLayerChanges(repo, layer, currentCommitId, dlg.ref.commitid)
+        setRef(layer, dlg.ref.commitid)
+        layer.reload()
+        layer.triggerRepaint()
 
 def updateFeatureIds(repo, layer, featureIds):
     filename, layername = namesFromLayer(layer)
@@ -114,7 +127,7 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     gpkgfid = cursor.fetchone()[0]
     return gpkgfid
 
-def applyRemoteChanges(repo, layer, beforeCommitId, afterCommitId):
+def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
     print changesFilename

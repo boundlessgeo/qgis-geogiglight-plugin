@@ -37,7 +37,7 @@ from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from PyQt4 import QtGui
 from PyQt4.QtCore import pyqtSignal, QObject
-from geogig.tools.gpkgsync import syncLayer
+from geogig.tools.gpkgsync import syncLayer, changeVersionForLayer
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
@@ -55,11 +55,16 @@ def setAsRepoLayer(layer):
     removeAction = QtGui.QAction(u"Remove layer from repository", config.iface.legendInterface())
     removeAction.triggered.connect(lambda: removeLayer(layer))
     config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
+    config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(removeAction, layer)
     syncAction = QtGui.QAction(u"Sync layer with repository", config.iface.legendInterface())
     syncAction.triggered.connect(lambda: syncLayer(layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
+    changeVersionAction = QtGui.QAction(u"Change to a different version...", config.iface.legendInterface())
+    changeVersionAction.triggered.connect(lambda: changeVersionForLayer(layer))
+    config.iface.legendInterface().addLegendLayerAction(changeVersionAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
+    config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
     changesAction = QtGui.QAction(u"Show local changes", config.iface.legendInterface())
     changesAction.triggered.connect(lambda: showLocalChanges(layer))
     config.iface.legendInterface().addLegendLayerAction(changesAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
@@ -68,7 +73,7 @@ def setAsRepoLayer(layer):
     revertAction.triggered.connect(lambda: revertLocalChanges(layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
-    layer.geogigActions = [removeAction, syncAction, changesAction, revertAction]
+    layer.geogigActions = [removeAction, syncAction, changeVersionAction, changesAction, revertAction]
 
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
