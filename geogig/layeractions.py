@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from PyQt4.QtGui import QInputDialog
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -25,13 +26,12 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-import sqlite3
 from geogig import config
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import iface
 from geogig.tools.utils import *
-from geogig.tools.layers import namesFromLayer
+from geogig.tools.layers import namesFromLayer, hasLocalChanges
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
@@ -58,12 +58,12 @@ def setAsRepoLayer(layer):
     config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(removeAction, layer)
-    syncAction = QtGui.QAction(u"Sync layer with repository", config.iface.legendInterface())
+    syncAction = QtGui.QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
     syncAction.triggered.connect(lambda: syncLayer(layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
     changeVersionAction = QtGui.QAction(u"Change to a different version...", config.iface.legendInterface())
-    changeVersionAction.triggered.connect(lambda: changeVersionForLayer(layer))
+    changeVersionAction.triggered.connect(lambda: changeVersion(layer))
     config.iface.legendInterface().addLegendLayerAction(changeVersionAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
     changesAction = QtGui.QAction(u"Show local changes", config.iface.legendInterface())
@@ -92,6 +92,14 @@ def removeLayerActions(layer):
     except AttributeError:
         pass
 
+def changeVersion(layer):
+    if hasLocalChanges(layer):
+        QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                "There are local changes that would be overwritten.\n"
+                "Revert them before changing version.",
+                QtGui.QMessageBox.Ok)
+    else:
+        changeVersionForLayer(layer)
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
@@ -112,15 +120,10 @@ def addLayer(layer):
                 "No local repositories were found",
                 QtGui.QMessageBox.Ok)
 
+
+
 def revertLocalChanges(layer):
-    filename, layername = namesFromLayer(layer)
-    con = sqlite3.connect(filename)
-    cursor = con.cursor()
-    cursor.execute("SELECT * FROM %s_audit;" % layername)
-    changes = cursor.fetchall()
-    cursor.close()
-    con.close()
-    if changes:
+    if hasLocalChanges(layer):
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
         commitid = getCommitId(layer)

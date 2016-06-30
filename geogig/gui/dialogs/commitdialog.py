@@ -29,11 +29,12 @@ from PyQt4 import QtGui
 
 class CommitDialog(QtGui.QDialog):
 
-    def __init__(self, repo, parent = None):
+    def __init__(self, repo, hasLocalChanges, parent = None):
         super(CommitDialog, self).__init__(parent)
         self.repo = repo
+        self.branch = None
         self.message = None
-        self._closing = False
+        self.hasLocalChanges = hasLocalChanges
         self.initGui()
 
     def initGui(self):
@@ -44,27 +45,40 @@ class CommitDialog(QtGui.QDialog):
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setMargin(5)
 
-        self.msgLabel = QtGui.QLabel("Message to describe this update")
-        self.verticalLayout.addWidget(self.msgLabel)
+        self.branchLabel = QtGui.QLabel("Branch (select a branch or type a name to create a new branch)")
+        self.verticalLayout.addWidget(self.branchLabel)
 
-        self.text = QtGui.QPlainTextEdit()
-        self.verticalLayout.addWidget(self.text)
+        self.branchCombo = QtGui.QComboBox()
+        self.branches = self.repo.branches()
+        self.branchCombo.addItems(self.branches)
+        self.branchCombo.setEditable(True)
+        self.verticalLayout.addWidget(self.branchCombo)
+
+        if self.hasLocalChanges:
+            self.msgLabel = QtGui.QLabel("Message to describe this update")
+            self.verticalLayout.addWidget(self.msgLabel)
+
+            self.text = QtGui.QPlainTextEdit()
+            self.text.textChanged.connect(self.textHasChanged)
+            self.verticalLayout.addWidget(self.text)
 
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+
+        if self.hasLocalChanges:
+            self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+
         self.setLayout(self.verticalLayout)
-
         self.buttonBox.accepted.connect(self.okPressed)
-
-        self.text.textChanged.connect(self.textHasChanged)
 
 
     def textHasChanged(self):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "")
 
     def okPressed(self):
-        self.message = self.text.toPlainText()
+        self.branch = self.branchCombo.currentText()
+        if self.hasLocalChanges:
+            self.message = self.text.toPlainText()
         self.close()
 
 

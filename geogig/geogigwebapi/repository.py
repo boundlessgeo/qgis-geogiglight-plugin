@@ -284,7 +284,7 @@ class Repository(object):
         QApplication.restoreOverrideCursor()
 
 
-    def importgeopkg(self, layer, message, authorName, authorEmail):
+    def importgeopkg(self, layer, branch, message, authorName, authorEmail):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         filename, layername = namesFromLayer(layer)
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
@@ -292,9 +292,9 @@ class Repository(object):
         transactionId = r.json()["response"]["Transaction"]["ID"]
         payload = {"authorEmail": authorEmail, "authorName": authorName,
                    "message": message, 'destPath':layername, "format": "gpkg",
-                   "transactionId": transactionId}
+                   "transactionId": transactionId, "root": branch}
         if isRepoLayer(layer):
-            payload["interchange=true"]
+            payload["interchange"]= True
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
         r.raise_for_status()

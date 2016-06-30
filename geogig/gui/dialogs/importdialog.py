@@ -58,6 +58,7 @@ class ImportDialog(QtGui.QDialog):
             verticalLayout.addWidget(layerLabel)
             self.repoCombo = QtGui.QComboBox()
             self.repoCombo.addItems(["%s - %s" % (r.group, r.title) for r in repos])
+            self.repoCombo.currentIndexChanged.connect(self.updateBranches)
             verticalLayout.addWidget(self.repoCombo)
         if self.layer is None:
             layerLabel = QtGui.QLabel('Layer')
@@ -68,6 +69,14 @@ class ImportDialog(QtGui.QDialog):
                           and not isRepoLayer(layer)]
             self.layerCombo.addItems(layerNames)
             verticalLayout.addWidget(self.layerCombo)
+
+        self.branchLabel = QtGui.QLabel("Branch")
+        verticalLayout.addWidget(self.branchLabel)
+
+        self.branchCombo = QtGui.QComboBox()
+        self.branches = self.repo.branches() if self.repo is not None else repos[0].branches()
+        self.branchCombo.addItems(self.branches)
+        verticalLayout.addWidget(self.branchCombo)
 
         messageLabel = QtGui.QLabel('Message to describe this update')
         verticalLayout.addWidget(messageLabel)
@@ -86,7 +95,13 @@ class ImportDialog(QtGui.QDialog):
 
         self.setLayout(verticalLayout)
 
-        self.resize(400, 200)
+        self.resize(600, 300)
+
+    def updateBranches(self):
+        self.branchCombo.clear()
+        repo = repository.repos[self.repoCombo.currentIndex()]
+        self.branches = repo.branches()
+        self.branchCombo.addItems(self.branches)
 
     def messageHasChanged(self):
         self.importButton.setEnabled(self.messageBox.toPlainText() != "")
@@ -104,8 +119,10 @@ class ImportDialog(QtGui.QDialog):
             self.close()
             return
         message = self.messageBox.toPlainText()
+
+        branch = self.branchCombo.currentText()
         try:
-            self.repo.importgeopkg(self.layer, message, user, email)
+            self.repo.importgeopkg(self.layer, branch, message, user, email)
             filename, layername = namesFromLayer(self.layer)
             self.repo.checkoutlayer(filename, layername)
         except GeoGigException, e:
@@ -113,8 +130,7 @@ class ImportDialog(QtGui.QDialog):
             self.close()
             return
 
-        commitid = getCommitId(self.layer)
-        addTrackedLayer(self.layer, self.repo.url, commitid)
+        addTrackedLayer(self.layer, self.repo.url)
 
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",

@@ -103,3 +103,13 @@ def namesFromLayer(layer):
     filename, layername = source.split("|")
     layername = layername.split("=")[-1]
     return filename, layername
+
+def hasLocalChanges(layer):
+    filename, layername = namesFromLayer(layer)
+    con = sqlite3.connect(filename)
+    cursor = con.cursor()
+    cursor.execute("SELECT * FROM %s_audit;" % layername)
+    changes = cursor.fetchall()
+    cursor.close()
+    con.close()
+    return changes

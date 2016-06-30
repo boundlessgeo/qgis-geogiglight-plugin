@@ -35,7 +35,7 @@ from geogig.tools.layertracking import *
 from geogig.tools.utils import *
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.tools.layers import getAllLayers, getVectorLayers, resolveLayerFromSource, WrongLayerSourceException
+from geogig.tools.layers import getAllLayers, getVectorLayers, resolveLayerFromSource, WrongLayerSourceException, formatSource
 from geogig.layeractions import setAsRepoLayer, repoWatcher, setAsNonRepoLayer
 import sys
 from geogig.geogigwebapi.repository import *
@@ -150,10 +150,11 @@ class NavigatorDialog(BASE, WIDGET):
     def _checkoutLayer(self, layername, bbox):
         filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
         source = "%s|layername=%s" % (filename, layername)
+        source = formatSource(source)
         trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
         if trackedlayer is None or not os.path.exists(filename):
             self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
-            addTrackedLayer(source, self.currentRepo.url, self.currentRepo.revparse(self.currentRepo.HEAD))
+            addTrackedLayer(source, self.currentRepo.url)
         try:
             resolveLayerFromSource(source)
             config.iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",

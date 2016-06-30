@@ -39,34 +39,34 @@ from geogig.geogigwebapi.diff import LocalDiff
 from geogig.geogigwebapi.repository import GeoGigException
 from geogig import config
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
-from geogig.tools.layertracking import setRef
 from geogig.tools.layers import namesFromLayer
 from geogig.tools.utils import tempFilename
 
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
-def syncLayer(layer, message = None):
+def syncLayer(layer):
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
     filename, layername = namesFromLayer(layer)
     con = sqlite3.connect(filename)
     cursor = con.cursor()
     cursor.execute("SELECT * FROM %s_audit;" % layername)
-    changes = cursor.fetchall()
+    changes = bool(cursor.fetchall())
     cursor.close()
+    dlg = CommitDialog(repo, changes)
+    dlg.exec_()
+    if dlg.branch is None:
+        return
     if changes:
         user, email = getUserInfo()
         if user is None:
             return
 
-        if message is None:
-            dlg = CommitDialog(repo)
-            dlg.exec_()
-            message = dlg.message
-            if message is None:
-                return
-        mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, message, user, email)
+        if dlg.branch not in repo.branches():
+            commitId = getCommitId(layer)
+            repo.createbranch(commitId, dlg.branch)
+        mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, dlg.branch, dlg.message, user, email)
 
         if conflicts:
             ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
@@ -86,15 +86,12 @@ def syncLayer(layer, message = None):
             elif solved == ConflictDialog.MANUAL:
                 pass#TODO
 
-
         updateFeatureIds(repo, layer, featureIds)
         applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
-        setRef(layer, mergeCommitId)
     else:
         commitId = getCommitId(layer)
-        headCommitId = repo.revparse(repo.HEAD)
+        headCommitId = repo.revparse(dlg.branch)
         applyLayerChanges(repo, layer, commitId, headCommitId)
-        setRef(layer, commitId)
 
     layer.reload()
     layer.triggerRepaint()
@@ -111,7 +108,6 @@ def changeVersionForLayer(layer):
     dlg.exec_()
     if dlg.ref is not None:
         applyLayerChanges(repo, layer, currentCommitId, dlg.ref.commitid)
-        setRef(layer, dlg.ref.commitid)
         layer.reload()
         layer.triggerRepaint()
 
@@ -178,7 +174,6 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
     cursor.execute("DELETE FROM %s_audit;" % layername)
 
     cursor.execute("UPDATE geogig_audited_tables SET commit_id='%s' WHERE table_name='%s'" % (afterCommitId, layername))
-    setRef(layer, afterCommitId)
 
     cursor.close()
     changesCursor.close()

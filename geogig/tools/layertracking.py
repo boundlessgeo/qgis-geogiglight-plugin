@@ -45,32 +45,22 @@ class Encoder(JSONEncoder):
 def decoder(jsonobj):
     if 'source' in jsonobj:
         return TrackedLayer(jsonobj['source'],
-                            jsonobj['repoUrl'],
-                            jsonobj['ref'])
+                            jsonobj['repoUrl'])
     else:
         return jsonobj
 
 class TrackedLayer(object):
-    def __init__(self, source, repoUrl, ref):
+    def __init__(self, source, repoUrl):
         self.repoUrl = repoUrl
-        self.ref = ref
         self.source = source
         self.geopkg, self.layername = source.split("|")
         self.layername = self.layername.split("=")[-1]
 
 
-def setRef(layer, ref):
-    source = formatSource(layer)
-    for obj in tracked:
-        if obj.source == source:
-            obj.ref = ref
-    saveTracked()
-
-
-def addTrackedLayer(source, repoFolder, ref):
+def addTrackedLayer(source, repoFolder):
     global tracked
     source = formatSource(source)
-    layer = TrackedLayer(source, repoFolder, ref)
+    layer = TrackedLayer(source, repoFolder)
     if layer not in tracked:
         for lay in tracked:
             if lay.source == source:
