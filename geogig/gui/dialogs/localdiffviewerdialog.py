@@ -37,7 +37,7 @@ from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 import sys
 from geogig.geogigwebapi.diff import *
 from geogig.geogigwebapi.commit import Commit
-from geogig.tools.layers import namesFromLayer
+from geogig.tools.layers import namesFromLayer, geogigFidFromGpkgFid
 import sqlite3
 from geogig.tools.layertracking import getTrackingInfo
 from geogig.geogigwebapi.repository import Repository
@@ -94,10 +94,10 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.attributesTable.setVerticalHeaderLabels([a for a in newfeature])
         self.attributesTable.setHorizontalHeaderLabels(["Old value", "New value", "Change type"])
         for i, attrib in enumerate(newfeature):
-            self.attributesTable.setItem(i, 0, DiffItem(oldfeature[attrib]))
-            self.attributesTable.setItem(i, 1, DiffItem(newfeature[attrib]))
+            self.attributesTable.setItem(i, 0, DiffItem(oldfeature.get(attrib, None)))
+            self.attributesTable.setItem(i, 1, DiffItem(newfeature.get(attrib, None)))
             attribChangeType = changeTypeName[changetype]
-            if changetype == LOCAL_FEATURE_MODIFIED and oldfeature[attrib] == newfeature[attrib]:
+            if changetype == LOCAL_FEATURE_MODIFIED and oldfeature.get(attrib, None) == newfeature.get(attrib, None):
                 attribChangeType = "NO_CHANGE"
             self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attribChangeType))
             for col in range(3):
@@ -170,6 +170,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         con = sqlite3.connect(filename)
         cursor = con.cursor()
         attributes = [v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername)]
+        attrnames = [a for a in attributes if a != "fid"]
         cursor.execute("SELECT * FROM %s_audit;" % layername)
         changes = cursor.fetchall()
         changesdict = {}
@@ -178,8 +179,9 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
         commitid = cursor.fetchone()[0]
         for c in changes:
-            featurechanges = {attr: c[attributes.index(attr)] for attr in [f.name() for f in layer.pendingFields()]}
+            featurechanges = {attr: c[attributes.index(attr)] for attr in attrnames}
             path = str(c[attributes.index("fid")])
+            path = geogigFidFromGpkgFid(tracking, path)
             try:
                 request = QgsFeatureRequest()
                 request.setFilterFid(int(path.split("/")[-1]))
