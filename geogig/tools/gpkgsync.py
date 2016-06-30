@@ -41,6 +41,7 @@ from geogig import config
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 from geogig.tools.layers import namesFromLayer
 from geogig.tools.utils import tempFilename
+from geogig.repowatcher import repoWatcher
 
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
@@ -95,6 +96,7 @@ def syncLayer(layer):
 
     layer.reload()
     layer.triggerRepaint()
+    repoWatcher.repoChanged.emit(repo)
 
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
                                                   level=QgsMessageBar.INFO)

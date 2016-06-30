@@ -43,13 +43,8 @@ from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
 from geogig.tools.gpkgsync import getCommitId
+from geogig.repowatcher import repoWatcher
 
-
-class RepoWatcher(QObject):
-
-    repoChanged = pyqtSignal(object)
-
-repoWatcher = RepoWatcher()
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)

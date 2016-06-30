@@ -36,7 +36,8 @@ from geogig.tools.utils import *
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.tools.layers import getAllLayers, getVectorLayers, resolveLayerFromSource, WrongLayerSourceException, formatSource
-from geogig.layeractions import setAsRepoLayer, repoWatcher, setAsNonRepoLayer
+from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
+from geogig.repowatcher import repoWatcher
 import sys
 from geogig.geogigwebapi.repository import *
 from geogig.geogigwebapi import repository

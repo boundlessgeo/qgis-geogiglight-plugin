@@ -49,9 +49,6 @@ tagIcon = icon("tag.gif")
 
 class HistoryViewer(QtGui.QTreeWidget):
 
-    repoChanged = QtCore.pyqtSignal()
-    headChanged = QtCore.pyqtSignal()
-
     def __init__(self):
         super(HistoryViewer, self).__init__()
         self.repo = None
