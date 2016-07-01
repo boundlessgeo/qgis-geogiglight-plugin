@@ -346,7 +346,6 @@ class ConflictDialog(WIDGET, BASE):
 
 
     def closeEvent(self, evnt):
-        print self.solved
         if self.solved == self.UNSOLVED:
             ret = QtGui.QMessageBox.warning(self, "Conflict resolution",
                                   "There are unsolved conflicts.\n"
