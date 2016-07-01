@@ -39,7 +39,6 @@ import time
 from geogig.gui.executor import execute
 import shutil
 from qgis.core import *
-import sqlite3
 from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
@@ -93,6 +92,7 @@ class Repository(object):
     def __apicall(self, command, payload = {}, transaction = False):
         if transaction:
             r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+            print r.url
             r.raise_for_status()
             transactionId = r.json()["response"]["Transaction"]["ID"]
             payload["output_format"] = "json"
@@ -106,6 +106,7 @@ class Repository(object):
         else:
             payload["output_format"] = "json"
             r = requests.get(self.url + command, params = payload)
+            print r.url
             r.raise_for_status()
             j = json.loads(r.text.replace(r"\/", "/"))
             return j["response"]
@@ -222,7 +223,7 @@ class Repository(object):
         try:
             return self.log(limit = 1)[0].committerdate
         except IndexError:
-            return ""
+            return None
 
 
     def blame(self, path):
@@ -238,6 +239,8 @@ class Repository(object):
         commit = commit or self.HEAD
         #TODO use commit
         resp = self._apicall("ls-tree", {"onlyTrees":True})
+        if "node" not in resp.keys():
+            return []
         if isinstance(resp["node"], dict):
             trees = [resp["node"]]
         else:
@@ -269,6 +272,8 @@ class Repository(object):
         url  = self.url + "export.json"
         r = requests.get(url, params=params)
         r.raise_for_status()
+        print r.url
+        print r.text
         return r.json()["task"]["id"]
 
 
@@ -288,6 +293,7 @@ class Repository(object):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         filename, layername = namesFromLayer(layer)
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        print r.url
         r.raise_for_status()
         transactionId = r.json()["response"]["Transaction"]["ID"]
         payload = {"authorEmail": authorEmail, "authorName": authorName,
@@ -297,9 +303,11 @@ class Repository(object):
             payload["interchange"]= True
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
+        print r.url
+        print r.text
         r.raise_for_status()
         root = ET.fromstring(r.text)
-        taskId = root.find("task").find("id").text
+        taskId = root.find("id").text
         checker = TaskChecker(self.rootUrl, taskId)
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
@@ -311,9 +319,16 @@ class Repository(object):
             else:
                 raise GeoGigException("Cannot import layer: %s" % checker.errorMessage)
         r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
+        print r.url
         r.raise_for_status()
         QApplication.restoreOverrideCursor()
-
+        if isRepoLayer(layer):
+            mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
+            importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
+            conflicts = []
+            featureIds = checker.response["task"]["result"]["NewFeatures"]["type"].get("ids", [])
+            featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
+            return mergeCommitId, importCommitId, conflicts, featureIds
 
 
     def fullDescription(self):
@@ -353,13 +368,14 @@ class TaskChecker(QObject):
     def checkTask(self):
         r = requests.get(self.url, stream=True)
         r.raise_for_status()
-        ret = r.json()
-        if ret["task"]["status"] == "FINISHED":
+        print r.text
+        self.response = r.json()
+        if self.response["task"]["status"] == "FINISHED":
             self.ok = True
             self.taskIsFinished.emit()
-        elif ret["task"]["status"] == "FAILED":
+        elif self.response["task"]["status"] == "FAILED":
             self.ok = False
-            self.errorMessage = ret["task"]["error"]["message"]
+            self.errorMessage = self.response["task"]["error"]["message"]
             self.taskIsFinished.emit()
         else:
             QTimer.singleShot(500, self.checkTask)

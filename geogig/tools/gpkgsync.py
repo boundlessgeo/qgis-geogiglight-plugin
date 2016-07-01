@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from PyQt4.QtGui import QInputDialog
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -55,13 +56,14 @@ def syncLayer(layer):
     cursor.execute("SELECT * FROM %s_audit;" % layername)
     changes = bool(cursor.fetchall())
     cursor.close()
-    dlg = CommitDialog(repo, changes)
-    dlg.exec_()
-    if dlg.branch is None:
-        return
     if changes:
         user, email = getUserInfo()
         if user is None:
+            return
+
+        dlg = CommitDialog(repo, changes)
+        dlg.exec_()
+        if dlg.branch is None:
             return
 
         if dlg.branch not in repo.branches():
@@ -90,8 +92,13 @@ def syncLayer(layer):
         updateFeatureIds(repo, layer, featureIds)
         applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
     else:
+        branch, ok = QInputDialog.getItem(iface.mainWindow(), "Sync",
+                                          "Select branch to update from",
+                                          repo.branches(), 0, False)
+        if not ok:
+            return
         commitId = getCommitId(layer)
-        headCommitId = repo.revparse(dlg.branch)
+        headCommitId = repo.revparse(branch)
         applyLayerChanges(repo, layer, commitId, headCommitId)
 
     layer.reload()
@@ -119,6 +126,9 @@ def updateFeatureIds(repo, layer, featureIds):
     cursor = con.cursor()
     for ids in featureIds:
         cursor.execute('INSERT INTO "%s_fids" VALUES ("%s", "%s")' % (layername, ids[0], ids[1]))
+    cursor.close()
+    con.commit()
+    con.close()
 
 def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, geogigfid))

@@ -125,10 +125,10 @@ class NavigatorDialog(BASE, WIDGET):
             allLayers = getAllLayers()
             items = ["Download complete layer", "Filter using bounding box of current project"]
             items.extend(["Filter using bounding box of layer " + lay.name() for lay in allLayers])
-
-            layernames = url.split(":")[-1].split(",")
+            layernames = url[url.find(":")+1:].split(",")
             for layername in layernames:
-                self._checkoutLayer(layername, None)
+                if layername:
+                    self._checkoutLayer(layername, None)
             #===================================================================
             # item, ok = QtGui.QInputDialog.getItem(self, "Layer download",
             #                                       "Download mode", items, 0, False)
@@ -374,7 +374,9 @@ class RepoItem(QtGui.QTreeWidgetItem):
         self.setText(0, self.repo.title)
         self.setIcon(0, repoIcon)
         self.setForeground(1, QtGui.QBrush(QtGui.QColor("#5f6b77")))
-        self.setText(1, "Updated " + relativeDate(self.repo.lastupdated()))
+        lastUpdate = self.repo.lastupdated()
+        lastUpdate = "Updated " + relativeDate(lastUpdate) if lastUpdate is not None else ""
+        self.setText(1, lastUpdate)
 
 navigatorInstance = NavigatorDialog()
 

@@ -15,7 +15,6 @@
 *                                                                         *
 ***************************************************************************
 """
-import sqlite3
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,6 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
+import sqlite3
 from qgis.core import *
 import os
 from qgis.utils import iface
@@ -93,10 +93,19 @@ def formatSource(source):
     source = os.path.normcase(source)
 
     if "|" not in source:
-        layername = os.path.splitext(os.path.basename(source))[0]
+        layername = layersInGpkgFile(source)[0]
         source = source + "|layername=" + layername
 
     return source
+
+def layersInGpkgFile(f):
+    con = sqlite3.connect(f)
+    cursor = con.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    layers = [t[0] for t in cursor.fetchall()]
+    layers = [lay for lay in layers if not lay.startswith("gpkg_") and not lay.startswith("tree_")]
+    return layers
+
 
 def namesFromLayer(layer):
     source = formatSource(layer.source())
