@@ -122,14 +122,15 @@ class HistoryViewer(QtGui.QTreeWidget):
             item.populate()
 
     def describeVersion(self, commit):
-        html = ("<p><b>Author:</b> %s </p>"
+        html = ("<p><b>Full commit Id:</b> %s </p>"
+                "<p><b>Author:</b> %s </p>"
                 "<p><b>Created at:</b> %s</p>"
                 "<p><b>Description message:</b> %s</p>"
                 "<p><b>Changes added by this version </b>:"
                 "<ul><li><b><font color='#FBB117'>%i features modified</font></b></li>"
                 "<li><b><font color='green'>%i features added</font></b></li>"
                 "<li><b><font color='red'>%i features deleted</font></b></li></ul></p>"
-                % (commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
+                % (commit.commitid, commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
                    commit.message.replace("\n", "<br>"),commit.modified, commit.added,
                    commit.removed))
         dlg = HtmlDialog("Version description", html, self)
