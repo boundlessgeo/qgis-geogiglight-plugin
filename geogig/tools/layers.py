@@ -99,12 +99,15 @@ def formatSource(source):
     return source
 
 def layersInGpkgFile(f):
-    con = sqlite3.connect(f)
-    cursor = con.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    layers = [t[0] for t in cursor.fetchall()]
-    layers = [lay for lay in layers if not lay.startswith("gpkg_") and not lay.startswith("tree_")]
-    return layers
+    if os.path.exists(f):
+        con = sqlite3.connect(f)
+        cursor = con.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        layers = [t[0] for t in cursor.fetchall()]
+        layers = [lay for lay in layers if not lay.startswith("gpkg_") and not lay.startswith("tree_")]
+        return layers
+    else:
+        return [os.path.splitext(os.path.basename(f))[0]]
 
 
 def namesFromLayer(layer):
