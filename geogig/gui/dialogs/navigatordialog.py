@@ -149,19 +149,28 @@ class NavigatorDialog(BASE, WIDGET):
 
 
     def _checkoutLayer(self, layername, bbox):
-        filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
-        source = "%s|layername=%s" % (filename, layername)
-        source = formatSource(source)
         trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
-        if trackedlayer is None or not os.path.exists(filename):
+        if trackedlayer is not None:
+            if not os.path.exists(trackedlayer.geopkg):
+                removeTrackedLayer(trackedlayer.source)
+                trackedlayer = None
+                filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
+                source = "%s|layername=%s" % (filename, layername)
+            else:
+                source = trackedlayer.source
+        else:
+            filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
+            source = "%s|layername=%s" % (filename, layername)
+        if trackedlayer is None:
             self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
             addTrackedLayer(source, self.currentRepo.url)
+
         try:
             resolveLayerFromSource(source)
             config.iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
                                   level=QgsMessageBar.INFO)
         except WrongLayerSourceException:
-            layer = loadLayerNoCrsDialog("%s|layername=%s" % (filename, layername), layername, "ogr")
+            layer = loadLayerNoCrsDialog(source, layername, "ogr")
             QgsMapLayerRegistry.instance().addMapLayers([layer])
             config.iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
                                                   level=QgsMessageBar.INFO)
