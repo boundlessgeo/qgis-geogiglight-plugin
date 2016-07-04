@@ -371,7 +371,7 @@ class TaskChecker(QObject):
         else:
             QTimer.singleShot(500, self.checkTask)
 
-repos = {}
+repos = []
 
 def addRepo(repo):
     global repos
