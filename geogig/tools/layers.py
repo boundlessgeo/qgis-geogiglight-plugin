@@ -92,7 +92,7 @@ def formatSource(source):
         source = source.source()
     source = os.path.normcase(source)
 
-    if "|" not in source:
+    if "|" in source:
         layername = layersInGpkgFile(source)[0]
         source = source + "|layername=" + layername
 
