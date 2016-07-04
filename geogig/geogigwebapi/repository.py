@@ -394,7 +394,7 @@ def readRepos():
     filename = os.path.join(userFolder(), "repositories")
     if os.path.exists(filename):
         repoDescs = json.load(open(filename))
-    repos = [Repository(r["url"], r["group"], r["title"]) for r in repoDescs]
+        repos = [Repository(r["url"], r["group"], r["title"]) for r in repoDescs]
 
 readRepos()
 
