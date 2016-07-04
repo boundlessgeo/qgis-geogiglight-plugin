@@ -112,9 +112,14 @@ def layersInGpkgFile(f):
 
 def namesFromLayer(layer):
     source = formatSource(layer.source())
-    filename, layername = source.split("|")
-    layername = layername.split("=")[-1]
+    if "|" in source:
+        filename, layername = source.split("|")
+        layername = layername.split("=")[-1]
+    else:
+        filename = source
+        layername = os.path.splitext(os.path.split(source)[1])[0]
     return filename, layername
+
 
 def hasLocalChanges(layer):
     filename, layername = namesFromLayer(layer)
