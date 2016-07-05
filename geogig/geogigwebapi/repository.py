@@ -124,11 +124,18 @@ class Repository(object):
         raise NotImplementedError()
 
     def tags(self):
-        return {}
         resp = self._apicall("tag", {"list":True})
-        tags = [b["name"] for b in _ensurelist(resp["Tag"])]
-        tags = {t: self.revparse(t) for t in tags}
-        return tags
+        if "Tag" in resp:
+            tags = [b["name"] for b in _ensurelist(resp["Tag"])]
+            tags = {t: self.revparse(t) for t in tags}
+            return tags
+        else:
+            return {}
+
+    def createtag(self, ref, tag):
+        raise NotImplementedError()
+
+
 
     def diff(self, oldRefSpec, newRefSpec, pathFilter = None):
         payload = {"oldRefSpec": oldRefSpec, "newRefSpec": newRefSpec}
@@ -236,7 +243,7 @@ class Repository(object):
     def trees(self, commit=None):
         commit = commit or self.HEAD
         #TODO use commit
-        resp = self._apicall("ls-tree", {"onlyTrees":True})
+        resp = self._apicall("ls-tree", {"onlyTrees":True, "path": commit})
         if "node" not in resp.keys():
             return []
         if isinstance(resp["node"], dict):
@@ -285,7 +292,7 @@ class Repository(object):
         QApplication.restoreOverrideCursor()
 
 
-    def importgeopkg(self, layer, branch, message, authorName, authorEmail):
+    def importgeopkg(self, layer, branch, message, authorName, authorEmail, interchange):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         filename, layername = namesFromLayer(layer)
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
@@ -294,7 +301,7 @@ class Repository(object):
         payload = {"authorEmail": authorEmail, "authorName": authorName,
                    "message": message, 'destPath':layername, "format": "gpkg",
                    "transactionId": transactionId, "root": branch}
-        if isRepoLayer(layer):
+        if interchange:
             payload["interchange"]= True
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files=files)
