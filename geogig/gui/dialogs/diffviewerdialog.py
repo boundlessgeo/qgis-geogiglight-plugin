@@ -57,10 +57,6 @@ class DiffViewerDialog(WIDGET, BASE):
                                QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.repo = repo
 
-        if (isinstance(refa, Commit) and isinstance(refb, Commit)
-                and refa.committerdate > refb.committerdate):
-            refa, refb = refb, refa
-
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |

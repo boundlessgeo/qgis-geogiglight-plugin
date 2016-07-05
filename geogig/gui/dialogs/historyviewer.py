@@ -137,13 +137,8 @@ class HistoryViewer(QtGui.QTreeWidget):
         dlg.exec_()
 
 
-    def showDiffs(self, commita, commitb = None):
-        if commitb is None:
-            commitb = commita
-            commita = commita.parent
-        else:
-            pass
-        dlg = DiffViewerDialog(self, self.repo, commita, commitb)
+    def showDiffs(self, commit):
+        dlg = DiffViewerDialog(self, self.repo, commit.parent, commit)
         dlg.exec_()
 
 
