@@ -52,12 +52,9 @@ class GeoGigThread(QtCore.QThread):
 _dialog = None
 
 def execute(func, useThread = False):
-    cursor = QtGui.QApplication.overrideCursor()
-    waitCursor = (cursor is not None and cursor.shape() == QtCore.Qt.WaitCursor)
     try:
         QtCore.QCoreApplication.processEvents()
-        if not waitCursor:
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         if useThread:
             t = GeoGigThread(func)
             loop = QtCore.QEventLoop()
@@ -71,6 +68,5 @@ def execute(func, useThread = False):
         else:
             return func()
     finally:
-        if not waitCursor:
-            QtGui.QApplication.restoreOverrideCursor()
+        QtGui.QApplication.restoreOverrideCursor()
         QtCore.QCoreApplication.processEvents()
