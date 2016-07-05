@@ -122,7 +122,7 @@ class ImportDialog(QtGui.QDialog):
 
         branch = self.branchCombo.currentText()
         try:
-            self.repo.importgeopkg(self.layer, branch, message, user, email)
+            self.repo.importgeopkg(self.layer, branch, message, user, email, False)
             filename, layername = namesFromLayer(self.layer)
             self.repo.checkoutlayer(filename, layername)
         except GeoGigException, e:
