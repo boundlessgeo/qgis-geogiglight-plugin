@@ -1,19 +1,31 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import unittest
 import os
 from geogig.geogigwebapi.repository import Repository
 import shutil
-
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 
 REPOS_SERVER_URL = "http://localhost:8182/"
-REPOS_FOLDER = ""
-def _createTestRepo(name):
+REPOS_FOLDER = "d:\\repo" #fill this with your repos folder
+
+def _createTestRepo(name, modifiesRepo = False):
     i = len(os.listdir(REPOS_FOLDER))
-    folderName = "%i_%s" % (i, name)
+    if modifiesRepo:
+        folderName = "%i_%s" % (i, name)
+    else:
+        folderName = "original_%s" % name
     destPath = os.path.join(REPOS_FOLDER, folderName)
-    orgPath = os.path.join(os.path.dirname(__file__), "data", "repos", name)
-    shutil.copytree(orgPath, destPath)
+    if not os.path.exists(destPath):
+        orgPath = os.path.join(os.path.dirname(__file__), "data", "repos", name)
+        shutil.copytree(orgPath, destPath)
     repo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName)
     return repo
+
+def _layer(name):
+    path = os.path.join(os.path.dirname(__file__), "data", "layers", name + ".gpkg")
+    return loadLayerNoCrsDialog(path, name, "ogr")
 
 class WebApiTests(unittest.TestCase):
 
@@ -21,85 +33,226 @@ class WebApiTests(unittest.TestCase):
         pass
 
     def testLog(self):
-        pass
+        repo = _createTestRepo("simple")
+        log = repo.log()
+        self.assertEqual(3, len(log))
+        self.assertEqual("third", log[0].message)
 
     def testLogInEmptyRepo(self):
-        pass
+        repo = _createTestRepo("empty")
+        log = repo.log()
+        self.assertEqual(0, len(log))
 
     def testLogWithPath(self):
-        pass
+        repo = _createTestRepo("simple")
+        log = repo.log(path = "points/fid--678854f5_155b574742f_-8000")
+        self.assertEqual(2, len(log))
+        self.assertEqual("third", log[0].message)
+        self.assertEqual("first", log[1].message)
+
+    def testLogMultipleParents(self):
+        repo = _createTestRepo("withmerge")
+        log = repo.log()
+        self.assertEqual(2, len(log[0].parents))
 
     def testBlame(self):
-        pass
+        repo = _createTestRepo("simple")
+        blame = repo.blame("points/fid--678854f5_155b574742f_-8000")
+        print blame
 
     def testDownload(self):
-        pass
+        repo = _createTestRepo("simple")
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points")
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        self.assertTrue(layer.isValid())
 
     def testDownloadNonHead(self):
-        pass
+        repo = _createTestRepo("simple")
+        log = repo.log()
+        self.assertEqual(3, len(log))
+        commitid = log[-1].commitid
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = commitid)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        self.assertTrue(layer.isValid())
+        features = list(layer.getFeatures())
+        self.assertEqual(1, len(features))
 
     def testDescription(self):
-        pass
+        repo = _createTestRepo("simple")
+        self.assertTrue("<p>LAST VERSION: <b>third" in repo.fullDescription())
 
     def testDescriptionInEmptyRepo(self):
-        pass
+        repo = _createTestRepo("empty")
+        self.assertTrue("<p>LAST VERSION: <b></b></p>" in repo.fullDescription())
 
     def testFeature(self):
-        pass
+        repo = _createTestRepo("simple")
+        expected = {'geometry': 'POINT (20.532220860123836 83.62989408803831)', 'n': 1}
+        feature = repo.feature("points/fid--678854f5_155b574742f_-8000", repo.HEAD)
+        self.assertEqual(expected, feature)
 
     def testFeatureDiff(self):
         pass
 
     def testTrees(self):
-        pass
+        repo = _createTestRepo("severallayers")
+        self.assertEquals(["points", "lines"], repo.trees())
 
     def testTreesNonHead(self):
-        pass
+        repo = _createTestRepo("severallayers")
+        log = repo.log()
+        self.assertEqual(4, len(log))
+        commitid = log[-1].commitid
+        self.assertEquals(["points"], repo.trees(commit = commitid))
 
     def testRemoveTree(self):
-        pass
+        repo = _createTestRepo("simple", True)
+        self.assertEquals(["points"], repo.trees())
+        repo.removetree("points")
+        self.assertEquals([], repo.trees())
 
     def testTags(self):
-        pass
+        repo = _createTestRepo("simple")
+        tags = repo.tags()
+        log = repo.log()
+        self.assertEqual({"mytag": log[0].commitid}, tags)
+
+    def testNoTags(self):
+        repo = _createTestRepo("empty")
+        tags = repo.tags()
+        self.assertEqual({}, tags)
+
+    def testCreateTag(self):
+        repo = _createTestRepo("simple", True)
+        repo.createtag(self.HEAD, "anothertag")
+        tags = repo.tags()
+        log = repo.log()
+        self.assertEqual({"mytag": log[0].commitid, "anothertag": log[0].commitid}, tags)
 
     def testRemoveTags(self):
-        pass
+        repo = _createTestRepo("simple", True)
+        tags = repo.tags()
+        self.assertEquals(1, len(tags))
+        repo.deletetag(tags.keys()[0])
+        tags = repo.tags()
+        self.assertEquals(0, len(tags))
 
     def testDiff(self):
-        pass
+        repo = _createTestRepo("simple")
+        log = repo.log()
+        self.assertEqual(3, len(log))
+        diff = repo.diff(log[-1].commitid, log[0].commitid)
+        self.assertEqual(2, len(diff))
+        self.assertEqual({"points/fid--678854f5_155b574742f_-8000", "points/fid--678854f5_155b574742f_-7ffd"},
+                         {d.path for d in diff})
 
     def testDiffWithPath(self):
-        pass
+        repo = _createTestRepo("simple")
+        log = repo.log()
+        self.assertEqual(3, len(log))
+        expected = None #TODO
+        diff = repo.diff(log[-1].commitid, log[0].commitid, "points/fid--678854f5_155b574742f_-8000")
+        self.assertTrue(1, len(diff))
+        print diff[0].featurediff
+        self.assertEqual(expected, diff)
 
     def testExportDiff(self):
-        pass
+        repo = _createTestRepo("simple")
+        filename = tempFilename("gpkg")
+        repo.exportdiff("points", "HEAD", "HEAD~1", filename)
+        self.assertTrue(os.path.exists(filename))
+        #Check exported gpkg is correct
 
     def testRevParse(self):
-        pass
+        repo = _createTestRepo("simple")
+        head = repo.log()[0].commitid
+        self.assertEqual(head, repo.revparse(repo.HEAD))
 
     def testLastUpdated(self):
         pass
 
     def testBranches(self):
-        pass
+        repo = _createTestRepo("simple")
+        self.assertEquals(["master", "mybranch"], repo.branches())
 
     def testBranchesInEmptyRepo(self):
-        pass
+        repo = _createTestRepo("empty")
+        self.assertEquals(["master"], repo.branches())
 
     def testCreateBranch(self):
-        pass
+        repo = _createTestRepo("simple", True)
+        self.assertEquals(["master", "mybranch"], repo.branches())
+        repo.createbranch(repo.HEAD, "anotherbranch")
+        self.assertEquals({"master", "mybranch", "anotherbranch"}, set(repo.branches()))
+        self.assertEqual(repo.revparse(repo.HEAD), repo.revparse("anotherbranch"))
 
     def testRemoveBranch(self):
-        pass
+        repo = _createTestRepo("simple", True)
+        self.assertEquals(["master", "mybranch"], repo.branches())
+        repo.deletebranch("mybranch")
+        self.assertEquals(["master"], repo.branches())
+
+    def testFirstImport(self):
+        repo = _createTestRepo("empty", True)
+        layer = _layer("points")
+        repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", False)
+        log = repo.log()
+        self.assertEqual(1, len(log))
+        self.assertEqual("message", log[0].message)
+        self.assertEqual(["points"], repo.trees())
+
+    def testNonAsciiImport(self):
+        repo = _createTestRepo("empty", True)
+        layer = _layer("points")
+        msg = "Покупая птицу, смотри, нет ли у нее зубов. Если есть зубы, то это не птица"
+        repo.importgeopkg(layer, "master", msg, "Даниил Хармс", "daniil@kharms.com", False)
+        log = repo.log()
+        self.assertEqual(1, len(log))
+        self.assertEqual(msg, log[0].message)
+        self.assertEqual(["points"], repo.trees())
+
+    def testImportInterchangeFormat(self):
+        repo = _createTestRepo("simple", True)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points")
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        self.assertTrue(layer.isValid())
+        fid = layer.getFeatures().next().id()
+        layer.dataProvider().deleteFeatures([fid])
+        features = list(layer.getFeatures())
+        self.assertEqual(1, len(features))
+        repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        log = repo.log()
+        self.assertEqual("message", log[0].message)
+        self.assertEqual(["points"], repo.trees())
+        filename2 = tempFilename("gpkg")
+        repo.checkoutlayer(filename2, "points")
+        layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
+        self.assertTrue(layer2.isValid())
+        features2 = list(layer2.getFeatures())
+        self.assertEqual(1, len(features2))
+
+    def testImportWithConflicts(self):
+        repo = _createTestRepo("simple", True)
+        log = repo.log()
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", log[1].commitid)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        res = layer.dataProvider().deleteFeatures([1])
+        self.assertTrue(res)
+        features = list(layer.getFeatures())
+        self.assertEqual(1, len(features))
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        ##TODO
 
 
 
-def suite():
+
+
+def webapiSuite():
     suite = unittest.TestSuite()
     suite.addTests(unittest.makeSuite(WebApiTests, 'test'))
     return suite
 
-def unitTests():
-    _tests = []
-    _tests.extend(suite())
-    return _tests
