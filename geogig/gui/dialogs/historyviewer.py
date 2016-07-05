@@ -151,7 +151,7 @@ class HistoryViewer(QtGui.QTreeWidget):
         tagname, ok = QtGui.QInputDialog.getText(self, 'Tag name',
                                               'Enter the tag name:')
         if ok:
-            self.repo.createtag(item.commit.commitid, tagname, tagname)
+            self.repo.createtag(item.commit.commitid, tagname)
             w = self.itemWidget(item, 0)
             w.tags = [tagname]
             w.updateText()
@@ -160,8 +160,8 @@ class HistoryViewer(QtGui.QTreeWidget):
         w = self.itemWidget(item, 0)
         for tag in w.tags:
             self.repo.deletetag(tag)
-            w.tags = []
-            w.updateText()
+        w.tags = []
+        w.updateText()
 
     def createBranch(self, ref):
         text, ok = QtGui.QInputDialog.getText(self, 'Title',
