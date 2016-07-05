@@ -51,8 +51,8 @@ def checkFolder(f):
 
 generalParams = [(USE_MAIN_MENUBAR, "Put GeoGig menus in main menu bar (requires restart)", True, TYPE_BOOL, lambda x: True),
                  (REPOS_FOLDER, "Base folder for repository data", "", TYPE_FOLDER, checkFolder),
-                 (USERNAME, "User name", "", TYPE_STRING, True),
-                 (EMAIL, "User email", "", TYPE_STRING, True)]
+                 (USERNAME, "User name", "", TYPE_STRING, lambda x: True),
+                 (EMAIL, "User email", "", TYPE_STRING, lambda x: True)]
 
 def initConfigParams():
     folder = getConfigValue(GENERAL, REPOS_FOLDER)
