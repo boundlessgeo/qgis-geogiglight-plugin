@@ -6,6 +6,7 @@ import os
 from geogig.geogigwebapi.repository import Repository
 import shutil
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+from qgis.core import *
 
 REPOS_SERVER_URL = "http://localhost:8182/"
 REPOS_FOLDER = "d:\\repo" #fill this with your repos folder
@@ -219,8 +220,10 @@ class WebApiTests(unittest.TestCase):
         repo.checkoutlayer(filename, "points")
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
         self.assertTrue(layer.isValid())
-        fid = layer.getFeatures().next().id()
-        layer.dataProvider().deleteFeatures([fid])
+        features = list(layer.getFeatures())
+        self.assertEqual(2, len(features))
+        with edit(layer):
+            layer.deleteFeatures([features[0].id()])
         features = list(layer.getFeatures())
         self.assertEqual(1, len(features))
         repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
@@ -240,11 +243,12 @@ class WebApiTests(unittest.TestCase):
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", log[1].commitid)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
-        res = layer.dataProvider().deleteFeatures([1])
-        self.assertTrue(res)
+        with edit(layer):
+            layer.deleteFeatures([layer.getFeature().next().id()])
         features = list(layer.getFeatures())
         self.assertEqual(1, len(features))
         _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        print conflicts
         ##TODO
 
 
