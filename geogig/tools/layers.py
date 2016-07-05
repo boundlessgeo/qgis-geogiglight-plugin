@@ -97,6 +97,10 @@ def formatSource(source):
         source = source.source()
     source = os.path.normcase(source)
 
+    ext = source.split(".")[-1].lower()
+    if ext not in ["geopkg", "gpkg"]:
+        return source
+
     if "|" not in source:
         layername = layersInGpkgFile(source)[0]
         source = source + "|layername=" + layername
