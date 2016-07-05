@@ -83,9 +83,14 @@ def geogigFidFromGpkgFid(trackedlayer, fid):
     tablename = trackedlayer.layername + "_fids"
     cursor = con.cursor()
     cursor.execute("SELECT geogig_fid FROM %s WHERE gpkg_fid = %s;" % (tablename, fid))
-    geogigFid = cursor.fetchone()[0]
-    cursor.close()
-    return geogigFid
+    try:
+        geogigFid = cursor.fetchone()[0]
+        return geogigFid
+    except:
+        return fid
+    finally:
+        cursor.close()
+
 
 def formatSource(source):
     if isinstance(source, QgsVectorLayer):
