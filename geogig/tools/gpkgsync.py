@@ -69,7 +69,7 @@ def syncLayer(layer):
         if dlg.branch not in repo.branches():
             commitId = getCommitId(layer)
             repo.createbranch(commitId, dlg.branch)
-        mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, dlg.branch, dlg.message, user, email)
+        mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, dlg.branch, dlg.message, user, email, True)
 
         if conflicts:
             ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
