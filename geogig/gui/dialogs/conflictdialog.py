@@ -52,13 +52,13 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'conflictdialog.ui'))
 
-class ConflictDialog(WIDGET, BASE):
+LOCAL, REMOTE = 1,2
 
-    UNSOLVED, MANUAL, OURS, THEIRS = range(4)
+class ConflictDialog(WIDGET, BASE):
 
     def __init__(self, conflicts, layername):
         QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
-        self.solved = self.UNSOLVED
+        self.solved = False
         self.resolvedConflicts = {}
         self.layername = layername
         self.conflicts = conflicts
@@ -72,14 +72,14 @@ class ConflictDialog(WIDGET, BASE):
         self.solveButton.clicked.connect(self.solve)
         self.conflictsTree.itemClicked.connect(self.treeItemClicked)
         self.attributesTable.cellClicked.connect(self.cellClicked)
-        self.solveAllOursButton.clicked.connect(self.solveOurs)
-        self.solveAllTheirsButton.clicked.connect(self.solveTheirs)
+        self.solveAllLocalButton.clicked.connect(self.solveAllLocal)
+        self.solveAllRemoteButton.clicked.connect(self.solveAllRemote)
+        self.solveLocalButton.clicked.connect(self.solveLocal)
+        self.solveRemoteButton.clicked.connect(self.solveRemote)
         self.baseMapCombo.currentIndexChanged.connect(self.baseMapChanged)
 
-        def refreshMap():
-            self.showGeoms()
-        self.showTheirsCheck.stateChanged.connect(refreshMap)
-        self.showOursCheck.stateChanged.connect(refreshMap)
+        self.showRemoteCheck.stateChanged.connect(self.showGeoms)
+        self.showLocalCheck.stateChanged.connect(self.showGeoms)
 
         self.lastSelectedItem = None
         self.currentPath = None
@@ -111,8 +111,8 @@ class ConflictDialog(WIDGET, BASE):
         item = QtGui.QTreeWidgetItem([self.layername])
         item.setIcon(0, layerIcon)
         self.conflictsTree.addTopLevelItem(item)
-        for path, c in self.conflicts.iteritems():
-            conflictItem = ConflictItem(path, c[0], c[1])
+        for c in self.conflicts:
+            conflictItem = ConflictItem(c)
             item.addChild(conflictItem)
 
     def cellClicked(self, row, col):
@@ -158,8 +158,10 @@ class ConflictDialog(WIDGET, BASE):
             return
         self.lastSelectedItem = item
         if isinstance(item, ConflictItem):
-            self.currentPath = item.path
+            self.currentPath = item.conflict.path
             self.updateCurrentPath()
+            self.solveLocalButton.setEnabled(True)
+            self.solveRemoteButton.setEnabled(True)
 
     def updateCurrentPath(self):
         self.cleanCanvas()
@@ -188,25 +190,48 @@ class ConflictDialog(WIDGET, BASE):
         self.theirsLayer = None
         self.baseLayer = None
 
-
-    def solveTheirs(self):
+    def solveAllRemote(self):
         ret = QtGui.QMessageBox.warning(self, "Solve conflict",
                                 "Are you sure you want to solve all conflicts using the 'To merge' version?",
                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
                                 QtGui.QMessageBox.Yes);
         if ret == QtGui.QMessageBox.Yes:
-            self.repo.solveconflicts(self.repo.conflicts().keys(), geogig.THEIRS)
-            self.solved = self.THEIRS
+            self.solved = True
+            self.resolvedConflicts = {c.path:REMOTE for c in self.conflicts}
             self.close()
 
-    def solveOurs(self):
+    def solveAllLocal(self):
         ret = QtGui.QMessageBox.warning(self, "Solve conflict",
             "Are you sure you want to solve all conflict using the 'Local' version?",
             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
             QtGui.QMessageBox.Yes);
         if ret == QtGui.QMessageBox.Yes:
-            self.solved = self.OURS
+            self.solved = True
+            self.resolvedConflicts = {c.path:LOCAL for c in self.conflicts}
             self.close()
+
+
+    def _afterSolve(self):
+        parent = self.lastSelectedItem.parent()
+        parent.removeChild(self.lastSelectedItem)
+        if parent.childCount() == 0:
+            self.conflictsTree.invisibleRootItem().removeChild(parent)
+            self.solved = True
+            self.close()
+        self.lastSelectedItem = None
+        self.attributesTable.setRowCount(0)
+        self.cleanCanvas()
+        self.solveButton.setEnabled(False)
+        self.solveLocalButton.setEnabled(False)
+        self.solveRemoteButton.setEnabled(False)
+
+    def solveLocal(self):
+        self.resolvedConflicts[self.currentPath] = LOCAL
+        self._afterSolve()
+
+    def solveRemote(self):
+        self.resolvedConflicts[self.currentPath] = REMOTE
+        self._afterSolve()
 
     def solve(self):
         attribs = {}
@@ -215,16 +240,7 @@ class ConflictDialog(WIDGET, BASE):
             name = unicode(self.attributesTable.item(i, 3).text())
             attribs[name] = value
         self.resolvedConflicts[self.currentPath] = attribs
-        parent = self.lastSelectedItem.parent()
-        parent.removeChild(self.lastSelectedItem)
-        if parent.childCount() == 0:
-            self.conflictsTree.invisibleRootItem().removeChild(parent)
-            self.solved = self.MANUAL
-            self.close()
-        self.lastSelectedItem = None
-        self.attributesTable.setRowCount(0)
-        self.cleanCanvas()
-        self.solveButton.setEnabled(False)
+        self._afterSolve()
 
 
     def updateSolveButton(self):
@@ -250,6 +266,7 @@ class ConflictDialog(WIDGET, BASE):
 
             self.attributesTable.setItem(idx, 4, ValueItem(None, False));
 
+            #TODO check case of feature deleted in one branch and modified in another one
             values = (conflictItem.origin[name], conflictItem.local[name], conflictItem.remote[name])
             try:
                 geom = QgsGeometry.fromWkt(values[0])
@@ -259,8 +276,6 @@ class ConflictDialog(WIDGET, BASE):
                 self.oursgeom = QgsGeometry().fromWkt(values[1])
                 self.theirsgeom = QgsGeometry.fromWkt(values[2])
                 geoms = (self.oursgeom, self.theirsgeom)
-                if self.oursgeom is not None:
-                    values[1] = self.oursgeom.exportToWkt()
 
             ok = values[0] == values[1] or values[1] == values[2] or values[0] == values[2]
 
@@ -388,24 +403,28 @@ class ValueItem(QtGui.QTableWidgetItem):
 
 class ConflictItem(QtGui.QTreeWidgetItem):
 
-    def __init__(self, path, local, remote):
+    def __init__(self, conflict):
         QtGui.QTreeWidgetItem.__init__(self)
-        self.setText(0, path)
+        self.setText(0, conflict.path)
         self.setIcon(0, featureIcon)
         self.setSizeHint(0, QtCore.QSize(self.sizeHint(0).width(), 25))
-        self.path = path
-        self.local = local
-        self._remote = remote
-        self._diff = None
+        self.conflict = conflict
+        self._local = None
+        self._remote = None
+        self._origin = None
+
+    @property
+    def local(self):
+        return self.conflict.local
 
     @property
     def remote(self):
-        if self._diff is None:
-            self._diff = self._remote.featurediff(allAttrs = True)
-        return {d["attributename"]: d.get("newvalue", d.get("oldvalue", "")) for d in self._diff}
+        if self._remote is None:
+            self._remote = self.conflict.repo.feature(self.conflict.path, self.conflict.remote)
+        return self._remote
 
     @property
     def origin(self):
-        if self._diff is None:
-            self._diff = self._remote.featurediff(allAttrs = True)
-        return {d["attributename"]: d.get("oldvalue", "") for d in self._diff}
+        if self._origin is None:
+            self._origin = self.conflict.repo.feature(self.conflict.path, self.conflict.origin)
+        return self._origin
