@@ -77,14 +77,18 @@ class NavigatorDialog(BASE, WIDGET):
         self.reposItem = None
         self.setupUi(self)
 
-        self.setAllowedAreas(QtCore.Qt.RightDockWidgetArea | QtCore.Qt.LeftDockWidgetArea)
+        self.filterWidget.hide()
+        self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
-        self.filterBox.adjustSize()
-        tabHeight = self.filterBox.height() + self.filterBox.parent().layout().spacing()
-        self.tabWidget.setStyleSheet("QTabWidget::pane {border: 0;} QTabBar::tab { height: %ipx}" % tabHeight);
+        self.actionAddRepositories.setIcon(QtGui.QIcon(os.path.join(pluginPath, 'ui', 'resources', 'download-repo.png')))
+        self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
 
-        self.addRepoButton.clicked.connect(self.addRepo)
-        self.filterBox.textChanged.connect(self.filterRepos)
+        self.actionAddRepositories.triggered.connect(self.addRepo)
+        self.actionShowFilter.triggered.connect(self.showFilterWidget)
+        self.leFilter.returnPressed.connect(self.filterRepos)
+        self.leFilter.cleared.connect(self.filterRepos)
+        self.leFilter.textChanged.connect(self.filterRepos)
+
         self.repoTree.itemClicked.connect(self.treeItemClicked)
         self.repoTree.customContextMenuRequested.connect(self.showRepoTreePopupMenu)
         self.repoDescription.setOpenLinks(False)
@@ -117,7 +121,6 @@ class NavigatorDialog(BASE, WIDGET):
     def updateNavigator(self):
         self.fillTree()
         self.updateCurrentRepo(None, None)
-
 
     def descriptionLinkClicked(self, url):
         url = url.toString()
@@ -176,7 +179,6 @@ class NavigatorDialog(BASE, WIDGET):
                                                   level=QgsMessageBar.INFO)
 
 
-
     def updateCurrentRepoDescription(self):
         self.repoDescription.setText(self.currentRepo.fullDescription())
 
@@ -212,7 +214,6 @@ class NavigatorDialog(BASE, WIDGET):
             self.reposItem.setExpanded(True)
         self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
 
-
     def showHistoryTab(self):
         self.historyTabButton.setAutoRaise(False)
         self.descriptionTabButton.setAutoRaise(True)
@@ -247,7 +248,6 @@ class NavigatorDialog(BASE, WIDGET):
             menu.addAction(refreshAction)
             point = self.repoTree.mapToGlobal(point)
             menu.exec_(point)
-
 
     def addLayer(self):
         layers = [layer for layer in getVectorLayers()
@@ -294,14 +294,13 @@ class NavigatorDialog(BASE, WIDGET):
 
 
     def filterRepos(self):
-        text = self.filterBox.text().strip()
+        text = self.leFilter.text().strip()
         for i in xrange(self.repoTree.topLevelItemCount()):
             parent = self.repoTree.topLevelItem(i)
             for j in xrange(parent.childCount()):
                 item = parent.child(j)
                 itemText = item.text(0)
                 item.setHidden(text != "" and text not in itemText)
-
 
     def treeItemClicked(self, item, i):
         if self.lastSelectedRepoItem == item:
@@ -316,7 +315,6 @@ class NavigatorDialog(BASE, WIDGET):
                 self.repoDescription.setSource(url)
             else:
                 self.repoDescription.setText("")
-
 
     def updateCurrentRepo(self, repo, name):
         def _update():
@@ -364,6 +362,14 @@ class NavigatorDialog(BASE, WIDGET):
                 QtGui.QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
                     QtGui.QMessageBox.Ok)
+
+    def showFilterWidget(self, visible):
+        self.filterWidget.setVisible(visible)
+        if not visible:
+            self.leFilter.setText("")
+            self.filterRepos()
+        else:
+            self.leFilter.setFocus()
 
 
 class RepositoriesItem(QtGui.QTreeWidgetItem):
