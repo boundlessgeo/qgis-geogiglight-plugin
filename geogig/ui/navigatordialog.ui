@@ -25,7 +25,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QToolBar" name="NavigatorToolbar">
+     <widget class="QToolBar" name="navigatorToolbar">
       <property name="iconSize">
        <size>
         <width>16</width>
@@ -36,6 +36,7 @@
        <bool>false</bool>
       </property>
       <addaction name="actionAddRepositories"/>
+      <addaction name="actionAddLayer"/>
       <addaction name="actionRefresh"/>
       <addaction name="actionShowFilter"/>
      </widget>
@@ -215,6 +216,30 @@
    </property>
    <property name="toolTip">
     <string>Refresh</string>
+   </property>
+  </action>
+  <action name="actionDeleteKeepUpstream">
+   <property name="text">
+    <string>Remove repository (do not delete upstream)</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove repository (do not delete upstream)</string>
+   </property>
+  </action>
+  <action name="actionDeleteWithUpstream">
+   <property name="text">
+    <string>Remove repository (delete upstream)</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove repository (delete upstream)</string>
+   </property>
+  </action>
+  <action name="actionAddLayer">
+   <property name="text">
+    <string>Add layer to repository...</string>
+   </property>
+   <property name="toolTip">
+    <string>Add layer to repository...</string>
    </property>
   </action>
  </widget>

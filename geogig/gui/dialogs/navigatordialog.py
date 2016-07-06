@@ -40,7 +40,8 @@ from PyQt4.QtGui import (QIcon,
                          QAction,
                          QMessageBox,
                          QBrush,
-                         QColor)
+                         QColor,
+                         QToolButton)
 
 from qgis.core import QgsApplication
 from qgis.gui import QgsMessageBar
@@ -69,9 +70,9 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
-addIcon = icon("new-repo.png")
+#addIcon = icon("new-repo.png")
 repoIcon = icon("repo-downloaded.png")
-deleteIcon = icon("delete.gif")
+#deleteIcon = icon("delete.gif")
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -91,18 +92,34 @@ class NavigatorDialog(BASE, WIDGET):
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
         self.actionAddRepositories.setIcon(icon('download-repo.png'))
+        self.actionAddLayer.setIcon(icon('new-repo.png'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
+        # ,maybe mActionDeleteSelected.svg (red recycle bin) is better here
+        self.actionDeleteKeepUpstream.setIcon(QgsApplication.getThemeIcon('/mActionRemoveLayer.svg'))
+        self.actionDeleteWithUpstream.setIcon(QgsApplication.getThemeIcon('/mActionRemoveLayer.svg'))
+
+        btnDelete = QToolButton(self.navigatorToolbar)
+        btnDelete.setPopupMode(QToolButton.MenuButtonPopup)
+        btnDelete.addAction(self.actionDeleteKeepUpstream)
+        btnDelete.addAction(self.actionDeleteWithUpstream)
+        btnDelete.setDefaultAction(self.actionDeleteKeepUpstream)
+        actionDelete = self.navigatorToolbar.addWidget(btnDelete)
+        actionDelete.setObjectName('actionDeleteRepo')
 
         self.actionAddRepositories.triggered.connect(self.addRepo)
+        self.actionAddLayer.triggered.connect(self.addLayer)
         self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
+        self.actionDeleteKeepUpstream.triggered.connect(lambda: self.deleteRepo(False))
+        self.actionDeleteWithUpstream.triggered.connect(lambda: self.deleteRepo(True))
+
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
         self.leFilter.textChanged.connect(self.filterRepos)
 
         self.repoTree.itemClicked.connect(self.treeItemClicked)
-        self.repoTree.customContextMenuRequested.connect(self.showRepoTreePopupMenu)
+        self.repoTree.itemSelectionChanged.connect(self.checkButtons)
         self.repoDescription.setOpenLinks(False)
         self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
         self.repoTree.setFocusPolicy(Qt.NoFocus)
@@ -133,6 +150,7 @@ class NavigatorDialog(BASE, WIDGET):
     def updateNavigator(self):
         self.fillTree()
         self.updateCurrentRepo(None, None)
+        self.checkButtons()
 
     def descriptionLinkClicked(self, url):
         url = url.toString()
@@ -236,27 +254,6 @@ class NavigatorDialog(BASE, WIDGET):
         self.versionsWidget.setVisible(False)
         self.repoDescription.setVisible(True)
 
-    def showRepoTreePopupMenu(self, point):
-        item = self.repoTree.selectedItems()[0]
-        if isinstance(item, RepoItem):
-            menu = QMenu()
-            addAction = QAction(addIcon, "Add layer to repository...", None)
-            addAction.triggered.connect(self.addLayer)
-            menu.addAction(addAction)
-            deleteAction = QAction(deleteIcon, "Remove this repository (do not delete upstream)", None)
-            deleteAction.triggered.connect(lambda: self.deleteRepo(item, False  ))
-            menu.addAction(deleteAction)
-            deleteUpstreamAction = QAction(deleteIcon, "Remove this repository (delete upstream)", None)
-            deleteUpstreamAction.triggered.connect(lambda: self.deleteRepo(item, True))
-            menu.addAction(deleteUpstreamAction)
-            point = self.repoTree.mapToGlobal(point)
-            menu.exec_(point)
-        elif isinstance(item, RepositoriesItem):
-            menu = QMenu()
-            menu.addAction(self.actionRefresh)
-            point = self.repoTree.mapToGlobal(point)
-            menu.exec_(point)
-
     def addLayer(self):
         layers = [layer for layer in getVectorLayers()
                         if layer.source().lower().split("|")[0].split(".")[-1] in["gpkg", "geopkg"]
@@ -274,7 +271,14 @@ class NavigatorDialog(BASE, WIDGET):
                 "Open the layers in QGIS before trying to add them.",
                 QMessageBox.Ok)
 
-    def deleteRepo(self, item, deleteUpstream):
+    def deleteRepo(self, deleteUpstream):
+        if len(self.repoTree.selectedItems()) == 0:
+            return
+
+        item = self.repoTree.selectedItems()[0]
+        if not isinstance(item, RepoItem):
+            return
+
         ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
                         "Are you sure you want to remove this repository?",
                         QMessageBox.Yes | QMessageBox.No,
@@ -377,6 +381,27 @@ class NavigatorDialog(BASE, WIDGET):
             self.filterRepos()
         else:
             self.leFilter.setFocus()
+
+    def checkButtons(self):
+        if len(self.repoTree.selectedItems()) == 0:
+            self.actionRefresh.setEnabled(False)
+            self.actionDeleteKeepUpstream.setEnabled(False)
+            self.actionDeleteWithUpstream.setEnabled(False)
+            return
+
+        item = self.repoTree.selectedItems()[0]
+        if isinstance(item, RepoItem):
+            self.actionRefresh.setEnabled(False)
+            self.actionDeleteKeepUpstream.setEnabled(True)
+            self.actionDeleteWithUpstream.setEnabled(True)
+        elif isinstance(item, RepositoriesItem):
+            self.actionRefresh.setEnabled(True)
+            self.actionDeleteKeepUpstream.setEnabled(False)
+            self.actionDeleteWithUpstream.setEnabled(False)
+        else:
+            self.actionRefresh.setEnabled(False)
+            self.actionDeleteKeepUpstream.setEnabled(False)
+            self.actionDeleteWithUpstream.setEnabled(False)
 
 
 class RepositoriesItem(QTreeWidgetItem):
