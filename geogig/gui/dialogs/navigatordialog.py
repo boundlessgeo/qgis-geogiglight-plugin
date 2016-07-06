@@ -26,28 +26,49 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4 import QtGui, QtCore, uic
-from qgis.core import *
-from qgis.gui import *
-from geogig import config
-from geogig.gui.executor import execute
-from geogig.tools.layertracking import *
-from geogig.tools.utils import *
-from geogig.gui.dialogs.historyviewer import HistoryViewer
-from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.tools.layers import getAllLayers, getVectorLayers, resolveLayerFromSource, WrongLayerSourceException, formatSource
-from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
-from geogig.repowatcher import repoWatcher
 import sys
-from geogig.geogigwebapi.repository import *
-from geogig.geogigwebapi import repository
-from geogig.gui.dialogs.createrepodialog import CreateRepoDialog
 from collections import defaultdict
 
+from PyQt4 import uic
+from PyQt4.QtCore import Qt, QUrl, QSize
+from PyQt4.QtGui import (QIcon,
+                         QHeaderView,
+                         QVBoxLayout,
+                         QAbstractItemView,
+                         QTreeWidgetItem,
+                         QMenu,
+                         QAction,
+                         QMessageBox,
+                         QBrush,
+                         QColor)
+
+from qgis.core import QgsApplication
+from qgis.gui import QgsMessageBar
+
+from geogig import config
+from geogig.gui.executor import execute
+from geogig.gui.dialogs.historyviewer import HistoryViewer
+from geogig.gui.dialogs.importdialog import ImportDialog
+from geogig.gui.dialogs.createrepodialog import CreateRepoDialog
+from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
+from geogig.repowatcher import repoWatcher
+from geogig.tools.layers import (getAllLayers,
+                                 getVectorLayers,
+                                 resolveLayerFromSource,
+                                 WrongLayerSourceException,
+                                 formatSource)
+from geogig.tools.layertracking import *
+from geogig.tools.utils import *
+
+from geogig.geogigwebapi import repository
+from geogig.geogigwebapi.repository import *
+
+
+pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 
 def icon(f):
-    return QtGui.QIcon(os.path.join(os.path.dirname(__file__),
-                            os.pardir, os.pardir, "ui", "resources", f))
+    return QIcon(os.path.join(pluginPath, "ui", "resources", f))
+
 
 addIcon = icon("new-repo.png")
 resetIcon = icon("reset.png")
@@ -63,9 +84,9 @@ syncIcon = icon("sync-repo.png")
 # Adding so that our UI files can find resources_rc.py
 sys.path.append(os.path.dirname(__file__))
 
-pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
+
 
 class NavigatorDialog(BASE, WIDGET):
 
@@ -80,7 +101,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.filterWidget.hide()
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
-        self.actionAddRepositories.setIcon(QtGui.QIcon(os.path.join(pluginPath, 'ui', 'resources', 'download-repo.png')))
+        self.actionAddRepositories.setIcon(icon('download-repo.png'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
 
         self.actionAddRepositories.triggered.connect(self.addRepo)
@@ -93,16 +114,16 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoTree.customContextMenuRequested.connect(self.showRepoTreePopupMenu)
         self.repoDescription.setOpenLinks(False)
         self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
-        self.repoTree.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.repoTree.setFocusPolicy(Qt.NoFocus)
 
         with open(resourceFile("repodescription.css")) as f:
             sheet = "".join(f.readlines())
         self.repoDescription.document().setDefaultStyleSheet(sheet)
-        self.repoTree.header().setResizeMode(0, QtGui.QHeaderView.Stretch)
-        self.repoTree.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
+        self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
+        self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
 
         self.versionsTree = HistoryViewer()
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.setSpacing(0)
         layout.setMargin(0)
         layout.addWidget(self.versionsTree)
@@ -133,7 +154,7 @@ class NavigatorDialog(BASE, WIDGET):
                 if layername:
                     self._checkoutLayer(layername, None)
             #===================================================================
-            # item, ok = QtGui.QInputDialog.getItem(self, "Layer download",
+            # item, ok = QInputDialog.getItem(self, "Layer download",
             #                                       "Download mode", items, 0, False)
             # if ok:
             #     if item == items[0]:
@@ -149,7 +170,6 @@ class NavigatorDialog(BASE, WIDGET):
             #         self._checkoutLayer(layername, bbox)
             #
             #===================================================================
-
 
     def _checkoutLayer(self, layername, bbox):
         trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
@@ -178,7 +198,6 @@ class NavigatorDialog(BASE, WIDGET):
             config.iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
                                                   level=QgsMessageBar.INFO)
 
-
     def updateCurrentRepoDescription(self):
         self.repoDescription.setText(self.currentRepo.fullDescription())
 
@@ -195,7 +214,7 @@ class NavigatorDialog(BASE, WIDGET):
             groupedRepos[repo.group].append(repo)
 
         for groupName, groupRepos in groupedRepos.iteritems():
-            groupItem = QtGui.QTreeWidgetItem()
+            groupItem = QTreeWidgetItem()
             groupItem.setText(0, groupName)
             groupItem.setIcon(0, repoIcon)
             for repo in groupRepos:
@@ -212,7 +231,7 @@ class NavigatorDialog(BASE, WIDGET):
         if self.reposItem.childCount():
             self.filterRepos()
             self.reposItem.setExpanded(True)
-        self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
+        self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showHistoryTab(self):
         self.historyTabButton.setAutoRaise(False)
@@ -229,21 +248,21 @@ class NavigatorDialog(BASE, WIDGET):
     def showRepoTreePopupMenu(self, point):
         item = self.repoTree.selectedItems()[0]
         if isinstance(item, RepoItem):
-            menu = QtGui.QMenu()
-            addAction = QtGui.QAction(addIcon, "Add layer to repository...", None)
+            menu = QMenu()
+            addAction = QAction(addIcon, "Add layer to repository...", None)
             addAction.triggered.connect(self.addLayer)
             menu.addAction(addAction)
-            deleteAction = QtGui.QAction(deleteIcon, "Remove this repository (do not delete upstream)", None)
+            deleteAction = QAction(deleteIcon, "Remove this repository (do not delete upstream)", None)
             deleteAction.triggered.connect(lambda: self.deleteRepo(item, False  ))
             menu.addAction(deleteAction)
-            deleteUpstreamAction = QtGui.QAction(deleteIcon, "Remove this repository (delete upstream)", None)
+            deleteUpstreamAction = QAction(deleteIcon, "Remove this repository (delete upstream)", None)
             deleteUpstreamAction.triggered.connect(lambda: self.deleteRepo(item, True))
             menu.addAction(deleteUpstreamAction)
             point = self.repoTree.mapToGlobal(point)
             menu.exec_(point)
         elif isinstance(item, RepositoriesItem):
-            menu = QtGui.QMenu()
-            refreshAction = QtGui.QAction(refreshIcon, "Refresh", None)
+            menu = QMenu()
+            refreshAction = QAction(refreshIcon, "Refresh", None)
             refreshAction.triggered.connect(self.updateNavigator)
             menu.addAction(refreshAction)
             point = self.repoTree.mapToGlobal(point)
@@ -261,17 +280,17 @@ class NavigatorDialog(BASE, WIDGET):
                 self.updateCurrentRepoDescription()
                 setAsRepoLayer(dlg.layer)
         else:
-            QtGui.QMessageBox.warning(self, 'Cannot add layer',
+            QMessageBox.warning(self, 'Cannot add layer',
                 "No suitable layers can be found in your current QGIS project.\n"
                 "Open the layers in QGIS before trying to add them.",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
 
     def deleteRepo(self, item, deleteUpstream):
-        ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
+        ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
                         "Are you sure you want to remove this repository?",
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                        QtGui.QMessageBox.Yes);
-        if ret == QtGui.QMessageBox.No:
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.Yes);
+        if ret == QMessageBox.No:
             return
         removeRepo(item.repo)
         if deleteUpstream:
@@ -292,7 +311,6 @@ class NavigatorDialog(BASE, WIDGET):
 
         removeTrackedForRepo(item.repo)
 
-
     def filterRepos(self):
         text = self.leFilter.text().strip()
         for i in xrange(self.repoTree.topLevelItemCount()):
@@ -311,7 +329,7 @@ class NavigatorDialog(BASE, WIDGET):
         else:
             self.updateCurrentRepo(None, None)
             if item.parent() == self.repoTree.invisibleRootItem():
-                url = QtCore.QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
+                url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
                 self.repoDescription.setSource(url)
             else:
                 self.repoDescription.setText("")
@@ -333,11 +351,11 @@ class NavigatorDialog(BASE, WIDGET):
                 self.versionsTree.updateContent(repo)
                 self.tabWidget.setTabEnabled(1, True)
         try:
-            self.repoTree.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+            self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
             self.repoTree.blockSignals(True)
             execute(_update)
         finally:
-            self.repoTree.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+            self.repoTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.repoTree.blockSignals(False)
 
     def addRepo(self):
@@ -346,7 +364,7 @@ class NavigatorDialog(BASE, WIDGET):
         if dlg.title is not None:
             try:
                 repos = repositoriesFromUrl(dlg.url, dlg.title)
-                groupItem = QtGui.QTreeWidgetItem()
+                groupItem = QTreeWidgetItem()
                 groupItem.setText(0, dlg.title)
                 groupItem.setIcon(0, repoIcon)
                 for repo in repos:
@@ -359,9 +377,9 @@ class NavigatorDialog(BASE, WIDGET):
                     self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
             except:
                 raise
-                QtGui.QMessageBox.warning(self, 'Add repositories',
+                QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
-                    QtGui.QMessageBox.Ok)
+                    QMessageBox.Ok)
 
     def showFilterWidget(self, visible):
         self.filterWidget.setVisible(visible)
@@ -372,28 +390,25 @@ class NavigatorDialog(BASE, WIDGET):
             self.leFilter.setFocus()
 
 
-class RepositoriesItem(QtGui.QTreeWidgetItem):
+class RepositoriesItem(QTreeWidgetItem):
     def __init__(self):
-        QtGui.QTreeWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.setText(0, "Repositories")
 
 
-class RepoItem(QtGui.QTreeWidgetItem):
+class RepoItem(QTreeWidgetItem):
     def __init__(self, repo):
-        QtGui.QTreeWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.repo = repo
         self.refreshTitle()
-        self.setSizeHint(0, QtCore.QSize(self.sizeHint(0).width(), 25))
+        self.setSizeHint(0, QSize(self.sizeHint(0).width(), 25))
 
     def refreshTitle(self):
         self.setText(0, self.repo.title)
         self.setIcon(0, repoIcon)
-        self.setForeground(1, QtGui.QBrush(QtGui.QColor("#5f6b77")))
+        self.setForeground(1, QBrush(QColor("#5f6b77")))
         lastUpdate = self.repo.lastupdated()
         lastUpdate = "Updated " + relativeDate(lastUpdate) if lastUpdate is not None else ""
         self.setText(1, lastUpdate)
 
 navigatorInstance = NavigatorDialog()
-
-
-
