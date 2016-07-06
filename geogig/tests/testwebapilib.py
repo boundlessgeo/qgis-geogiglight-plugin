@@ -7,6 +7,8 @@ from geogig.geogigwebapi.repository import Repository
 import shutil
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from qgis.core import *
+from geogig.tools.gpkgsync import getCommitId
+from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 REPOS_SERVER_URL = "http://localhost:8182/"
 REPOS_FOLDER = "d:\\repo" #fill this with your repos folder
@@ -237,22 +239,35 @@ class WebApiTests(unittest.TestCase):
         features2 = list(layer2.getFeatures())
         self.assertEqual(1, len(features2))
 
-    def testImportWithConflicts(self):
+    def testConflicts(self):
+        repo = _createTestRepo("forconflict", True)
+        log = repo.log()
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = log[2].commitid)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        self.assertEqual(2, len(features))
+        with edit(layer):
+            layer.deleteFeatures([features[0].id()])
+            layer.deleteFeatures([features[1].id()])
+        features = list(layer.getFeatures())
+        self.assertEqual(0, len(features))
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        self.assertEqual(2, len(conflicts))
+        self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
+        self.assertEqual("ca9f0251588e575d802f3690a6ef93b1128e236b", conflicts[0].remote)
+        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].origin)
+        self.assertEqual(None, conflicts[0].local)
+        self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
+
+
+    def testLayerCommitId(self):
         repo = _createTestRepo("simple", True)
         log = repo.log()
         filename = tempFilename("gpkg")
-        repo.checkoutlayer(filename, "points", log[1].commitid)
+        repo.checkoutlayer(filename, "points", ref = log[1].commitid)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
-        with edit(layer):
-            layer.deleteFeatures([layer.getFeature().next().id()])
-        features = list(layer.getFeatures())
-        self.assertEqual(1, len(features))
-        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
-        print conflicts
-        ##TODO
-
-
-
+        self.assertTrue(log[1].commitid, getCommitId(layer))
 
 
 def webapiSuite():
