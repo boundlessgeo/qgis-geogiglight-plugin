@@ -46,6 +46,11 @@ class WebApiTests(unittest.TestCase):
         log = repo.log()
         self.assertEqual(0, len(log))
 
+    def testLogInEmptyBranch(self):
+        repo = _createTestRepo("empty")
+        log = repo.log(until="master")
+        self.assertEqual(0, len(log))
+
     def testLogWithPath(self):
         repo = _createTestRepo("simple")
         log = repo.log(path = "points/fid--678854f5_155b574742f_-8000")
@@ -239,26 +244,59 @@ class WebApiTests(unittest.TestCase):
         features2 = list(layer2.getFeatures())
         self.assertEqual(1, len(features2))
 
-    def testConflicts(self):
-        repo = _createTestRepo("forconflict", True)
+
+    def testConflictsWithDeleteAndModify(self):
+        repo = _createTestRepo("simple", True)
         log = repo.log()
         filename = tempFilename("gpkg")
-        repo.checkoutlayer(filename, "points", ref = log[2].commitid)
+        repo.checkoutlayer(filename, "points", ref = log[0].commitid)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        filename2 = tempFilename("gpkg")
+        repo.checkoutlayer(filename2, "points", ref = log[0].commitid)
+        layer2 = loadLayerNoCrsDialog(filename2, "points", "ogr")
         features = list(layer.getFeatures())
-        self.assertEqual(2, len(features))
         with edit(layer):
-            layer.deleteFeatures([features[0].id()])
-            layer.deleteFeatures([features[1].id()])
-        features = list(layer.getFeatures())
-        self.assertEqual(0, len(features))
+            layer.changeAttributeValue(features[0].id(), 1, 1000)
+            layer.changeAttributeValue(features[1].id(), 1, 2000)
         _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        self.assertEqual(0, len(conflicts))
+        features2 = list(layer2.getFeatures())
+        with edit(layer2):
+            layer2.deleteFeatures([features2[0].id()])
+            layer2.deleteFeatures([features2[1].id()])
+        _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
         self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual("ca9f0251588e575d802f3690a6ef93b1128e236b", conflicts[0].remote)
         self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].origin)
         self.assertEqual(None, conflicts[0].local)
         self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
+
+    def testConflicts(self):
+        repo = _createTestRepo("simple", True)
+        log = repo.log()
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = log[0].commitid)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        filename2 = tempFilename("gpkg")
+        repo.checkoutlayer(filename2, "points", ref = log[0].commitid)
+        layer2 = loadLayerNoCrsDialog(filename2, "points", "ogr")
+        features = list(layer.getFeatures())
+        with edit(layer):
+            layer.changeAttributeValue(features[0].id(), 1, 1000)
+            layer.changeAttributeValue(features[1].id(), 1, 2000)
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        self.assertEqual(0, len(conflicts))
+        features2 = list(layer2.getFeatures())
+        with edit(layer2):
+            layer2.changeAttributeValue(features2[0].id(), 1, 1001)
+            layer2.changeAttributeValue(features2[1].id(), 1, 2001)
+        _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
+        self.assertEqual(2, len(conflicts))
+        self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
+        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].origin)
+        self.assertEqual({'the_geom': 'Point (20.53222086012383585 83.62989408803831282)', 'fid': 2, 'n': 1001}, conflicts[0].local)
+        self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
+
 
 
     def testLayerCommitId(self):
