@@ -65,5 +65,13 @@ class LocalDiff(object):
     def oldfeature(self):
         return self.repo.feature(self.layername + "/" + self.fid, self.oldcommitid)
 
+class ConflictDiff(object):
+
+    def __init__(self, repo, path, origin, remote, local):
+        self.repo = repo
+        self.path = path
+        self.origin = origin
+        self.remote = remote
+        self.local = local
 
 
