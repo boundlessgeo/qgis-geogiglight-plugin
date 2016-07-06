@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -28,7 +29,7 @@ __revision__ = '$Format:%H$'
 import re
 import requests
 from commit import Commit
-from diff import Diffentry
+from diff import Diffentry, ConflictDiff
 from commitish import Commitish
 import os
 from geogig.tools.utils import userFolder, resourceFile
@@ -36,6 +37,7 @@ import json
 from geogig.geogigwebapi.commit import NULL_ID
 from datetime import datetime
 import time
+import sqlite3
 from geogig.gui.executor import execute
 import shutil
 from qgis.core import *
@@ -45,6 +47,7 @@ from PyQt4.Qt import QCursor
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
+
 
 class GeoGigException(Exception):
     pass
@@ -313,19 +316,60 @@ class Repository(object):
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
-        if not checker.ok:
-            if "conflicts" in checker.errorMessage.lower():
-                raise MergeConflictsException()
-            else:
-                raise GeoGigException("Cannot import layer: %s" % checker.errorMessage)
+        if not checker.ok and "error" in checker.response["task"]:
+            errorMessage = checker.response["task"]["error"]["message"]
+            raise GeoGigException("Cannot import layer: %s" % errorMessage)
         r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
         r.raise_for_status()
         QApplication.restoreOverrideCursor()
-        if isRepoLayer(layer):
-            mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
-            importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
-            conflicts = []
-            featureIds = checker.response["task"]["result"]["NewFeatures"]["type"].get("ids", [])
+        import json
+        print json.dumps(checker.response, indent=4, sort_keys=True)
+        if interchange:
+            try:
+                nconflicts = checker.response["task"]["result"]["Merge"]["conflicts"]
+            except KeyError:
+                nconflicts = 0
+            if nconflicts:
+                mergeCommitId = None
+                importCommitId = checker.response["task"]["result"]["import"]["importCommit"]["id"]
+                ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
+                remote = checker.response["task"]["result"]["Merge"]["ours"]
+                featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"].get("ids", [])
+                conflicts = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
+                def _local(fid):
+                    con = sqlite3.connect(filename)
+                    cursor = con.cursor()
+                    cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, fid))
+                    gpkgfid = int(cursor.fetchone()[0])
+                    request = QgsFeatureRequest()
+                    request.setFilterFid(gpkgfid)
+
+                    try:
+                        feature = layer.getFeatures(request).next()
+                    except:
+                        return None
+
+                    attributes = [v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername)]
+                    attrnames = [f.name() for f in layer.dataProvider().fields() if f.name() != "fid"]
+                    cursor.execute("SELECT * FROM %s_audit WHERE fid='%s';" % (layername, gpkgfid))
+                    attrValues = cursor.fetchall()
+
+                    local = {attr: attrValues[attributes.index(attr)] for attr in attrnames}
+
+                    try:
+                        local["the_geom"] = feature.geometry().exportToWkt()
+                    except:
+                        local["the_geom"] = None
+                    cursor.close()
+                    con.close()
+                    return local
+
+                conflicts = [ConflictDiff(self, c["id"], ancestor, remote, _local(c["id"].split("/")[-1])) for c in conflicts]
+            else:
+                mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
+                importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
+                featureIds = checker.response["task"]["result"]["NewFeatures"]["type"].get("ids", [])
+                conflicts = []
             featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
             return mergeCommitId, importCommitId, conflicts, featureIds
 
@@ -373,7 +417,6 @@ class TaskChecker(QObject):
             self.taskIsFinished.emit()
         elif self.response["task"]["status"] == "FAILED":
             self.ok = False
-            self.errorMessage = self.response["task"]["error"]["message"]
             self.taskIsFinished.emit()
         else:
             QTimer.singleShot(500, self.checkTask)
