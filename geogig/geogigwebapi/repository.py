@@ -47,7 +47,7 @@ from PyQt4.Qt import QCursor
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
-
+from requests.exceptions import HTTPError
 
 class GeoGigException(Exception):
     pass
@@ -203,7 +203,11 @@ class Repository(object):
         commits = []
         payload["page"] = 0
         while True:
-            resp = self._apicall("log", payload)
+            try:
+                resp = self._apicall("log", payload)
+            except HTTPError, e:
+                #TODO more accurate error treatment
+                return []
             if "commit" in resp:
                 for c in _ensurelist(resp["commit"]):
                     commits.append(self._parseCommit(c))
@@ -349,12 +353,7 @@ class Repository(object):
                     except:
                         return None
 
-                    attributes = [v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername)]
-                    attrnames = [f.name() for f in layer.dataProvider().fields() if f.name() != "fid"]
-                    cursor.execute("SELECT * FROM %s_audit WHERE fid='%s';" % (layername, gpkgfid))
-                    attrValues = cursor.fetchall()
-
-                    local = {attr: attrValues[attributes.index(attr)] for attr in attrnames}
+                    local = {f.name():feature[f.name()] for f in layer.pendingFields()}
 
                     try:
                         local["the_geom"] = feature.geometry().exportToWkt()
