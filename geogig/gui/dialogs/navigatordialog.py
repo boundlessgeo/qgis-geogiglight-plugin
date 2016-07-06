@@ -72,7 +72,6 @@ def icon(f):
 
 addIcon = icon("new-repo.png")
 resetIcon = icon("reset.png")
-refreshIcon = icon("refresh.png")
 privateReposIcon = icon("your-repos.png")
 repoIcon = icon("repo-downloaded.png")
 searchIcon = icon("search-repos.png")
@@ -102,9 +101,11 @@ class NavigatorDialog(BASE, WIDGET):
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
         self.actionAddRepositories.setIcon(icon('download-repo.png'))
+        self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
 
         self.actionAddRepositories.triggered.connect(self.addRepo)
+        self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
@@ -262,9 +263,7 @@ class NavigatorDialog(BASE, WIDGET):
             menu.exec_(point)
         elif isinstance(item, RepositoriesItem):
             menu = QMenu()
-            refreshAction = QAction(refreshIcon, "Refresh", None)
-            refreshAction.triggered.connect(self.updateNavigator)
-            menu.addAction(refreshAction)
+            menu.addAction(self.actionRefresh)
             point = self.repoTree.mapToGlobal(point)
             menu.exec_(point)
 

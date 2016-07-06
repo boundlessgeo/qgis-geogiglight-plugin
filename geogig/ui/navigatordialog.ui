@@ -36,6 +36,7 @@
        <bool>false</bool>
       </property>
       <addaction name="actionAddRepositories"/>
+      <addaction name="actionRefresh"/>
       <addaction name="actionShowFilter"/>
      </widget>
     </item>
@@ -206,6 +207,14 @@
    </property>
    <property name="toolTip">
     <string>Show Filter</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+   <property name="toolTip">
+    <string>Refresh</string>
    </property>
   </action>
  </widget>
