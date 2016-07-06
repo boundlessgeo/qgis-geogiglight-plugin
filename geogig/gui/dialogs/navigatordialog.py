@@ -69,19 +69,9 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
-
 addIcon = icon("new-repo.png")
-resetIcon = icon("reset.png")
-privateReposIcon = icon("your-repos.png")
 repoIcon = icon("repo-downloaded.png")
-searchIcon = icon("search-repos.png")
-newBranchIcon = icon("create_branch.png")
 deleteIcon = icon("delete.gif")
-syncIcon = icon("sync-repo.png")
-
-
-# Adding so that our UI files can find resources_rc.py
-sys.path.append(os.path.dirname(__file__))
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
