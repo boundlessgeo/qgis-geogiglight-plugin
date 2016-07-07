@@ -160,11 +160,12 @@ class WebApiTests(unittest.TestCase):
         repo = _createTestRepo("simple")
         log = repo.log()
         self.assertEqual(3, len(log))
-        expected = None #TODO
+        expected = [{u'changetype': u'NO_CHANGE', u'attributename': u'n', u'oldvalue': 1},
+                    {u'crs': u'EPSG:4326', u'geometry': True, u'changetype': u'MODIFIED', u'attributename': u'geometry', u'oldvalue': u'POINT (13.997099976619822 76.31340005541968)',
+                      u'newvalue': u'POINT (20.532220860123836 83.62989408803831)'}]
         diff = repo.diff(log[-1].commitid, log[0].commitid, "points/fid--678854f5_155b574742f_-8000")
         self.assertTrue(1, len(diff))
-        print diff[0].featurediff
-        self.assertEqual(expected, diff)
+        self.assertEqual(expected, diff[0].featurediff())
 
     def testExportDiff(self):
         repo = _createTestRepo("simple")
@@ -267,11 +268,50 @@ class WebApiTests(unittest.TestCase):
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
         self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].origin)
+        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].originCommit)
         self.assertEqual(None, conflicts[0].local)
         self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
 
-    def testConflicts(self):
+    def testResolveConflictWithLocalVersion(self):
+        repo, conflicts = self._createConflict()
+        conflicts[0].resolveWithLocalVersion()
+        conflicts[1].resolveWithLocalVersion()
+        repo.closeTransaction(conflicts[0].transactionId)
+        self.assertTrue("another message" in repo.log()[0].message)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        self.assertTrue([1, 1001], features[0].attributes())
+        self.assertTrue([2, 2001], features[1].attributes())
+
+    def testResolveConflictWithRemoteVersion(self):
+        repo, conflicts = self._createConflict()
+        conflicts[0].resolveWithRemoteVersion()
+        conflicts[1].resolveWithRemoteVersion()
+        repo.closeTransaction(conflicts[0].transactionId)
+        self.assertTrue("another message" in repo.log()[0].message)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        self.assertTrue([1, 1000], features[0].attributes())
+        self.assertTrue([2, 2000], features[1].attributes())
+
+    def testResolveConflictWithNewFeature(self):
+        repo, conflicts = self._createConflict()
+        conflicts[0].resolveWithNewFeature({"fid": 1, "n": 1002})
+        conflicts[1].resolveWithRemoteVersion({"fid": 2, "n": 2002})
+        repo.closeTransaction(conflicts[0].transactionId)
+        self.assertTrue("another message" in repo.log()[0].message)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        self.assertTrue([1, 1002], features[0].attributes())
+        self.assertTrue([2, 2002], features[1].attributes())
+
+    def _createConflict(self):
         repo = _createTestRepo("simple", True)
         log = repo.log()
         filename = tempFilename("gpkg")
@@ -293,10 +333,10 @@ class WebApiTests(unittest.TestCase):
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
         self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].origin)
-        self.assertEqual({'the_geom': 'Point (20.53222086012383585 83.62989408803831282)', 'fid': 2, 'n': 1001}, conflicts[0].local)
+        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].originCommit)
+        self.assertEqual({'the_geom': 'Point (20.53222086012383585 83.62989408803831282)', 'fid': 2, 'n': 1001}, conflicts[0].localFeature)
         self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
-
+        return repo, conflicts
 
 
     def testLayerCommitId(self):
