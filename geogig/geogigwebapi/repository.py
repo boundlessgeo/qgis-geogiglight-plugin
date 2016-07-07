@@ -364,11 +364,12 @@ class Repository(object):
                 conflicts = []
                 conflictsResponse = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
                 for c in conflictsResponse:
-                    remoteFeatureId = c["ourvalue"]
-                    localFeatureId = c["theirvalue"]
-                    localFeature = _local(c["id"].split("/")[-1])
-                    conflicts.append(ConflictDiff(self, c["id"], ancestor, remote, importCommitId, localFeature,
-                                          localFeatureId, remoteFeatureId, transactionId))
+                    if c["change"] == "CONFLICT":
+                        remoteFeatureId = c["ourvalue"]
+                        localFeatureId = c["theirvalue"]
+                        localFeature = _local(c["id"].split("/")[-1])
+                        conflicts.append(ConflictDiff(self, c["id"], ancestor, remote, importCommitId, localFeature,
+                                              localFeatureId, remoteFeatureId, transactionId))
             else:
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
