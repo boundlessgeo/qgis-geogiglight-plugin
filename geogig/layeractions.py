@@ -15,7 +15,6 @@
 *                                                                         *
 ***************************************************************************
 """
-from PyQt4.QtGui import QInputDialog
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -37,13 +36,13 @@ from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from PyQt4 import QtGui
-from PyQt4.QtCore import pyqtSignal, QObject
 from geogig.tools.gpkgsync import syncLayer, changeVersionForLayer
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
 from geogig.tools.gpkgsync import getCommitId
 from geogig.repowatcher import repoWatcher
+from geogig.gui.dialogs.geogigref import RefDialog
 
 
 def setAsRepoLayer(layer):
@@ -94,7 +93,16 @@ def changeVersion(layer):
                 "Revert them before changing version.",
                 QtGui.QMessageBox.Ok)
     else:
-        changeVersionForLayer(layer)
+        tracking = getTrackingInfo(layer)
+        repo = Repository(tracking.repoUrl)
+        dlg = RefDialog(repo)
+        dlg.exec_()
+        if dlg.ref is not None:
+            repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
+            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
+                                                      level=QgsMessageBar.INFO)
+            layer.reload()
+            layer.triggerRepaint()
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
