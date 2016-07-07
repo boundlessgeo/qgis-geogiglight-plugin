@@ -67,11 +67,30 @@ class LocalDiff(object):
 
 class ConflictDiff(object):
 
-    def __init__(self, repo, path, origin, remote, local):
+    def __init__(self, repo, path, originCommit, remoteCommit, localCommit, localFeature,
+                localFeatureId, remoteFeatureId, transactionId):
         self.repo = repo
         self.path = path
-        self.origin = origin
-        self.remote = remote
-        self.local = local
+        self.remoteCommit = remoteCommit
+        self.originCommit = originCommit
+        self.remoteFeatureId = remoteFeatureId
+        self.localCommit = localCommit
+        self.localFeature = localFeature
+        self.localFeatureId = localFeatureId
+        self.transactionId = transactionId
+
+    def resolveWithLocalVersion(self):
+        self.repo.resolveConflictWithFeatureId(self.path, self.localFeatureId, self.transactionId)
+
+    def resolveWithRemoteVersion(self):
+        self.repo.resolveConflictWithFeatureId(self.path, self.remoteFeatureId, self.transactionId)
+
+    def resolveWithNewFeature(self, feature):
+        self.repo.resolveConflictWithFeature(self.path, feature, self.remoteCommit,
+                                               self.localCommit, self.transactionId)
+
+
+
+
 
 

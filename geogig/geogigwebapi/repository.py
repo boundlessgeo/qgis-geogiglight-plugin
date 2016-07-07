@@ -127,13 +127,16 @@ class Repository(object):
         raise NotImplementedError()
 
     def tags(self):
-        resp = self._apicall("tag", {"list":True})
-        if "Tag" in resp:
-            tags = [b["name"] for b in _ensurelist(resp["Tag"])]
-            tags = {t: self.revparse(t) for t in tags}
-            return tags
-        else:
-            return {}
+        r = requests.get(self.url + "repo/manifest")
+        r.raise_for_status()
+        lines = r.text.splitlines()
+        tags = {}
+        for line in lines:
+            tokens = line.split(" ")
+            ref, sha = tokens[-2], tokens[-1]
+            if ref.startswith("refs/tags/"):
+                tags[ref.split("/")[-1]] = sha
+        return tags
 
     def createtag(self, ref, tag):
         raise NotImplementedError()
@@ -323,8 +326,7 @@ class Repository(object):
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
-        r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
-        r.raise_for_status()
+        self.closeTransaction(transactionId)
         QApplication.restoreOverrideCursor()
         import json
         print json.dumps(checker.response, indent=4, sort_keys=True)
@@ -339,7 +341,6 @@ class Repository(object):
                 ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
                 remote = checker.response["task"]["result"]["Merge"]["ours"]
                 featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"].get("ids", [])
-                conflicts = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
                 def _local(fid):
                     con = sqlite3.connect(filename)
                     cursor = con.cursor()
@@ -347,14 +348,11 @@ class Repository(object):
                     gpkgfid = int(cursor.fetchone()[0])
                     request = QgsFeatureRequest()
                     request.setFilterFid(gpkgfid)
-
                     try:
                         feature = layer.getFeatures(request).next()
                     except:
                         return None
-
                     local = {f.name():feature[f.name()] for f in layer.pendingFields()}
-
                     try:
                         local["the_geom"] = feature.geometry().exportToWkt()
                     except:
@@ -363,7 +361,14 @@ class Repository(object):
                     con.close()
                     return local
 
-                conflicts = [ConflictDiff(self, c["id"], ancestor, remote, _local(c["id"].split("/")[-1])) for c in conflicts]
+                conflicts = []
+                conflictsResponse = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
+                for c in conflictsResponse:
+                    remoteFeatureId = c["ourvalue"]
+                    localFeatureId = c["theirvalue"]
+                    localFeature = _local(c["id"].split("/")[-1])
+                    conflicts.append(ConflictDiff(self, c["id"], ancestor, remote, importCommitId, localFeature,
+                                          localFeatureId, remoteFeatureId, transactionId))
             else:
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
@@ -372,6 +377,24 @@ class Repository(object):
             featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
             return mergeCommitId, importCommitId, conflicts, featureIds
 
+    def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
+        payload = {"path": path, "ours": ours, "theirs": theirs,
+                   "merges": feature}
+        print payload
+        r = requests.post(self.url + "repo/mergefeature", json = payload)
+        r.raise_for_status()
+        fid = r.text
+        self.resolveConflictWithFeatureId(path, fid, transactionId)
+
+    def resolveConflictWithFeatureId(self, path, fid, transactionId):
+        payload = {"path": path, "objectid": fid,
+                   "transactionId": transactionId}
+        r = requests.get(self.url + "resolveconflict", params = payload)
+        r.raise_for_status()
+
+    def closeTransaction(self, transactionId):
+        r = requests.get(self.url + "endTransaction", params = {"transactionId": transactionId})
+        r.raise_for_status()
 
     def fullDescription(self):
         def _prepareDescription():
