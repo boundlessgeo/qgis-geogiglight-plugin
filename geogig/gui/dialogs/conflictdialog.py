@@ -52,9 +52,10 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'conflictdialog.ui'))
 
-LOCAL, REMOTE = 1,2
 
 class ConflictDialog(WIDGET, BASE):
+
+    LOCAL, REMOTE = 1,2
 
     def __init__(self, conflicts, layername):
         QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
@@ -197,7 +198,7 @@ class ConflictDialog(WIDGET, BASE):
                                 QtGui.QMessageBox.Yes);
         if ret == QtGui.QMessageBox.Yes:
             self.solved = True
-            self.resolvedConflicts = {c.path:REMOTE for c in self.conflicts}
+            self.resolvedConflicts = {c.path:self.REMOTE for c in self.conflicts}
             self.close()
 
     def solveAllLocal(self):
@@ -207,7 +208,7 @@ class ConflictDialog(WIDGET, BASE):
             QtGui.QMessageBox.Yes);
         if ret == QtGui.QMessageBox.Yes:
             self.solved = True
-            self.resolvedConflicts = {c.path:LOCAL for c in self.conflicts}
+            self.resolvedConflicts = {c.path:self.LOCAL for c in self.conflicts}
             self.close()
 
 
@@ -226,11 +227,11 @@ class ConflictDialog(WIDGET, BASE):
         self.solveRemoteButton.setEnabled(False)
 
     def solveLocal(self):
-        self.resolvedConflicts[self.currentPath] = LOCAL
+        self.resolvedConflicts[self.currentPath] = self.LOCAL
         self._afterSolve()
 
     def solveRemote(self):
-        self.resolvedConflicts[self.currentPath] = REMOTE
+        self.resolvedConflicts[self.currentPath] = self.REMOTE
         self._afterSolve()
 
     def solve(self):
@@ -347,7 +348,7 @@ class ConflictDialog(WIDGET, BASE):
             self.theirsLayer = None
 
     def showGeoms(self):
-        checks = [self.showOursCheck, self.showTheirsCheck]
+        checks = [self.showRemoteCheck, self.showLocalCheck]
         layers = [self.oursLayer, self.theirsLayer]
         toShow = []
         for lay, chk in zip(layers, checks):
@@ -361,7 +362,7 @@ class ConflictDialog(WIDGET, BASE):
 
 
     def closeEvent(self, evnt):
-        if self.solved == self.UNSOLVED:
+        if not self.solved:
             ret = QtGui.QMessageBox.warning(self, "Conflict resolution",
                                   "There are unsolved conflicts.\n"
                                   "Do you really want to exit and abort the sync operation?",
@@ -415,16 +416,16 @@ class ConflictItem(QtGui.QTreeWidgetItem):
 
     @property
     def local(self):
-        return self.conflict.local
+        return self.conflict.localFeature
 
     @property
     def remote(self):
         if self._remote is None:
-            self._remote = self.conflict.repo.feature(self.conflict.path, self.conflict.remote)
+            self._remote = self.conflict.repo.feature(self.conflict.path, self.conflict.remoteCommit)
         return self._remote
 
     @property
     def origin(self):
         if self._origin is None:
-            self._origin = self.conflict.repo.feature(self.conflict.path, self.conflict.origin)
+            self._origin = self.conflict.repo.feature(self.conflict.path, self.conflict.originCommit)
         return self._origin

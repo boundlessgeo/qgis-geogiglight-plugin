@@ -132,7 +132,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="solveRemoteButton">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -158,10 +158,6 @@
            </property>
            <property name="text">
             <string>Solve with merged feature</string>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icon/push-repo.png</normaloff>:/icon/push-repo.png</iconset>
            </property>
            <property name="iconSize">
             <size>

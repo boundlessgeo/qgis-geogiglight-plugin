@@ -56,6 +56,7 @@ def syncLayer(layer):
     cursor.execute("SELECT * FROM %s_audit;" % layername)
     changes = bool(cursor.fetchall())
     cursor.close()
+    con.close()
     if changes:
         user, email = getUserInfo()
         if user is None:
@@ -79,15 +80,19 @@ def syncLayer(layer):
             if ret == QtGui.QMessageBox.No:
                 return
             solved, resolvedConflicts = solveConflicts(conflicts, layername)
-            if solved == ConflictDialog.UNSOLVED:
+            if not solved:
                 cursor.close()
+                con.close()
                 return
-            elif solved == ConflictDialog.OURS:
-                pass#TODO
-            elif solved == ConflictDialog.THEIRS:
-                pass#TODO
-            elif solved == ConflictDialog.MANUAL:
-                pass#TODO
+            print resolvedConflicts
+            for conflict, resolution in zip(conflicts, resolvedConflicts):
+                if resolution == ConflictDialog.LOCAL:
+                    conflict.resolveWithLocalVersion()
+                elif resolution == ConflictDialog.REMOTE:
+                    conflict.resolveWithRemoteVersion()
+                else:
+                    conflict.resolveWithNewFeature(resolution)
+            repo.closeTransaction(conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
         applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
@@ -192,42 +197,6 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
     con.commit()
     con.close()
     changesCon.close()
-
-
-def updateLocalVersionAfterConflicts(solved, layer, layername, cursor):
-    #TODO: write geoms as WKB
-    def quote(val):
-        if isinstance(val, basestring):
-            return "'%s'" % val
-        else:
-            return str(val)
-    tableInfo = cursor.execute("PRAGMA table_info('%s');" % layername)
-    for col in tableInfo:
-        if col[-1] == 1:
-            pkName = col[1]
-    geomField = None
-    for path, values in solved.iteritems():
-        request = QgsFeatureRequest()
-        request.setFilterFid(int(path))
-        geom = None
-        if geomField is not None:
-            geom = QgsGeometry.fromWkt(values[geomField])
-        else:
-            for k,v in values.iteritems():
-                try:
-                    geom = QgsGeometry.fromWkt(v)
-                    if geom is not None:
-                        geomField = k
-                        break
-                except:
-                    pass
-
-        layer.dataProvider().changeAttributeValues({int(path): values})
-        layer.dataProvider().changeGeometryValues({ int(path): geom})
-
-        svalues = ",".join(["%s=%s"] % (k,quote(v)) for k,v in values.iteritems())
-        sql = "UPDATE %s_audit SET %s WHERE %s='%s'" % (layername, svalues, pkName, path)
-        cursor.execute(sql)
 
 def getCommitId(layer):
     filename, layername = namesFromLayer(layer)
