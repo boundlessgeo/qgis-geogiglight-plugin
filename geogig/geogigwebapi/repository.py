@@ -341,9 +341,11 @@ class Repository(object):
                 ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
                 remote = checker.response["task"]["result"]["Merge"]["ours"]
                 featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"].get("ids", [])
+                con = sqlite3.connect(filename)
+                cursor = con.cursor()
+                geomField = cursor.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='%s';" % layername).fetchone()[0]
+
                 def _local(fid):
-                    con = sqlite3.connect(filename)
-                    cursor = con.cursor()
                     cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, fid))
                     gpkgfid = int(cursor.fetchone()[0])
                     request = QgsFeatureRequest()
@@ -354,11 +356,9 @@ class Repository(object):
                         return None
                     local = {f.name():feature[f.name()] for f in layer.pendingFields()}
                     try:
-                        local["the_geom"] = feature.geometry().exportToWkt()
+                        local[geomField] = feature.geometry().exportToWkt()
                     except:
-                        local["the_geom"] = None
-                    cursor.close()
-                    con.close()
+                        local[geomField] = None
                     return local
 
                 conflicts = []
@@ -370,6 +370,8 @@ class Repository(object):
                         localFeature = _local(c["id"].split("/")[-1])
                         conflicts.append(ConflictDiff(self, c["id"], ancestor, remote, importCommitId, localFeature,
                                               localFeatureId, remoteFeatureId, transactionId))
+                cursor.close()
+                con.close()
             else:
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
