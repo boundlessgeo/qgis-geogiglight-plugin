@@ -133,6 +133,8 @@ def revertLocalChanges(layer):
         repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
         config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
                                                       level=QgsMessageBar.INFO)
+        layer.reload()
+        layer.triggerRepaint()
     else:
         config.iface.messageBar().pushMessage("GeoGig", "No local changes were found",
                                                       level=QgsMessageBar.INFO)
