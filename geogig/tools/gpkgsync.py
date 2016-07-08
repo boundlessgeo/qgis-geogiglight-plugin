@@ -81,8 +81,6 @@ def syncLayer(layer):
                 return
             solved, resolvedConflicts = solveConflicts(conflicts, layername)
             if not solved:
-                cursor.close()
-                con.close()
                 return
             print resolvedConflicts
             for conflict, resolution in zip(conflicts, resolvedConflicts):
