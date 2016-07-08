@@ -28,7 +28,7 @@ The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI e
 
 Open the GeoGig navigator by selecting the *GeoGig/GeoGig Navigator* menu.
 
-.. image:: addlayermenu.png
+.. image:: navigator.png
 	:align: center
 
 Click on the *Add repositories* button and you will see the following dialog:
@@ -55,12 +55,7 @@ The history is shown as a tree, with elements representing branches and under ea
 Adding a layer to a repository
 ******************************
 
-To add a layer to a repository, select the repository in the repositories list, right click on it and select the *Add layer to repository* option.
-
-.. image:: addlayermenu.png
-	:align: center
-
-You will see the following dialog.
+To add a layer to a repository, select the repository in the repositories list and then click on the *Add layer to repository* button. You will see the following dialog.
 
 .. image:: addlayer.png
 	:align: center
@@ -73,7 +68,7 @@ Select the layer that you want to add to the repository and add a message to des
 
 Layers can be also added from the QGIS interface. Select the layer that you want to import in the QGIS legend and right-click on it. In the context menu, there will be a *GeoGig* section with a menu entry named *Add layer to repository...*.
 
-.. image::  addlayercontextmenu.png
+.. image::  addlayercontext.png
 	:align: center
 
 Select it and the add layer dialog will be shown.
@@ -97,7 +92,9 @@ To edit a GeoGig layer, just edit it normally, using the QGIS edit functionality
 
 You must enter a message to describe the new version to create (a message describing the changes that are going to be applied to the layer).
 
-The destination branch should also be selected.
+The destination branch should also be selected. You can type the name of a branch instead of using a
+
+If an existing branch is selected, the new changes in the repository that are not yet in the local layer will be downloaded and merged with the local ones.
 
 Click on *OK* and the data will be incorporated to the repository, and a new version will be created.
 
@@ -106,7 +103,7 @@ If you want to confirm that the change has been applied to the repository, you c
 Conflicts
 **********
 
-When you create a new version in the repository by uploading your local changes, it might happen that the features that you have modified have also been modified in the repository by someone else. This causes a conflicting situation that has to be manually solved. For each feature in a conflicted situation (a feature that has been modified differently in your local layer and in the repository), you will have to decide which version of it you want to keep.
+When you synchronie your local layer 8uploading your local changes and fetching new remote ones), it might happen that the features that you have modified have also been modified in the repository by someone else. This causes a conflicting situation that has to be manually solved. For each feature in a conflicted situation (a feature that has been modified differently in your local layer and in the repository), you will have to decide which version of it you want to keep.
 
 When a sync operation results in conflicts, you will see a message like this one:
 
@@ -157,12 +154,7 @@ Repeat the above steps for each conflicted feature before closing the dialog. Af
 Creating a new branch
 **********************
 
-To create a new branch, you must select the version in the current history of the repository where the branch starts. In the history panel, expand the branch where that version is located, select the corresponding version and right--click on it. You will see the following context menu.
-
-.. image:: versioncontextmenu.png
-	:align: center
-
-Select the *Create new branch at this version* option and you will see the following dialog.
+To create a new branch, you must select the version in the current history of the repository where the branch starts. In the history panel, expand the branch where that version is located, select the corresponding version and right--click on it. Select the *Create new branch at this version* option and you will see the following dialog.
 
 .. image:: createbranchdialog.png
 	:align: center
@@ -181,12 +173,12 @@ Visualizing changes using the comparison viewer
 
 To visualize the changes introduced by a given version (that is, the difference between that version and previous one in the history) in the comparison viewer, right-click on it and select the *Show changes introduced by this version* menu. This will open the comparison viewer.
 
-.. image:: diffviewer.png
+.. image:: comparisonviewer.png
 	:align: center
 
 The compared versions are listed in the *Versions to Compare* section at the top of the dialog. When the dialog is opened, it compares the selected version with its parent. You can change any of the versions to be compared by clicking the button next to each text box, which will open the version selector dialog:
 
-.. image:: reference_selector.png
+.. image:: referenceselector.png
 	:align: center
 
 Click *OK* and the selected version will be set in the Comparison Viewer.
@@ -205,19 +197,15 @@ The geometry comparison viewer will be opened, showing the geometries for both v
 
 .. image::  geometrychangesdialog.png
 	:align: center
-Opening a given version in the current QGIS project
-****************************************************
 
-Any version from a repository can be added to QGIS. A layer will be added for each repository layer in the selected version, and its name will include the id of the version.
+Recovering a given version of a layer
+**************************************
 
-Unlike the layers that represent the current state of the repository, which are linked to it and are kept in sync with the repository by the GeoGig plugin, these layers exported from a given version are not linked to it. Moreover, editing is disabled for them, so you cannot edit such a layer.
+If you have a Geogig layer in your project, yu can update it's content to any existing version of that layer that is contained in the corresponding repository. 
 
-.. image:: cannotedit.png
-	:align: center
+To do so, select the *GeoGig/Change to a different version...* menu entry in the context menu of the layer. It will open the reference selector, and you will be able to select the version you want to update to.
 
-You can use this layers form comparing with the current state of the repository or just to perform analysis based on the repository data as it was at a certain point of its history, but not for editing and adding new versions based on them.
-
-If you want to edit layers starting with a given version, create a new branch at that version, switch to that branch and then edit the corresponding layers that represent the current state of the repository.
+If you have local changes that haven't been added to the repository yet, you will have to sync the layer or discard those changes, before being able to update it to a different version.
 
 Removing a layer from a repository
 ***********************************
