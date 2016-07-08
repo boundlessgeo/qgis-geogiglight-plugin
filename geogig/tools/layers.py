@@ -48,7 +48,7 @@ def resolveLayer(name):
 def resolveLayerFromSource(source):
     layers = getAllLayers()
     for layer in layers:
-        if os.path.normcase(layer.source()) == os.path.normcase(source):
+        if formatSource(layer.source()) == formatSource(source):
             return layer
     raise WrongLayerSourceException()
 
