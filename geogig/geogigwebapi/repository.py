@@ -124,7 +124,7 @@ class Repository(object):
         self._apicall("branch", {"branchName":branch, "source": ref})
 
     def deletebranch(self, branch):
-        raise NotImplementedError()
+        self._apicall("updateref", {"name": branch, "delete": True})
 
     def tags(self):
         r = requests.get(self.url + "repo/manifest")
@@ -141,7 +141,8 @@ class Repository(object):
     def createtag(self, ref, tag):
         raise NotImplementedError()
 
-
+    def deletetag(self, tag):
+        self._apicall("updateref", {"name": tag, "delete": True})
 
     def diff(self, oldRefSpec, newRefSpec, pathFilter = None):
         payload = {"oldRefSpec": oldRefSpec, "newRefSpec": newRefSpec}
@@ -447,31 +448,25 @@ class TaskChecker(QObject):
             QTimer.singleShot(500, self.checkTask)
 
 repos = []
+repoEndpoints = {}
 
 def addRepo(repo):
     global repos
     repos.append(repo)
-    saveRepos()
 
 def removeRepo(repo):
     global repos
     repos.remove(repo)
-    saveRepos()
 
-def saveRepos():
+def addRepoEndpoint(url, title):
+    repoEndpoints[title] = url
+    saveRepoEndpoints()
+
+def saveRepoEndpoints():
     filename = os.path.join(userFolder(), "repositories")
-    towrite=[{"url": r.url, "group":r.group, "title": r.title} for r in repos]
+    towrite=[{"url": r.url, "title": r.title} for r in repoEndpoints]
     with open(filename, "w") as f:
         f.write(json.dumps(towrite))
-
-def readRepos():
-    global repos
-    filename = os.path.join(userFolder(), "repositories")
-    if os.path.exists(filename):
-        repoDescs = json.load(open(filename))
-        repos = [Repository(r["url"], r["group"], r["title"]) for r in repoDescs]
-
-readRepos()
 
 
 def repositoriesFromUrl(url, title):
@@ -488,3 +483,18 @@ def repositoriesFromUrl(url, title):
         repos.append(Repository(url + "repos/%s/" % name, title, name))
 
     return repos
+
+def readRepos():
+    global repos
+    global repoEndpoints
+    repos = []
+    repoEndpoints = {}
+    filename = os.path.join(userFolder(), "repositories")
+    if os.path.exists(filename):
+        repoDescs = json.load(open(filename))
+        for r in repoDescs:
+            repoEndpoints[r["title"]] = r["url"]
+            repos.extend(repositoriesFromUrl(r["url"], r["title"]))
+
+
+readRepos()

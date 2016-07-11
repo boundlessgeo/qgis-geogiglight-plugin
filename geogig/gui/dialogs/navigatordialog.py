@@ -63,7 +63,6 @@ from geogig.tools.utils import *
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import *
 
-
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 
 def icon(f):
@@ -147,6 +146,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.updateNavigator()
 
     def updateNavigator(self):
+        readRepos()
         self.fillTree()
         self.updateCurrentRepo(None, None)
         self.checkButtons()
@@ -356,6 +356,7 @@ class NavigatorDialog(BASE, WIDGET):
         if dlg.title is not None:
             try:
                 repos = repositoriesFromUrl(dlg.url, dlg.title)
+                addRepoEndpoint(dlg.url, dlg.title)
                 groupItem = QTreeWidgetItem()
                 groupItem.setText(0, dlg.title)
                 groupItem.setIcon(0, repoIcon)
@@ -366,9 +367,8 @@ class NavigatorDialog(BASE, WIDGET):
                 if groupItem.childCount():
                     self.reposItem.addChild(groupItem)
                     self.reposItem.setExpanded(True)
-                    self.repoTree.sortItems(0, QtCore.Qt.AscendingOrder)
+                    self.repoTree.sortItems(0, Qt.AscendingOrder)
             except:
-                raise
                 QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
                     QMessageBox.Ok)
