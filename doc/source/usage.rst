@@ -223,9 +223,6 @@ Removing a layer from a repository
 
 If you no longer want to have a layer in your repository, you can remove it by right-clicking on it in the QGIS legend and selecting *Remove this layer from repository* in the GeoGig submenu.
 
-.. image:: removelayer.png
-	:align: center
-
 A new version will be added to the repository, which removes the selected layer.
 
 The layer will not be unloaded from QGIS and will still be part of you QGIS project, but it will not be tracked anymore. The layer file and the repository are now independent and not linked.
