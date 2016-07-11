@@ -459,12 +459,18 @@ def removeRepo(repo):
     repos.remove(repo)
 
 def addRepoEndpoint(url, title):
+    global repoEndpoints
     repoEndpoints[title] = url
+    saveRepoEndpoints()
+
+def removeRepoEndpoint(title):
+    global repoEndpoints
+    del repoEndpoints[title]
     saveRepoEndpoints()
 
 def saveRepoEndpoints():
     filename = os.path.join(userFolder(), "repositories")
-    towrite=[{"url": r.url, "title": r.title} for r in repoEndpoints]
+    towrite=[{"url": url, "title": title} for title,url in repoEndpoints.iteritems()]
     with open(filename, "w") as f:
         f.write(json.dumps(towrite))
 

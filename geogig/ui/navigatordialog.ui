@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>314</width>
+    <width>425</width>
     <height>602</height>
    </rect>
   </property>
@@ -39,6 +39,7 @@
       <addaction name="actionAddLayer"/>
       <addaction name="actionRefresh"/>
       <addaction name="actionShowFilter"/>
+      <addaction name="actionDelete"/>
      </widget>
     </item>
     <item>
@@ -142,7 +143,7 @@
       </widget>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -218,28 +219,20 @@
     <string>Refresh</string>
    </property>
   </action>
-  <action name="actionDeleteKeepUpstream">
-   <property name="text">
-    <string>Remove repository (do not delete upstream)</string>
-   </property>
-   <property name="toolTip">
-    <string>Remove repository (do not delete upstream)</string>
-   </property>
-  </action>
-  <action name="actionDeleteWithUpstream">
-   <property name="text">
-    <string>Remove repository (delete upstream)</string>
-   </property>
-   <property name="toolTip">
-    <string>Remove repository (delete upstream)</string>
-   </property>
-  </action>
   <action name="actionAddLayer">
    <property name="text">
     <string>Add layer to repository...</string>
    </property>
    <property name="toolTip">
     <string>Add layer to repository...</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove</string>
    </property>
   </action>
  </widget>

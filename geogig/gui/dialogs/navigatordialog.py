@@ -93,24 +93,13 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionAddLayer.setIcon(icon('new-repo.png'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
-        # ,maybe mActionDeleteSelected.svg (red recycle bin) is better here
-        self.actionDeleteKeepUpstream.setIcon(QgsApplication.getThemeIcon('/mActionRemoveLayer.svg'))
-        self.actionDeleteWithUpstream.setIcon(QgsApplication.getThemeIcon('/mActionRemoveLayer.svg'))
-
-        btnDelete = QToolButton(self.navigatorToolbar)
-        btnDelete.setPopupMode(QToolButton.MenuButtonPopup)
-        btnDelete.addAction(self.actionDeleteKeepUpstream)
-        btnDelete.addAction(self.actionDeleteWithUpstream)
-        btnDelete.setDefaultAction(self.actionDeleteKeepUpstream)
-        actionDelete = self.navigatorToolbar.addWidget(btnDelete)
-        actionDelete.setObjectName('actionDeleteRepo')
+        self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
 
         self.actionAddRepositories.triggered.connect(self.addRepo)
         self.actionAddLayer.triggered.connect(self.addLayer)
         self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
-        self.actionDeleteKeepUpstream.triggered.connect(lambda: self.deleteRepo(False))
-        self.actionDeleteWithUpstream.triggered.connect(lambda: self.deleteRepo(True))
+        self.actionDelete.triggered.connect(self.deleteCurrentElement)
 
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
@@ -222,7 +211,7 @@ class NavigatorDialog(BASE, WIDGET):
             groupedRepos[repo.group].append(repo)
 
         for groupName, groupRepos in groupedRepos.iteritems():
-            groupItem = QTreeWidgetItem()
+            groupItem = GroupItem()
             groupItem.setText(0, groupName)
             groupItem.setIcon(0, repoIcon)
             for repo in groupRepos:
@@ -270,38 +259,42 @@ class NavigatorDialog(BASE, WIDGET):
                 "Open the layers in QGIS before trying to add them.",
                 QMessageBox.Ok)
 
-    def deleteRepo(self, deleteUpstream):
+    def deleteCurrentElement(self):
         if len(self.repoTree.selectedItems()) == 0:
             return
 
         item = self.repoTree.selectedItems()[0]
-        if not isinstance(item, RepoItem):
-            return
+        if isinstance(item, RepoItem):
+            ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
+                            "Are you sure you want to remove this repository?",
+                            QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.Yes);
+            if ret == QMessageBox.No:
+                return
+            removeRepo(item.repo)
 
-        ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
-                        "Are you sure you want to remove this repository?",
-                        QMessageBox.Yes | QMessageBox.No,
-                        QMessageBox.Yes);
-        if ret == QMessageBox.No:
-            return
-        removeRepo(item.repo)
-        if deleteUpstream:
             item.repo.delete()
 
-        parent = self.lastSelectedRepoItem.parent()
-        parent.removeChild(self.lastSelectedRepoItem)
-        if parent.childCount() == 0:
-            parent.parent().removeChild(parent)
+            parent = self.lastSelectedRepoItem.parent()
+            parent.removeChild(self.lastSelectedRepoItem)
+            if parent.childCount() == 0:
+                parent.parent().removeChild(parent)
 
-        self.updateCurrentRepo(None, None)
+            self.updateCurrentRepo(None, None)
 
-        tracked = getTrackedPathsForRepo(item.repo)
-        layers = getVectorLayers()
-        for layer in layers:
-            if formatSource(layer) in tracked:
-                setAsNonRepoLayer(layer)
+            tracked = getTrackedPathsForRepo(item.repo)
+            layers = getVectorLayers()
+            for layer in layers:
+                if formatSource(layer) in tracked:
+                    setAsNonRepoLayer(layer)
 
-        removeTrackedForRepo(item.repo)
+            removeTrackedForRepo(item.repo)
+        elif isinstance(item, GroupItem):
+            print "removing"
+            parent = item.parent()
+            parent.removeChild(item)
+            removeRepoEndpoint(item.text(0))
+
 
     def filterRepos(self):
         text = self.leFilter.text().strip()
@@ -357,7 +350,7 @@ class NavigatorDialog(BASE, WIDGET):
             try:
                 repos = repositoriesFromUrl(dlg.url, dlg.title)
                 addRepoEndpoint(dlg.url, dlg.title)
-                groupItem = QTreeWidgetItem()
+                groupItem = GroupItem()
                 groupItem.setText(0, dlg.title)
                 groupItem.setIcon(0, repoIcon)
                 for repo in repos:
@@ -369,6 +362,7 @@ class NavigatorDialog(BASE, WIDGET):
                     self.reposItem.setExpanded(True)
                     self.repoTree.sortItems(0, Qt.AscendingOrder)
             except:
+                raise
                 QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
                     QMessageBox.Ok)
@@ -384,23 +378,19 @@ class NavigatorDialog(BASE, WIDGET):
     def checkButtons(self):
         if len(self.repoTree.selectedItems()) == 0:
             self.actionRefresh.setEnabled(False)
-            self.actionDeleteKeepUpstream.setEnabled(False)
-            self.actionDeleteWithUpstream.setEnabled(False)
+            self.actionDelete.setEnabled(False)
+            self.actionDelete.setEnabled(False)
             return
 
         item = self.repoTree.selectedItems()[0]
-        if isinstance(item, RepoItem):
-            self.actionRefresh.setEnabled(False)
-            self.actionDeleteKeepUpstream.setEnabled(True)
-            self.actionDeleteWithUpstream.setEnabled(True)
-        elif isinstance(item, RepositoriesItem):
+        if isinstance(item, RepositoriesItem):
             self.actionRefresh.setEnabled(True)
-            self.actionDeleteKeepUpstream.setEnabled(False)
-            self.actionDeleteWithUpstream.setEnabled(False)
+            self.actionDelete.setEnabled(False)
+            self.actionDelete.setEnabled(False)
         else:
             self.actionRefresh.setEnabled(False)
-            self.actionDeleteKeepUpstream.setEnabled(False)
-            self.actionDeleteWithUpstream.setEnabled(False)
+            self.actionDelete.setEnabled(True)
+            self.actionDelete.setEnabled(True)
 
 
 class RepositoriesItem(QTreeWidgetItem):
@@ -408,6 +398,8 @@ class RepositoriesItem(QTreeWidgetItem):
         QTreeWidgetItem.__init__(self)
         self.setText(0, "Repositories")
 
+class GroupItem(QTreeWidgetItem):
+    pass
 
 class RepoItem(QTreeWidgetItem):
     def __init__(self, repo):
