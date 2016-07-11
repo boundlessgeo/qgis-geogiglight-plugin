@@ -2,6 +2,11 @@ The GeoGig QGIS plugin allow you to manage GeoGig repositories from QGIS, adding
 
 This document describes a typical workflow with the GeoGig plugin, going through its main features.
 
+.. warning::
+
+    You need the development version of GeoGig to use the QGIS plugin, RC2 will not work due to API changes.
+    http://ares.boundlessgeo.com/geogig/dev/geogig-dev-latest.zip
+
 Starting the GeoGig server
 ***************************
 
