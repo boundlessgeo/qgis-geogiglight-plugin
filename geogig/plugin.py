@@ -92,8 +92,6 @@ class GeoGigPlugin:
 
         config.initConfigParams()
 
-        QgsMapLayerRegistry.instance().layerWasAdded.connect(trackLayer)
-        QgsMapLayerRegistry.instance().layerRemoved.connect(layerRemoved)
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
         for layer in layers:
             trackLayer(layer)
