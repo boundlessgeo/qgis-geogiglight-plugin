@@ -13,6 +13,6 @@ Open QGIS and make sure that the plugin is enabled, by opening the QGIS Plugin M
 Usage
 ********
 
-Usage is documented `here <./doc/usage.rst>`_
+Usage is documented `here <./doc/source/usage.rst>`_
 
 
