@@ -142,6 +142,7 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
     print changesFilename
+    beforeCommitId, afterCommitId = repo.revparse(beforeCommitId), repo.revparse(afterCommitId)
     repo.exportdiff(layername, beforeCommitId, afterCommitId, changesFilename)
 
     con = sqlite3.connect(filename)
