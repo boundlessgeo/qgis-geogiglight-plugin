@@ -52,6 +52,27 @@ The history is shown as a tree, with elements representing branches and under ea
 	:align: center
 
 
+Adding layers from a repository to the current QGIS project
+*************************************************************
+
+To add a layer from a repository to the current project, select the repository in the navigator and go to the *Repository summary* tab in the lower part of the navigator.
+
+There you will find the list of layers in the repository, and for each one an *Add to QGIS* link. Use these links to add the layers to your project.
+
+If it is the first time you add that layer, it will be downloaded before opening it in QGIS. The most recent version of the layer in the master branch of the repository will be used. 
+
+If the layer had been previously downloaded, but it is not currently loaded into your QGIS project, the downloaded file will be loaded.
+
+
+Recovering a given version of a layer
+**************************************
+
+If you have a Geogig layer in your project, you can update it's content to any existing version of that layer that is contained in the corresponding repository. 
+
+To do so, select the *GeoGig/Change to a different version...* menu entry in the context menu of the layer. It will open the reference selector, and you will be able to select the version you want to update to.
+
+If you have local changes that haven't been added to the repository yet, you will have to sync the layer or discard those changes, before being able to update it to a different version.
+
 Adding a layer to a repository
 ******************************
 
@@ -141,9 +162,6 @@ Once the conflict for a given attribute has been solved, you can still click a c
 
 The geometry of the feature, whether conflicted or not, will be represented in the window canvas. You can toggle the rendering of the different versions using the checkboxes.
 
-.. image:: conflictcanvas.png
-	:align: center
-
 No interaction is currently available in the canvas other than zooming and panning. To solve a conflict in a geometry, you must use the table.
 
 Once you have solved all conflicts (that is, there are no yellow cells in your attribute table), the *Solve with merged feature* button will be enabled. When you click it, the conflict for the current feature will be solved, and its entry will be inserted in the repository. You can also use the *Solve with local version* and *Solve with remote version* buttons to solve the conflict without having to manually select the value for each conflicted attribute.
@@ -154,12 +172,7 @@ Repeat the above steps for each conflicted feature before closing the dialog. Af
 Creating a new branch
 **********************
 
-To create a new branch, you must select the version in the current history of the repository where the branch starts. In the history panel, expand the branch where that version is located, select the corresponding version and right--click on it. Select the *Create new branch at this version* option and you will see the following dialog.
-
-.. image:: createbranchdialog.png
-	:align: center
-
-Enter the name of the branch and click on *OK*. The new branch will be created and added to the list of branches in the history panel.
+To create a new branch, you must select the version in the current history of the repository where the branch starts. In the history panel, expand the branch where that version is located, select the corresponding version and right--click on it. Select the *Create new branch at this version* option and you will be prompted to enter the name of the new branch. Enter the name of the branch and click on *OK*. The new branch will be created and added to the list of branches in the history panel.
 
 
 Deleting a branch
@@ -198,14 +211,7 @@ The geometry comparison viewer will be opened, showing the geometries for both v
 .. image::  geometrychangesdialog.png
 	:align: center
 
-Recovering a given version of a layer
-**************************************
 
-If you have a Geogig layer in your project, yu can update it's content to any existing version of that layer that is contained in the corresponding repository. 
-
-To do so, select the *GeoGig/Change to a different version...* menu entry in the context menu of the layer. It will open the reference selector, and you will be able to select the version you want to update to.
-
-If you have local changes that haven't been added to the repository yet, you will have to sync the layer or discard those changes, before being able to update it to a different version.
 
 Removing a layer from a repository
 ***********************************
@@ -222,17 +228,7 @@ The layer will not be unloaded from QGIS and will still be part of you QGIS proj
 Tags
 *****
 
-You can add tags to any version in the repository history. To add a tag, select the version that you want to tag in the repository viewer, right-click on it and select *Create new tag at this version...*.
-
-.. image:: createtagmenu.png
-	:align: center
-
-
-You will be prompted to enter the name of the tag to create.
-
-
-.. image:: tagnamedialog.png
-	:align: center
+You can add tags to any version in the repository history. To add a tag, select the version that you want to tag in the repository viewer, right-click on it and select *Create new tag at this version...*.You will be prompted to enter the name of the tag to create.
 
 When a version has a tag, it will be shown in the history tree
 
