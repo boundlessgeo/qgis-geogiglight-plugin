@@ -101,7 +101,12 @@ In this case, the selector is not used to select the layer to import, but the re
 
 When you add the layer to the repository, a new version is created in the repository with the layer that you have added, and a new entry is also added to the versions list under the destination branch.
 
-Once a layer is imported into a GeoGig repository, it becomes linked to it. The layer context menu will contain new entries that allow operations with the layer as part of a GeoGig repository. These entries will be explained in further sections of this document.
+Once a layer is imported into a GeoGig repository, it becomes linked to it. The layer context menu will contain new entries that allow operations with the layer as part of a GeoGig repository. 
+
+.. image::  repolayercontext.png
+	:align: center
+
+These entries will be explained in further sections of this document.
 
 Editing a GeoGig layer and creating a new version in the repository
 *********************************************************************
