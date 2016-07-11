@@ -4,31 +4,13 @@
 import unittest
 import os
 from geogig.geogigwebapi.repository import Repository
-import shutil
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from qgis.core import *
 from geogig.tools.gpkgsync import getCommitId
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
+from geogig.tests import _createTestRepo, _layer
 
-REPOS_SERVER_URL = "http://localhost:8182/"
-REPOS_FOLDER = "d:\\repo" #fill this with your repos folder
 
-def _createTestRepo(name, modifiesRepo = False):
-    i = len(os.listdir(REPOS_FOLDER))
-    if modifiesRepo:
-        folderName = "%i_%s" % (i, name)
-    else:
-        folderName = "original_%s" % name
-    destPath = os.path.join(REPOS_FOLDER, folderName)
-    if not os.path.exists(destPath):
-        orgPath = os.path.join(os.path.dirname(__file__), "data", "repos", name)
-        shutil.copytree(orgPath, destPath)
-    repo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName)
-    return repo
-
-def _layer(name):
-    path = os.path.join(os.path.dirname(__file__), "data", "layers", name + ".gpkg")
-    return loadLayerNoCrsDialog(path, name, "ogr")
 
 class WebApiTests(unittest.TestCase):
 
