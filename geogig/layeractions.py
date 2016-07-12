@@ -101,9 +101,8 @@ def addInfoActions(layer):
     layer.infoActions.append(shaAction)
 
 def updateInfoActions(layer):
-    for action in layer.infoActions:
-        config.iface.legendInterface().removeLegendLayerAction(action)
-    addInfoActions()
+    removeLayerActions(layer)
+    setAsRepoLayer(layer)
 
 def _syncLayer(layer):
     syncLayer(layer)
