@@ -324,11 +324,11 @@ class Repository(object):
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        QApplication.restoreOverrideCursor()
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
         self.closeTransaction(transactionId)
-        QApplication.restoreOverrideCursor()
         import json
         print json.dumps(checker.response, indent=4, sort_keys=True)
         if interchange:
