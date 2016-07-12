@@ -48,7 +48,7 @@ from geogig.gui.dialogs.geogigref import RefDialog
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
-    addInfoActions(layer)
+    canConnect = addInfoActions(layer)
     separatorAction = QtGui.QAction("", config.iface.legendInterface())
     separatorAction.setSeparator(True)
     config.iface.legendInterface().addLegendLayerAction(separatorAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
@@ -74,6 +74,14 @@ def setAsRepoLayer(layer):
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
     layer.geogigActions = [removeAction, separatorAction, syncAction, changeVersionAction, changesAction, revertAction]
+    for action in layer.geogigActions:
+        action.setEnabled(canConnect)
+    if not canConnect:
+        refreshAction = QtGui.QAction(u"Retry connecting...", config.iface.legendInterface())
+        refreshAction.triggered.connect(lambda: setAsRepoLayer(layer))
+        config.iface.legendInterface().addLegendLayerAction(refreshAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
+        config.iface.legendInterface().addLegendLayerActionForLayer(refreshAction, layer)
+        layer.geogigActions.append(refreshAction)
     layer.geogigActions.extend(layer.infoActions)
 
 def addInfoActions(layer):
@@ -91,7 +99,14 @@ def addInfoActions(layer):
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
         layer.infoActions.append(messageAction)
     except:
-        pass #do not add anything it cannot resolve commit
+        messageAction = QtGui.QAction("Error: Cannot connect with repository", config.iface.legendInterface())
+        f = messageAction.font();
+        f.setBold(True);
+        messageAction.setFont(f);
+        config.iface.legendInterface().addLegendLayerAction(messageAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
+        config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
+        layer.infoActions.append(messageAction)
+        return False
     shaAction = QtGui.QAction("Version ID: %s" % commitId, config.iface.legendInterface())
     f = shaAction.font();
     f.setBold(True);
@@ -99,9 +114,9 @@ def addInfoActions(layer):
     config.iface.legendInterface().addLegendLayerAction(shaAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(shaAction, layer)
     layer.infoActions.append(shaAction)
+    return True
 
 def updateInfoActions(layer):
-    removeLayerActions(layer)
     setAsRepoLayer(layer)
 
 def _syncLayer(layer):
