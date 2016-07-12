@@ -24,7 +24,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
+from functools import partial
 from geogig import config
 from qgis.core import *
 from qgis.gui import *
@@ -54,23 +54,23 @@ def setAsRepoLayer(layer):
     config.iface.legendInterface().addLegendLayerAction(separatorAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(separatorAction, layer)
     removeAction = QtGui.QAction(u"Remove layer from repository", config.iface.legendInterface())
-    removeAction.triggered.connect(lambda: removeLayer(layer))
+    removeAction.triggered.connect(partial(removeLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(removeAction, layer)
     syncAction = QtGui.QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
-    syncAction.triggered.connect(lambda: _syncLayer(layer))
+    syncAction.triggered.connect(partial(_syncLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
     changeVersionAction = QtGui.QAction(u"Change to a different version...", config.iface.legendInterface())
-    changeVersionAction.triggered.connect(lambda: changeVersion(layer))
+    changeVersionAction.triggered.connect(partial(changeVersion, layer))
     config.iface.legendInterface().addLegendLayerAction(changeVersionAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
     changesAction = QtGui.QAction(u"Show local changes...", config.iface.legendInterface())
-    changesAction.triggered.connect(lambda: showLocalChanges(layer))
+    changesAction.triggered.connect(partial(showLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(changesAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changesAction, layer)
     revertAction = QtGui.QAction(u"Revert local changes", config.iface.legendInterface())
-    revertAction.triggered.connect(lambda: revertLocalChanges(layer))
+    revertAction.triggered.connect(partial(revertLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
     layer.geogigActions = [removeAction, separatorAction, syncAction, changeVersionAction, changesAction, revertAction]
@@ -126,7 +126,7 @@ def _syncLayer(layer):
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
     action = QtGui.QAction(u"Add layer to Repository...", config.iface.legendInterface())
-    action.triggered.connect(lambda: addLayer(layer))
+    action.triggered.connect(partial(addLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(action, u"GeoGig", u"id2", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
     layer.geogigActions = [action]
@@ -154,7 +154,7 @@ def changeVersion(layer):
         if dlg.ref is not None:
             repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
             config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
-                                                      level=QgsMessageBar.INFO)
+                                                   level=QgsMessageBar.INFO)
             layer.reload()
             layer.triggerRepaint()
             updateInfoActions(layer)
@@ -216,5 +216,3 @@ def removeLayer(layer):
                                            level = QgsMessageBar.INFO, duration = 4)
     setAsNonRepoLayer(layer)
     repoWatcher.repoChanged.emit(repo)
-
-
