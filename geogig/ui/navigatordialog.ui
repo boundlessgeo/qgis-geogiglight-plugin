@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
+    <width>349</width>
     <height>602</height>
    </rect>
   </property>
@@ -35,7 +35,8 @@
       <property name="floatable">
        <bool>false</bool>
       </property>
-      <addaction name="actionAddRepositories"/>
+      <addaction name="actionAddGeoGigServer"/>
+      <addaction name="actionCreateRepository"/>
       <addaction name="actionAddLayer"/>
       <addaction name="actionRefresh"/>
       <addaction name="actionShowFilter"/>
@@ -192,12 +193,12 @@
     </item>
    </layout>
   </widget>
-  <action name="actionAddRepositories">
+  <action name="actionAddGeoGigServer">
    <property name="text">
-    <string>Add Repositories</string>
+    <string>Add GeoGig server</string>
    </property>
    <property name="toolTip">
-    <string>Add Repositories</string>
+    <string>Add GeoGig server</string>
    </property>
   </action>
   <action name="actionShowFilter">
@@ -233,6 +234,14 @@
    </property>
    <property name="toolTip">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="actionCreateRepository">
+   <property name="text">
+    <string>Create new repository</string>
+   </property>
+   <property name="toolTip">
+    <string>Create new repository</string>
    </property>
   </action>
  </widget>

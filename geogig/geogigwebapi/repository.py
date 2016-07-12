@@ -424,7 +424,10 @@ class Repository(object):
         return(execute(_prepareDescription))
 
     def delete(self):
-        self._apicall("delete")
+        r = self._apicall("delete")
+        params = {"token": r["token"]}
+        r = requests.delete(self.url, params = params)
+        r.raise_for_status()
 
 class TaskChecker(QObject):
     taskIsFinished = pyqtSignal()
@@ -456,7 +459,11 @@ def addRepo(repo):
 
 def removeRepo(repo):
     global repos
-    repos.remove(repo)
+    for r in repos:
+        if repo.url == r.url:
+            print r.url
+            repos.remove(r)
+            break
 
 def addRepoEndpoint(url, title):
     global repoEndpoints
@@ -489,6 +496,14 @@ def repositoriesFromUrl(url, title):
         repos.append(Repository(url + "repos/%s/" % name, title, name))
 
     return repos
+
+def createRepoAtUrl(url, group, name):
+    if not url.endswith("/"):
+        url = url + "/"
+    r = requests.put(url + "repos/%s/init" % name)
+    r.raise_for_status()
+    return Repository(url + "repos/%s/" % name, group, name)
+
 
 def readRepos():
     global repos

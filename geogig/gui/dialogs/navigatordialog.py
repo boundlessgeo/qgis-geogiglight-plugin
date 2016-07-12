@@ -40,7 +40,8 @@ from PyQt4.QtGui import (QIcon,
                          QMessageBox,
                          QBrush,
                          QColor,
-                         QToolButton)
+                         QToolButton,
+                         QInputDialog)
 
 from qgis.core import QgsApplication
 from qgis.gui import QgsMessageBar
@@ -89,13 +90,15 @@ class NavigatorDialog(BASE, WIDGET):
         self.filterWidget.hide()
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
-        self.actionAddRepositories.setIcon(icon('download-repo.png'))
-        self.actionAddLayer.setIcon(icon('new-repo.png'))
+        self.actionAddGeoGigServer.setIcon(icon('geogig_server.png'))
+        self.actionCreateRepository.setIcon(icon('new-repo.png'))
+        self.actionAddLayer.setIcon(icon('layer_group.gif'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
         self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
 
-        self.actionAddRepositories.triggered.connect(self.addRepo)
+        self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
+        self.actionCreateRepository.triggered.connect(self.createRepo)
         self.actionAddLayer.triggered.connect(self.addLayer)
         self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
@@ -271,26 +274,20 @@ class NavigatorDialog(BASE, WIDGET):
                             QMessageBox.Yes);
             if ret == QMessageBox.No:
                 return
-            removeRepo(item.repo)
-
-            item.repo.delete()
-
-            parent = self.lastSelectedRepoItem.parent()
-            parent.removeChild(self.lastSelectedRepoItem)
-            if parent.childCount() == 0:
-                parent.parent().removeChild(parent)
-
-            self.updateCurrentRepo(None, None)
-
             tracked = getTrackedPathsForRepo(item.repo)
+            item.repo.delete()
+            removeRepo(item.repo)
+            removeTrackedForRepo(item.repo)
             layers = getVectorLayers()
             for layer in layers:
                 if formatSource(layer) in tracked:
                     setAsNonRepoLayer(layer)
-
-            removeTrackedForRepo(item.repo)
+            parent = self.lastSelectedRepoItem.parent()
+            parent.removeChild(self.lastSelectedRepoItem)
+            if parent.childCount() == 0:
+                parent.parent().removeChild(parent)
+            self.updateCurrentRepo(None, None)
         elif isinstance(item, GroupItem):
-            print "removing"
             parent = item.parent()
             parent.removeChild(item)
             removeRepoEndpoint(item.text(0))
@@ -343,7 +340,19 @@ class NavigatorDialog(BASE, WIDGET):
             self.repoTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.repoTree.blockSignals(False)
 
-    def addRepo(self):
+    def createRepo(self):
+        name, ok = QInputDialog.getText(self, 'Create repository',
+                                              'Enter the repository name:')
+        if ok:
+            groupItem = self.repoTree.selectedItems()[0]
+            group = groupItem.text(0)
+            url = repository.repoEndpoints[group]
+            repo = createRepoAtUrl(url, group, name)
+            item = RepoItem(repo)
+            addRepo(repo)
+            groupItem.addChild(item)
+
+    def addGeoGigServer(self):
         dlg = CreateRepoDialog()
         dlg.exec_()
         if dlg.title is not None:
@@ -362,7 +371,6 @@ class NavigatorDialog(BASE, WIDGET):
                     self.reposItem.setExpanded(True)
                     self.repoTree.sortItems(0, Qt.AscendingOrder)
             except:
-                raise
                 QMessageBox.warning(self, 'Add repositories',
                     "No repositories found at the specified url.",
                     QMessageBox.Ok)
@@ -376,20 +384,19 @@ class NavigatorDialog(BASE, WIDGET):
             self.leFilter.setFocus()
 
     def checkButtons(self):
+        self.actionCreateRepository.setEnabled(False)
+        self.actionRefresh.setEnabled(False)
+        self.actionDelete.setEnabled(False)
         if len(self.repoTree.selectedItems()) == 0:
-            self.actionRefresh.setEnabled(False)
-            self.actionDelete.setEnabled(False)
-            self.actionDelete.setEnabled(False)
             return
 
         item = self.repoTree.selectedItems()[0]
         if isinstance(item, RepositoriesItem):
             self.actionRefresh.setEnabled(True)
-            self.actionDelete.setEnabled(False)
-            self.actionDelete.setEnabled(False)
-        else:
-            self.actionRefresh.setEnabled(False)
+        elif isinstance(item, GroupItem):
+            self.actionCreateRepository.setEnabled(True)
             self.actionDelete.setEnabled(True)
+        else:
             self.actionDelete.setEnabled(True)
 
 
