@@ -485,8 +485,11 @@ def saveRepoEndpoints():
 def repositoriesFromUrl(url, title):
     if not url.endswith("/"):
         url = url + "/"
-    r = requests.get(url + "repos")
-    r.raise_for_status()
+    try:
+        r = requests.get(url + "repos")
+        r.raise_for_status()
+    except:
+        return []
 
     root = ET.fromstring(r.text)
 
