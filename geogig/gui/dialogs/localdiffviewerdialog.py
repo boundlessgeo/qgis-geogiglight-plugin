@@ -65,8 +65,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                              QtCore.Qt.WindowSystemMenuHint |
-                              QtCore.Qt.WindowMinMaxButtonsHint)
+                              QtCore.Qt.WindowSystemMenuHint)
 
         self.attributesTable.customContextMenuRequested.connect(self.showContextMenu)
         self.featuresTree.itemClicked.connect(self.treeItemClicked)
@@ -210,4 +209,3 @@ class DiffItem(QtGui.QTableWidgetItem):
         except:
             pass
         QtGui.QTableWidgetItem.__init__(self, s)
-
