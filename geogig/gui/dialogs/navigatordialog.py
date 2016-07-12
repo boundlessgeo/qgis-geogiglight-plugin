@@ -43,7 +43,7 @@ from PyQt4.QtGui import (QIcon,
                          QToolButton,
                          QInputDialog)
 
-from qgis.core import QgsApplication
+from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
 
 from geogig import config
@@ -306,15 +306,23 @@ class NavigatorDialog(BASE, WIDGET):
         if self.lastSelectedRepoItem == item:
             return
         self.lastSelectedRepoItem = item
-        if isinstance(item, RepoItem):
-            self.updateCurrentRepo(item.repo, item.text(0))
-        else:
-            self.updateCurrentRepo(None, None)
-            if item.parent() == self.repoTree.invisibleRootItem():
-                url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
-                self.repoDescription.setSource(url)
+        try:
+            if isinstance(item, RepoItem):
+                self.updateCurrentRepo(item.repo, item.text(0))
             else:
-                self.repoDescription.setText("")
+                self.updateCurrentRepo(None, None)
+                if item.parent() == self.repoTree.invisibleRootItem():
+                    url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
+                    self.repoDescription.setSource(url)
+                else:
+                    self.repoDescription.setText("")
+        except Exception, e:
+                msg = "An error occourred while fetching repository data! %s"
+                QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
+                QMessageBox.warning(self, 'Add repositories',
+                                    msg % "See the logs for details.",
+                                    QMessageBox.Ok)
+
 
     def updateCurrentRepo(self, repo, name):
         def _update():
@@ -370,10 +378,12 @@ class NavigatorDialog(BASE, WIDGET):
                     self.reposItem.addChild(groupItem)
                     self.reposItem.setExpanded(True)
                     self.repoTree.sortItems(0, Qt.AscendingOrder)
-            except:
+            except Exception, e:
+                msg = "No repositories found at the specified url. %s"
+                QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
                 QMessageBox.warning(self, 'Add repositories',
-                    "No repositories found at the specified url.",
-                    QMessageBox.Ok)
+                                    msg % "See the logs for details.",
+                                    QMessageBox.Ok)
 
     def showFilterWidget(self, visible):
         self.filterWidget.setVisible(visible)
