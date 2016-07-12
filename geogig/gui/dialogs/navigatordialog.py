@@ -282,12 +282,19 @@ class NavigatorDialog(BASE, WIDGET):
             for layer in layers:
                 if formatSource(layer) in tracked:
                     setAsNonRepoLayer(layer)
-            parent = self.lastSelectedRepoItem.parent()
-            parent.removeChild(self.lastSelectedRepoItem)
+            parent = item.parent()
+            parent.removeChild(item)
             if parent.childCount() == 0:
                 parent.parent().removeChild(parent)
             self.updateCurrentRepo(None, None)
         elif isinstance(item, GroupItem):
+            for repoItem in item.children():
+                tracked = getTrackedPathsForRepo(repoItem.repo)
+                layers = getVectorLayers()
+                for layer in layers:
+                    if formatSource(layer) in tracked:
+                        setAsNonRepoLayer(layer)
+                removeTrackedForRepo(repoItem.repo)
             parent = item.parent()
             parent.removeChild(item)
             removeRepoEndpoint(item.text(0))
