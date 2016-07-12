@@ -125,6 +125,8 @@ class ImportDialog(QtGui.QDialog):
             self.repo.importgeopkg(self.layer, branch, message, user, email, False)
             filename, layername = namesFromLayer(self.layer)
             self.repo.checkoutlayer(filename, layername)
+            self.layer.reload()
+            self.layer.triggerRepaint()
         except GeoGigException, e:
             iface.messageBar().pushMessage("Error", str(e), level=QgsMessageBar.CRITICAL)
             self.close()
