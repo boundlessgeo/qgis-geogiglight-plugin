@@ -129,7 +129,7 @@ class GeoGigPlugin:
         QgsMapLayerRegistry.instance().layerWasAdded.connect(trackLayer)
         QgsMapLayerRegistry.instance().layerRemoved.connect(layerRemoved)
 
-        icon = QtGui.QIcon(os.path.dirname(__file__) + "/ui/resources/geogig-16.png")
+        icon = QtGui.QIcon(os.path.dirname(__file__) + "/ui/resources/geogig.png")
         self.explorerAction = navigatorInstance.toggleViewAction()
         self.explorerAction.setIcon(icon)
         self.explorerAction.setText("GeoGig Navigator")
