@@ -259,7 +259,7 @@ def checkoutLayer(repo, layername, bbox):
         repo.checkoutlayer(filename, layername, bbox, repo.HEAD)
         addTrackedLayer(source, repo.url)
     try:
-        resolveLayerFromSource(source)
+        layer = resolveLayerFromSource(source)
         iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
                               level=QgsMessageBar.INFO)
     except WrongLayerSourceException:
@@ -267,3 +267,5 @@ def checkoutLayer(repo, layername, bbox):
         QgsMapLayerRegistry.instance().addMapLayers([layer])
         iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
                                               level=QgsMessageBar.INFO)
+    finally:
+        return layer
