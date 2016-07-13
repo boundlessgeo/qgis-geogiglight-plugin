@@ -47,7 +47,7 @@ from PyQt4.Qt import QCursor
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 
 class GeoGigException(Exception):
     pass
@@ -93,24 +93,29 @@ class Repository(object):
         self.group = group
 
     def __apicall(self, command, payload = {}, transaction = False):
-        if transaction:
-            r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
-            r.raise_for_status()
-            transactionId = r.json()["response"]["Transaction"]["ID"]
-            payload["output_format"] = "json"
-            payload["transactionId"] = transactionId
-            r = requests.get(self.url + command, params = payload)
-            r.raise_for_status()
-            resp = json.loads(r.text.replace(r"\/", "/"))["response"]
-            r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
-            r.raise_for_status()
-            return resp
-        else:
-            payload["output_format"] = "json"
-            r = requests.get(self.url + command, params = payload)
-            r.raise_for_status()
-            j = json.loads(r.text.replace(r"\/", "/"))
-            return j["response"]
+        try:
+            if transaction:
+                r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+                r.raise_for_status()
+                transactionId = r.json()["response"]["Transaction"]["ID"]
+                payload["output_format"] = "json"
+                payload["transactionId"] = transactionId
+                r = requests.get(self.url + command, params = payload)
+                r.raise_for_status()
+                resp = json.loads(r.text.replace(r"\/", "/"))["response"]
+                r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
+                r.raise_for_status()
+                return resp
+            else:
+                payload["output_format"] = "json"
+                r = requests.get(self.url + command, params = payload)
+                r.raise_for_status()
+                j = json.loads(r.text.replace(r"\/", "/"))
+                return j["response"]
+        except ConnectionError, e:
+            msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
+            QgsMessageLog.logMessage(msg, "GeoGig", level=QgsMessageLog.CRITICAL)
+            raise GeoGigException(msg)
 
     def _apicall(self, command, payload = {}, transaction = False):
         return execute(lambda: self.__apicall(command, payload, transaction))

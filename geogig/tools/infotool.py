@@ -32,7 +32,7 @@ from geogig.tools import layertracking
 from geogig.gui.dialogs.blamedialog import BlameDialog
 from geogig.gui.dialogs.versionsviewer import VersionViewerDialog
 from geogig import config
-from geogig.geogigwebapi.repository import Repository
+from geogig.geogigwebapi.repository import Repository, GeoGigException
 from geogig.tools.layers import geogigFidFromGpkgFid
 
 
@@ -87,12 +87,18 @@ class MapToolGeoGigInfo(QgsMapTool):
         menu.exec_(point)
 
     def versions(self, repo, tree, fid):
-        path = unicode(tree) + "/" + unicode(fid)
-        dlg = VersionViewerDialog(repo, path)
-        dlg.exec_()
+        try:
+            path = unicode(tree) + "/" + unicode(fid)
+            dlg = VersionViewerDialog(repo, path)
+            dlg.exec_()
+        except GeoGigException, e:
+            QtGui.QMessageBox.critical(self.parent(), "Error", "%s" % e)
 
 
     def blame(self, repo, tree, fid):
-        path = tree + "/" + fid
-        dlg = BlameDialog(repo, path)
-        dlg.exec_()
+        try:
+            path = "%s/%s" % (tree, fid)
+            dlg = BlameDialog(repo, path)
+            dlg.exec_()
+        except GeoGigException, e:
+            QtGui.QMessageBox.critical(self.parent(), "Error", "%s" % e)

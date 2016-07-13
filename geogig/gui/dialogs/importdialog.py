@@ -136,7 +136,8 @@ class ImportDialog(QtGui.QDialog):
 
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",
-                                                  level = QgsMessageBar.INFO, duration = 4)
+                                       level=QgsMessageBar.INFO,
+                                       duration=4)
         self.close()
 
 
