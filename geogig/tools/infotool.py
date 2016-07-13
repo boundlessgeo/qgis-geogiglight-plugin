@@ -96,4 +96,3 @@ class MapToolGeoGigInfo(QgsMapTool):
         path = tree + "/" + fid
         dlg = BlameDialog(repo, path)
         dlg.exec_()
-

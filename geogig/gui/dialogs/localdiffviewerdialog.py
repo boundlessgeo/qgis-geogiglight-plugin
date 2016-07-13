@@ -143,8 +143,8 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         modifiedItem.setText(0, "Modified")
         modifiedItem.setIcon(0, modifiedIcon)
         layerSubItems = {LOCAL_FEATURE_ADDED: addedItem,
-                                    LOCAL_FEATURE_REMOVED: removedItem,
-                                    LOCAL_FEATURE_MODIFIED: modifiedItem}
+                         LOCAL_FEATURE_REMOVED: removedItem,
+                         LOCAL_FEATURE_MODIFIED: modifiedItem}
 
         for c in self.changes.values():
             item = QtGui.QTreeWidgetItem()

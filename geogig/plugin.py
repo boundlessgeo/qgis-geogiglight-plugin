@@ -180,8 +180,8 @@ class GeoGigPlugin:
 
     def setWarning(self, msg):
         QtGui.QMessageBox.warning(None, 'Could not complete GeoGig command',
-                            msg,
-                            QtGui.QMessageBox.Ok)
+                                  msg,
+                                  QtGui.QMessageBox.Ok)
 
     def setTool(self):
         self.toolAction.setChecked(True)
@@ -192,10 +192,3 @@ class GeoGigPlugin:
         dlg = ConfigDialog()
         dlg.exec_()
         navigatorInstance.updateNavigator()
-
-
-
-
-
-
-

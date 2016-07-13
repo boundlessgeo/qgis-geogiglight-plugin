@@ -24,14 +24,14 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
+import os
 from PyQt4 import QtGui, QtCore
 from qgis.core import *
 from qgis.gui import *
 from geogig.ui.versionsviewer import Ui_VersionViewer
 from geogig import config
 from geogig.tools.utils import loadLayerNoCrsDialog
-import os
+from geogig.geogigwebapi.repository import GeoGigException
 
 class VersionViewerDialog(QtGui.QDialog):
 
@@ -154,5 +154,3 @@ class CommitListItem(QtGui.QListWidgetItem):
         if self._feature is None:
             self._feature = self.repo.feature(self.path, self.commit)
         return self._feature
-
-
