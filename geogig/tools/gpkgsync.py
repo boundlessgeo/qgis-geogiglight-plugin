@@ -86,7 +86,7 @@ def syncLayer(layer):
             if not solved:
                 return
             print resolvedConflicts
-            for conflict, resolution in zip(conflicts, resolvedConflicts):
+            for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
                 if resolution == ConflictDialog.LOCAL:
                     conflict.resolveWithLocalVersion()
                 elif resolution == ConflictDialog.REMOTE:
