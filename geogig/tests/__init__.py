@@ -20,7 +20,7 @@ def _createTestRepo(name, modifiesRepo = False):
         orgPath = os.path.join(os.path.dirname(__file__), "data", "repos", name)
         shutil.copytree(orgPath, destPath)
     global _lastRepo
-    _lastRepo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName, "test repositories", name)
+    _lastRepo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName, "test repositories", "%s [%i]" % (name, i))
     return _lastRepo
 
 def _layer(name):
