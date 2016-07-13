@@ -26,7 +26,7 @@ Creating repos is not currently supported through the WebAPI, so you must create
 
 
 
-Connecting to a repository
+Connecting to a repository server
 **************************************
 
 The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI endpoint, which serves one or multiple repositories.
@@ -36,7 +36,7 @@ Open the GeoGig navigator by selecting the *GeoGig/GeoGig Navigator* menu.
 .. image:: navigator.png
 	:align: center
 
-Click on the *Add repositories* button and you will see the following dialog:
+Click on the *Add GeoGig server* button and you will see the following dialog:
 
 .. image:: addrepos.png
 	:align: center
@@ -55,6 +55,19 @@ The history is shown as a tree, with elements representing branches and under ea
 
 .. image:: versionsinbranch.png
 	:align: center
+
+
+To remove a GeoGig server from the list of available connections, select it in the repositories tree and clik on the delete button in the navigator toolbar. 
+
+
+Creating and deleting repositories
+***********************************
+
+New repositories can be added to a GeoGig server. To do it, select the server in the list of available ones in the navigator, and then click on the *Create new repository* icon.
+
+You will be prompted to enter the name of the repository. A repository with that name will be created in the GeoGig server and added to the navigator tree.
+
+To delete a repository (all its data will be removed from the server), select it and clik on the delete button in the navigator toolbar.
 
 
 Adding layers from a repository to the current QGIS project
@@ -112,6 +125,9 @@ Once a layer is imported into a GeoGig repository, it becomes linked to it. The 
 	:align: center
 
 These entries will be explained in further sections of this document.
+
+If a repository is deleted, layer that were exported from it will not be removed from the current project or deleted locally. However, they will not be linked anymore to a repo, and the above context menu entries will not be available, just like it happens with any other regular QGIS layer.
+
 
 Editing a GeoGig layer and creating a new version in the repository
 *********************************************************************
