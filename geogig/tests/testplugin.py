@@ -50,7 +50,6 @@ def openTestProject(name):
     if projectFile != QgsProject.instance().fileName():
         iface.addProject(projectFile)
 
-
 _repos = []
 _tracked = []
 
@@ -103,6 +102,40 @@ def _exportAndChangeToFirstVersion():
     layer.reload()
     layer.triggerRepaint()
 
+def _exportAndAddFeatureToLayer():
+    layer = checkoutLayer(tests._lastRepo, "points", None)
+    log = tests._lastRepo.log()
+    assert len(log) == 3
+    commitid = log[-1].commitid
+    applyLayerChanges(tests._lastRepo, layer, tests._lastRepo.HEAD, commitid)
+    updateInfoActions(layer)
+    with edit(layer):
+        feat = QgsFeature(layer.pendingFields())
+        feat.setAttributes(["5", 5])
+        feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(123, 456)))
+        layer.addFeatures([feat])
+    layer.reload()
+    layer.triggerRepaint()
+
+def _exportAndCreateConflict():
+    layer = checkoutLayer(tests._lastRepo, "points", None)
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), 1, 1000)
+    filename = tempFilename("gpkg")
+    tests._lastRepo.checkoutlayer(filename, "points")
+    layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
+    features2 = list(layer2.getFeatures())
+    with edit(layer2):
+        layer2.changeAttributeValue(features2[0].id(), 1, 1001)
+    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
+
+def _exportLayer():
+    checkoutLayer(tests._lastRepo, "points", None)
+
+def _selectLayer():
+    layer = layerFromName("points")
+    iface.setActiveLayer(layer)
 
 def _checkLayerInProject():
     layer = layerFromName("points")
@@ -153,7 +186,6 @@ def functionalTests():
 
     test = GeoGigTest("Add layer without repo")
     test.addStep("Open test data", lambda: openTestProject("points"))
-    #test.addStep("Remove repos", _removeRepos)
     test.addStep("Open navigator", lambda:  _openNavigator(True))
     test.addStep("Right click on the layer and try to add it to a repository.\n"
                  "Verify that it shows a warning because there are no repositories defined.")
@@ -187,26 +219,62 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Export and edit repo layer", _exportAndEditLayer)
-    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Sync with master branch'")
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch'")
     test.addStep("Check in repo history that a new version has been created")
     tests.append(test)
 
-    test = Test("Sync with no local changes")
-    test.addStep("New project", iface.newProject)
-    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
-    test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
-    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Sync with master branch'")
-    test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
-    test.addStep("Check that layer has been modified")
-    tests.append(test)
-
-    test = Test("Sync with only local changes")
+    test = Test("Sync to new branch")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Export and edit repo layer", _exportAndEditLayer)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Type 'newbranch' in the branch box and sync'")
+    test.addStep("Check in repo history that a branch called 'newbranch' has been created with the changes")
+    tests.append(test)
+
+    test = Test("Sync with only upstream changes")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch'")
+    test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
+    test.addStep("Check that layer has been modified")
+    tests.append(test)
+
+    test = Test("Sync with no changes at all")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export repo layer", _exportLayer)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch'")
+    test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
+    test.addStep("Check that no changes are made in the layer or the history")
+    tests.append(test)
+
+    test = Test("Sync with conflicts")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export and edit repo layer", _exportAndCreateConflict)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Solve conflict'")
+    test.addStep("Check that new version has been created in the repo history")
+    tests.append(test)
+
+    test = Test("Sync with conflicts, without resolving them")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export and edit repo layer", _exportAndCreateConflict)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Exit conflict dialog without solving'")
+    test.addStep("Check that no new version has been created in the repo history, and the layer hasn't been modified")
+    tests.append(test)
+
+    test = Test("Sync with both local and upstream changes, without conflict")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Export and edit repo layer", _exportAndAddFeatureToLayer)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Sync with master branch'")
-    test.addStep("Check in repo history that a new version has been created")
+    test.addStep("Check that layer has been modified and a new version has been created in the repo history")
     tests.append(test)
 
     test = Test("Check diff viewer")
@@ -241,7 +309,7 @@ def functionalTests():
     test = GeoGigTest("Create new branch")
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Create new branch at current branch's HEAD and verify it is added to history tree")
+    test.addStep("Create new branch at master branch's last commit and verify it is added to history tree")
     tests.append(test)
 
     test = GeoGigTest("Delete branch")
@@ -250,7 +318,28 @@ def functionalTests():
     test.addStep("Delete 'mybranch' and verify the versions tree is updated")
     tests.append(test)
 
-    #return []
+    test = GeoGigTest("Create new tag")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Create new tag at current branch's last commit and verify it is added to history tree")
+    tests.append(test)
+
+    test = GeoGigTest("Delete tag")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Delete 'mytag' tag and verify the versions tree is updated")
+    tests.append(test)
+
+    test = Test("Check map tools viewer")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export layer", _exportLayer)
+    test.addStep("Select the 'GeoGig/Info Tool' menu")
+    test.addStep("Select layer", _selectLayer)
+    test.addStep("Click on a feature and select 'View authorship'. Verify it shows authorship correctly", isVerifyStep = True)
+    test.addStep("Click on a feature and select 'View versions'. Verify it shows feature versions correctly")
+    tests.append(test)
+
     return tests
 
 class PluginTests(unittest.TestCase):
