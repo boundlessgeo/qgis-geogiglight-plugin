@@ -60,6 +60,7 @@ from geogig.tools.layers import (getAllLayers,
                                  formatSource)
 from geogig.tools.layertracking import *
 from geogig.tools.utils import *
+from geogig.tools.gpkgsync import checkoutLayer
 
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import *
@@ -172,31 +173,7 @@ class NavigatorDialog(BASE, WIDGET):
             #===================================================================
 
     def _checkoutLayer(self, layername, bbox):
-        trackedlayer = getTrackingInfoForGeogigLayer(self.currentRepo.url, layername)
-        if trackedlayer is not None:
-            if not os.path.exists(trackedlayer.geopkg):
-                removeTrackedLayer(trackedlayer.source)
-                trackedlayer = None
-                filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
-                source = "%s|layername=%s" % (filename, layername)
-            else:
-                source = trackedlayer.source
-        else:
-            filename = layerGeopackageFilename(layername, self.currentRepoName, self.currentRepo.group)
-            source = "%s|layername=%s" % (filename, layername)
-        if trackedlayer is None:
-            self.currentRepo.checkoutlayer(filename, layername, bbox, self.currentRepo.HEAD)
-            addTrackedLayer(source, self.currentRepo.url)
-
-        try:
-            resolveLayerFromSource(source)
-            config.iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
-                                  level=QgsMessageBar.INFO)
-        except WrongLayerSourceException:
-            layer = loadLayerNoCrsDialog(source, layername, "ogr")
-            QgsMapLayerRegistry.instance().addMapLayers([layer])
-            config.iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
-                                                  level=QgsMessageBar.INFO)
+        checkoutLayer(self.currentRepo, layername, bbox)
 
     def updateCurrentRepoDescription(self):
         self.repoDescription.setText(self.currentRepo.fullDescription())

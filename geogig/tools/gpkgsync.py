@@ -15,7 +15,6 @@
 *                                                                         *
 ***************************************************************************
 """
-from PyQt4.QtGui import QInputDialog
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,6 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
+import os
 import sqlite3
 from geogig.geogigwebapi.repository import Repository
 from geogig.gui.dialogs.geogigref import RefDialog
@@ -33,16 +33,19 @@ from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from qgis.core import *
 from qgis.gui import *
-from geogig.tools.layertracking import getTrackingInfo
-from PyQt4 import QtGui
 from qgis.utils import iface
 from geogig.geogigwebapi.diff import LocalDiff
 from geogig.geogigwebapi.repository import GeoGigException
 from geogig import config
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
-from geogig.tools.layers import namesFromLayer
-from geogig.tools.utils import tempFilename
 from geogig.repowatcher import repoWatcher
+from geogig.tools.layertracking import getTrackingInfoForGeogigLayer,\
+    removeTrackedLayer, addTrackedLayer, getTrackingInfo
+from geogig.tools.utils import layerGeopackageFilename, loadLayerNoCrsDialog, \
+    tempFilename
+from PyQt4.QtGui import QInputDialog, QMessageBox
+from geogig.tools.layers import WrongLayerSourceException, resolveLayerFromSource, \
+    namesFromLayer
 
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
@@ -73,11 +76,11 @@ def syncLayer(layer):
         mergeCommitId, importCommitId, conflicts, featureIds = repo.importgeopkg(layer, dlg.branch, dlg.message, user, email, True)
 
         if conflicts:
-            ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+            ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
                                       "There are conflicts between local and remote changes.\n"
                                       "Do you want to continue and fix them?",
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            if ret == QtGui.QMessageBox.No:
+                                      QMessageBox.Yes | QMessageBox.No)
+            if ret == QMessageBox.No:
                 return
             solved, resolvedConflicts = solveConflicts(conflicts, layername)
             if not solved:
@@ -238,3 +241,29 @@ def getUserInfo():
         else:
             return None
     return user, email
+
+def checkoutLayer(repo, layername, bbox):
+    trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername)
+    if trackedlayer is not None:
+        if not os.path.exists(trackedlayer.geopkg):
+            removeTrackedLayer(trackedlayer.source)
+            trackedlayer = None
+            filename = layerGeopackageFilename(layername, repo.title, repo.group)
+            source = "%s|layername=%s" % (filename, layername)
+        else:
+            source = trackedlayer.source
+    else:
+        filename = layerGeopackageFilename(layername, repo.title, repo.group)
+        source = "%s|layername=%s" % (filename, layername)
+    if trackedlayer is None:
+        repo.checkoutlayer(filename, layername, bbox, repo.HEAD)
+        addTrackedLayer(source, repo.url)
+    try:
+        resolveLayerFromSource(source)
+        iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
+                              level=QgsMessageBar.INFO)
+    except WrongLayerSourceException:
+        layer = loadLayerNoCrsDialog(source, layername, "ogr")
+        QgsMapLayerRegistry.instance().addMapLayers([layer])
+        iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
+                                              level=QgsMessageBar.INFO)
