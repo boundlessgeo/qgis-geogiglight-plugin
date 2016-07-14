@@ -265,7 +265,8 @@ class NavigatorDialog(BASE, WIDGET):
                 parent.parent().removeChild(parent)
             self.updateCurrentRepo(None, None)
         elif isinstance(item, GroupItem):
-            for repoItem in item.children():
+            for i in range(item.childCount()):
+                repoItem = item.child(i)
                 tracked = getTrackedPathsForRepo(repoItem.repo)
                 layers = getVectorLayers()
                 for layer in layers:
@@ -301,7 +302,7 @@ class NavigatorDialog(BASE, WIDGET):
                 else:
                     self.repoDescription.setText("")
         except Exception, e:
-                msg = "An error occourred while fetching repository data! %s"
+                msg = "An error occurred while fetching repository data! %s"
                 QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
                 QMessageBox.warning(self, 'Add repositories',
                                     msg % "See the logs for details.",
