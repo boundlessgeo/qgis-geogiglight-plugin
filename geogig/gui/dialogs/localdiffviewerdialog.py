@@ -65,7 +65,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                              QtCore.Qt.WindowSystemMenuHint)
+                            QtCore.Qt.WindowSystemMenuHint)
 
         self.attributesTable.customContextMenuRequested.connect(self.showContextMenu)
         self.featuresTree.itemClicked.connect(self.treeItemClicked)

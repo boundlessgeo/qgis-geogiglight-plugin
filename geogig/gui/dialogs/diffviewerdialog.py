@@ -60,8 +60,7 @@ class DiffViewerDialog(WIDGET, BASE):
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                              QtCore.Qt.WindowSystemMenuHint |
-                              QtCore.Qt.WindowMinMaxButtonsHint)
+                            QtCore.Qt.WindowSystemMenuHint)
 
         self.commit1 = refa
         self.commit1Panel = RefPanel(self.repo, refa, onlyCommits = False)
@@ -86,6 +85,7 @@ class DiffViewerDialog(WIDGET, BASE):
         self.featuresTree.header().hide()
 
         self.computeDiffs()
+        self.groupBox.adjustSize()
 
         #self.showMaximized()
 
@@ -221,4 +221,3 @@ class DiffItem(QtGui.QTableWidgetItem):
         except:
             pass
         QtGui.QTableWidgetItem.__init__(self, s)
-
