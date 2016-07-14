@@ -93,6 +93,10 @@ def geogigFidFromGpkgFid(trackedlayer, fid):
 
 
 def formatSource(source):
+    # Skip if it's a raster
+    # TODO: maybe better raise a LayerNotSupported exception
+    if source.type() == QgsMapLayer.RasterLayer:
+        return None
     if isinstance(source, QgsVectorLayer):
         source = source.source()
     source = os.path.normcase(source)

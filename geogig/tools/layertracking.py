@@ -121,6 +121,7 @@ def getTrackingInfo(layer):
     for obj in tracked:
         if obj.source == source:
             return obj
+    return None
 
 
 def getTrackingInfoForGeogigLayer(repoUrl, layername):
@@ -133,8 +134,3 @@ def getTrackedPathsForRepo(repo):
     trackedPaths = [layer.source for layer in tracked
                 if repo.url == layer.repoUrl and layer.layername in repoLayers]
     return trackedPaths
-
-
-
-
-
