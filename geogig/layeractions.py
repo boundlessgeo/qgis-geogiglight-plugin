@@ -175,7 +175,7 @@ def addLayer(layer):
 
     else:
         QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
-                "No local repositories were found",
+                "No repositories were found",
                 QtGui.QMessageBox.Ok)
 
 
