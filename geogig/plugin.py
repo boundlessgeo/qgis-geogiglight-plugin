@@ -77,19 +77,6 @@ class GeoGigPlugin:
                 except AttributeError: #prevent error in case the log object is None
                     pass
 
-        logFile = os.path.join(userFolder(), "geogig.log")
-        handler = logging.FileHandler(logFile)
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-        qgisHandler = QgisLogHandler()
-        qgisFormatter = logging.Formatter('%(levelname)s - %(message)s')
-        qgisHandler.setFormatter(qgisFormatter)
-        qgisHandler.setLevel(logging.DEBUG)
-        logger.addHandler(qgisHandler)
-
         config.initConfigParams()
 
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
