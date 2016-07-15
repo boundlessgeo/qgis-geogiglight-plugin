@@ -381,7 +381,7 @@ class Repository(object):
             else:
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
-                featureIds = checker.response["task"]["result"]["NewFeatures"]["type"].get("ids", [])
+                featureIds = _ensurelist(checker.response["task"]["result"]["NewFeatures"]["type"].get("id", []))
                 conflicts = []
             featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
             return mergeCommitId, importCommitId, conflicts, featureIds
