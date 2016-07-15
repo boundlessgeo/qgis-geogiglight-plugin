@@ -31,11 +31,11 @@ from qgis.utils import *
 from PyQt4 import QtGui
 from geogig.tools.layers import *
 import os
+from geogig import config
 from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.utils import *
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException
-from geogig.tools.gpkgsync import getUserInfo
 from geogig.tools.gpkgsync import getCommitId
 
 
@@ -114,7 +114,7 @@ class ImportDialog(QtGui.QDialog):
             text = self.layerCombo.currentText()
             self.layer = resolveLayer(text)
 
-        user, email = getUserInfo()
+        user, email, logServerCalls = config.getUserInfo()
         if user is None:
             self.close()
             return

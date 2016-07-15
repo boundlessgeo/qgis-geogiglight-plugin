@@ -26,8 +26,6 @@ __revision__ = '$Format:%H$'
 
 
 from PyQt4 import QtGui
-from geogig import config
-
 
 class UserConfigDialog(QtGui.QDialog):
 
@@ -65,6 +63,19 @@ class UserConfigDialog(QtGui.QDialog):
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.groupBox)
+
+        self.debugGroupBox = QtGui.QGroupBox()
+        self.debugGroupBox.setTitle("Debug")
+        logLabel = QtGui.QLabel('Log all server calls')
+        self.debugGroupBox.addWidget(logLabel)
+        self.logCheckBox = QtGui.QCheckBox()
+        self.debugGroupBox.addWidget(self.logCheckBox)
+        self.debugGroupBox.setLayout(verticalLayout)
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.groupBox)
+
+
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         layout.addWidget(self.buttonBox)
 
@@ -78,9 +89,11 @@ class UserConfigDialog(QtGui.QDialog):
     def okPressed(self):
         self.user = unicode(self.usernameBox.text())
         self.email = unicode(self.emailBox.text())
+        self.logCalls = self.logCheckBox.isChecked()
         self.close()
 
     def cancelPressed(self):
         self.user = None
         self.email = None
+        self.logCalls = None
         self.close()

@@ -61,7 +61,7 @@ def syncLayer(layer):
     cursor.close()
     con.close()
     if changes:
-        user, email = getUserInfo()
+        user, email, logServerCalls = config.getUserInfo()
         if user is None:
             return
 
@@ -226,21 +226,6 @@ def isGeoGigGeopackage(layer):
     tables = [t[0] for t in cursor.fetchall()]
     return "geogig_audited_tables" in tables
 
-def getUserInfo():
-    user = config.getConfigValue(config.GENERAL, config.USERNAME).strip()
-    email = config.getConfigValue(config.GENERAL, config.EMAIL).strip()
-    if not (user and email):
-        configdlg = UserConfigDialog(config.iface.mainWindow())
-        configdlg.exec_()
-        if configdlg.user is not None:
-            user = configdlg.user
-            email = configdlg.email
-            config.setConfigValue(config.GENERAL, config.USERNAME, user)
-            config.setConfigValue(config.GENERAL, config.EMAIL, email)
-            return user, email
-        else:
-            return None
-    return user, email
 
 def checkoutLayer(repo, layername, bbox):
     trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername)

@@ -2,7 +2,7 @@
 
 """
 ***************************************************************************
-    config.py
+    py
     ---------------------
     Date                 : March 2016
     Copyright            : (C) 2016 Boundless, http://boundlessgeo.com
@@ -26,6 +26,7 @@ __revision__ = '$Format:%H$'
 
 import os
 from PyQt4 import QtCore
+from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 
 iface = None
 explorer = None
@@ -36,6 +37,7 @@ USE_MAIN_MENUBAR = "UseMainMenuBar"
 REPOS_FOLDER = "ReposFolder"
 USERNAME = "Username"
 EMAIL = "Email"
+LOG_SERVER_CALLS = "LogServerCalls"
 
 TYPE_NUMBER, TYPE_STRING, TYPE_FOLDER, TYPE_BOOL = range(4)
 
@@ -52,13 +54,16 @@ def checkFolder(f):
 generalParams = [(USE_MAIN_MENUBAR, "Put GeoGig menus in main menu bar (requires restart)", True, TYPE_BOOL, lambda x: True),
                  (REPOS_FOLDER, "Base folder for repository data", "", TYPE_FOLDER, checkFolder),
                  (USERNAME, "User name", "", TYPE_STRING, lambda x: True),
-                 (EMAIL, "User email", "", TYPE_STRING, lambda x: True)]
+                 (EMAIL, "User email", "", TYPE_STRING, lambda x: True),
+                 (LOG_SERVER_CALLS, "Log server calls", False, TYPE_BOOL, lambda x: True)]
+
 
 def initConfigParams():
     folder = getConfigValue(GENERAL, REPOS_FOLDER)
     if folder.strip() == "":
         folder = os.path.join(os.path.expanduser('~'), 'geogig', 'repos')
         setConfigValue(GENERAL, REPOS_FOLDER, folder)
+
 
 def getConfigValue(group, name):
     default = None
@@ -71,5 +76,25 @@ def getConfigValue(group, name):
     else:
         return QtCore.QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, str)
 
+
 def setConfigValue(group, name, value):
     return QtCore.QSettings().setValue("/GeoGig/Settings/%s/%s" % (group, name), value)
+
+
+def getUserInfo():
+    """Return user information from the settings dialog"""
+    user = getConfigValue(GENERAL, USERNAME).strip()
+    email = getConfigValue(GENERAL, EMAIL).strip()
+    logServerCalls = getConfigValue(GENERAL, LOG_SERVER_CALLS)
+    if not (user and email):
+        configdlg = UserConfigDialog(iface.mainWindow())
+        configdlg.exec_()
+        if configdlg.user is not None:
+            user = configdlg.user
+            email = configdlg.email
+            setConfigValue(GENERAL, USERNAME, user)
+            setConfigValue(GENERAL, EMAIL, email)
+            return user, email, logServerCalls
+        else:
+            return None
+    return user, email, logServerCalls

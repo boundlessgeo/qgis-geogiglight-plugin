@@ -44,10 +44,12 @@ from qgis.core import *
 from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
+from geogig import config
 from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
 from requests.exceptions import HTTPError, ConnectionError
+
 
 class GeoGigException(Exception):
     pass
@@ -91,26 +93,40 @@ class Repository(object):
         self.rootUrl = url.split("/repos")[0] + "/"
         self.title = title
         self.group = group
+        _, _, self.logServerCalls = config.getUserInfo()
 
-    def __apicall(self, command, payload = {}, transaction = False):
+    def __apicall(self, command, payload={}, transaction=False):
+
+        def __log(url, response, params):
+            if self.logServerCalls:
+                msg = "GET: %s\nPARAMS: %s\nRESPONSE: %s" % (url, params, response)
+                QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
+
         try:
             if transaction:
-                r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+                url = self.url + "beginTransaction"
+                params = {"output_format":"json"}
+                r = requests.get(url, params=params)
                 r.raise_for_status()
+                __log(url, r.json(), params)
                 transactionId = r.json()["response"]["Transaction"]["ID"]
                 payload["output_format"] = "json"
                 payload["transactionId"] = transactionId
-                r = requests.get(self.url + command, params = payload)
+                url = self.url + command
+                r = requests.get(url, params=payload)
                 r.raise_for_status()
                 resp = json.loads(r.text.replace(r"\/", "/"))["response"]
+                __log(url, resp, payload)
                 r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
                 r.raise_for_status()
                 return resp
             else:
                 payload["output_format"] = "json"
-                r = requests.get(self.url + command, params = payload)
+                url = self.url + command
+                r = requests.get(url, params=payload)
                 r.raise_for_status()
                 j = json.loads(r.text.replace(r"\/", "/"))
+                __log(url, r.json(), payload)
                 return j["response"]
         except ConnectionError, e:
             msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
