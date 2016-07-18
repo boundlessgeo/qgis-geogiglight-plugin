@@ -141,9 +141,6 @@ def _checkLayerInProject():
     layer = layerFromName("points")
     assert layer is not None
 
-def _checkFeatureAddedInRepo():
-    pass
-
 def _checkLayerInRepo():
     assert "points" in tests._lastRepo.trees()
 
