@@ -84,6 +84,7 @@ def syncLayer(layer):
                 return
             solved, resolvedConflicts = solveConflicts(conflicts, layername)
             if not solved:
+                repo.closeTransaction(conflicts[0].transactionId)
                 return
             print resolvedConflicts
             for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
