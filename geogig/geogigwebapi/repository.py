@@ -349,7 +349,6 @@ class Repository(object):
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
-        self.closeTransaction(transactionId)
         import json
         print json.dumps(checker.response, indent=4, sort_keys=True)
         if interchange:
@@ -395,6 +394,7 @@ class Repository(object):
                 cursor.close()
                 con.close()
             else:
+                self.closeTransaction(transactionId)
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
                 featureIds = _ensurelist(checker.response["task"]["result"]["NewFeatures"]["type"].get("id", []))
