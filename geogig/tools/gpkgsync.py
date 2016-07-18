@@ -81,6 +81,7 @@ def syncLayer(layer):
                                       "Do you want to continue and fix them?",
                                       QMessageBox.Yes | QMessageBox.No)
             if ret == QMessageBox.No:
+                repo.closeTransaction(conflicts[0].transactionId)
                 return
             solved, resolvedConflicts = solveConflicts(conflicts, layername)
             if not solved:
