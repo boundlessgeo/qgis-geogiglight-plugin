@@ -12,10 +12,10 @@
   <mapcanvas>
     <units>degrees</units>
     <extent>
-      <xmin>8.59144132388031601</xmin>
-      <ymin>75.76640705474667925</ymin>
-      <xmax>20.82343867611968591</xmax>
-      <ymax>83.82169294525331793</ymax>
+      <xmin>8.59143674734497864</xmin>
+      <ymin>75.76640404090524328</ymin>
+      <xmax>20.82344325265502505</xmax>
+      <ymax>83.8216959590947539</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -48,14 +48,8 @@
   </legend>
   <projectlayers>
     <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-        <xmin>8.88268000000000058</xmin>
-        <ymin>75.95820000000000505</ymin>
-        <xmax>20.53219999999999956</xmax>
-        <ymax>83.62990000000000634</ymax>
-      </extent>
       <id>points20160711142519692</id>
-      <datasource>D:\github\qgis-geogiglight-plugin\geogig\tests\data\layers\points.gpkg</datasource>
+      <datasource>./points.gpkg</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -143,17 +137,17 @@
         <multilineenabled fieldname="" on=""/>
         <selectedonly on=""/>
       </labelattributes>
-      <annotationform></annotationform>
+      <annotationform>.</annotationform>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
       <attributeactions/>
       <attributetableconfig actionWidgetStyle="dropDown" sortExpression="">
         <columns/>
       </attributetableconfig>
-      <editform></editform>
+      <editform>.</editform>
       <editforminit/>
       <editforminitcodesource>0</editforminitcodesource>
-      <editforminitfilepath></editforminitfilepath>
+      <editforminitfilepath>.</editforminitfilepath>
       <editforminitcode><![CDATA[]]></editforminitcode>
       <featformsuppress>0</featformsuppress>
       <editorlayout>generatedlayout</editorlayout>
