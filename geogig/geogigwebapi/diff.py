@@ -63,6 +63,8 @@ class LocalDiff(object):
 
     @property
     def oldfeature(self):
+        if self.changetype == LOCAL_FEATURE_ADDED:
+            return {}
         return self.repo.feature(self.layername + "/" + self.fid, self.oldcommitid)
 
 class ConflictDiff(object):
