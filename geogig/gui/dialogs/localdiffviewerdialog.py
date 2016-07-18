@@ -175,19 +175,20 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         changesdict = {}
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
-        cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
-        commitid = cursor.fetchone()[0]
+        commitid = cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername).fetchone()[0]
+        geomField = cursor.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='%s';" % layername).fetchone()[0]
         for c in changes:
-            featurechanges = {attr: c[attributes.index(attr)] for attr in attrnames}
+            featurechanges = {}
             path = str(c[attributes.index("fid")])
+            for attr in attrnames:
+                if attr != geomField:
+                    value = c[attributes.index(attr)]
+                else:
+                    request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
+                    qgsfeature = list(layer.getFeatures(request))[0]
+                    value = qgsfeature.geometry().exportToWkt()
+                featurechanges[attr] = value
             path = geogigFidFromGpkgFid(tracking, path)
-            try:
-                request = QgsFeatureRequest()
-                request.setFilterFid(int(path.split("/")[-1]))
-                feature = layer.getFeatures(request).next()
-                featurechanges["the_geom"] = feature.geometry().exportToWkt()
-            except:
-                featurechanges["the_geom"] = None
             changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
         return changesdict
 
