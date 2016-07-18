@@ -130,11 +130,10 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.lastSelectedRepoItem = None
 
-        def _updateDescription(repo):
+        def _repoChanged(repo):
             if self.currentRepo is not None and repo.url == self.currentRepo.url:
-                self.updateCurrentRepoDescription()
-                self.versionsTree.updateCurrentBranchItem()
-        repoWatcher.repoChanged.connect(_updateDescription)
+                self.updateCurrentRepo(repo, repo.title)
+        repoWatcher.repoChanged.connect(_repoChanged)
 
         self.updateNavigator()
 
