@@ -64,17 +64,6 @@ class UserConfigDialog(QtGui.QDialog):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.groupBox)
 
-        self.debugGroupBox = QtGui.QGroupBox()
-        self.debugGroupBox.setTitle("Debug")
-        logLabel = QtGui.QLabel('Log all server calls')
-        self.debugGroupBox.addWidget(logLabel)
-        self.logCheckBox = QtGui.QCheckBox()
-        self.debugGroupBox.addWidget(self.logCheckBox)
-        self.debugGroupBox.setLayout(verticalLayout)
-
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.groupBox)
-
 
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         layout.addWidget(self.buttonBox)
