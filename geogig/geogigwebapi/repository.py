@@ -148,19 +148,16 @@ class Repository(object):
         self._apicall("updateref", {"name": branch, "delete": True})
 
     def tags(self):
-        r = requests.get(self.url + "repo/manifest")
-        r.raise_for_status()
-        lines = r.text.splitlines()
-        tags = {}
-        for line in lines:
-            tokens = line.split(" ")
-            ref, sha = tokens[-2], tokens[-1]
-            if ref.startswith("refs/tags/"):
-                tags[ref.split("/")[-1]] = sha
+        r = self._apicall("tag", {})
+        if "Tag" in r:
+            tags = {t["name"]: t["commitid"] for t in _ensurelist(r["Tag"])}
+        else:
+            tags = {}
         return tags
 
     def createtag(self, ref, tag):
-        raise NotImplementedError()
+        r = requests.post(self.url + "tag", params = {"commit":ref, "name": tag, "message": tag}, json = {})
+        r.raise_for_status()
 
     def deletetag(self, tag):
         self._apicall("updateref", {"name": tag, "delete": True})
