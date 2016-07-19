@@ -206,7 +206,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoTree.addTopLevelItem(self.reposItem)
         if self.reposItem.childCount():
             self.filterRepos()
-            self.reposItem.setExpanded(True)
+        self.repoTree.expandAll()
         self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showHistoryTab(self):
