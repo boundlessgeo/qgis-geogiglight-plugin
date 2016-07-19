@@ -91,20 +91,6 @@ class RefWidget(QtGui.QWidget):
         horizontalLayout3.addWidget(self.comboCommit)
         verticalLayout2.addLayout(horizontalLayout3)
 
-        horizontalLayout4 = QtGui.QHBoxLayout()
-        horizontalLayout4.setSpacing(10)
-        horizontalLayout4.setMargin(0)
-        self.dateRadio = QtGui.QRadioButton('Date', self)
-        self.dateRadio.toggled.connect(self.dateRadioClicked)
-        self.dateRadio.setMaximumWidth(200)
-        self.dateRadio.setMinimumWidth(200)
-        horizontalLayout4.addWidget(self.dateRadio)
-        self.dateBox = QtGui.QDateTimeEdit()
-        now = datetime.datetime.now()
-        self.dateBox.setDate(now)
-        horizontalLayout4.addWidget(self.dateBox)
-        verticalLayout2.addLayout(horizontalLayout4)
-
         groupBox = QtGui.QGroupBox("Reference")
         groupBox.setLayout(verticalLayout2)
 
@@ -121,34 +107,22 @@ class RefWidget(QtGui.QWidget):
         self.comboBranch.setEnabled(False)
         self.comboTag.setEnabled(False)
         self.comboCommit.setEnabled(True)
-        self.dateBox.setEnabled(False)
 
     def tagRadioClicked(self):
         self.comboBranch.setEnabled(False)
         self.comboCommit.setEnabled(False)
         self.comboTag.setEnabled(True)
-        self.dateBox.setEnabled(False)
 
     def branchRadioClicked(self):
         self.comboCommit.setEnabled(False)
         self.comboTag.setEnabled(False)
         self.comboBranch.setEnabled(True)
-        self.dateBox.setEnabled(False)
-
-    def dateRadioClicked(self):
-        self.comboCommit.setEnabled(False)
-        self.comboTag.setEnabled(False)
-        self.comboBranch.setEnabled(False)
-        self.dateBox.setEnabled(True)
 
     def getref(self):
         if self.branchRadio.isChecked():
             return Commitish(self.repo, self.comboBranch.currentText())
         elif self.tagRadio.isChecked():
             return Commitish(self.repo, self.comboTag.currentText())
-        elif self.dateRadio.isChecked():
-            date = self.dateBox.dateTime().toPyDateTime()
-            return self.repo.commitatdate(date)
         else:
             idx = self.comboCommit.currentIndex()
             commit = self.comboCommit.itemData(idx)
