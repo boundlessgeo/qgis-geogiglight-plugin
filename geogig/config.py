@@ -85,7 +85,6 @@ def getUserInfo():
     """Return user information from the settings dialog"""
     user = getConfigValue(GENERAL, USERNAME).strip()
     email = getConfigValue(GENERAL, EMAIL).strip()
-    logServerCalls = getConfigValue(GENERAL, LOG_SERVER_CALLS)
     if not (user and email):
         configdlg = UserConfigDialog(iface.mainWindow())
         configdlg.exec_()
@@ -94,7 +93,7 @@ def getUserInfo():
             email = configdlg.email
             setConfigValue(GENERAL, USERNAME, user)
             setConfigValue(GENERAL, EMAIL, email)
-            return user, email, logServerCalls
+            return user, email
         else:
             return None
-    return user, email, logServerCalls
+    return user, email

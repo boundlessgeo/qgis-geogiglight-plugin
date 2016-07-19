@@ -49,6 +49,7 @@ from geogig.tools.layertracking import isRepoLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
 from requests.exceptions import HTTPError, ConnectionError
+from geogig.config import GENERAL, LOG_SERVER_CALLS, getConfigValue
 
 
 class GeoGigException(Exception):
@@ -93,7 +94,7 @@ class Repository(object):
         self.rootUrl = url.split("/repos")[0] + "/"
         self.title = title
         self.group = group
-        _, _, self.logServerCalls = config.getUserInfo()
+        self.logServerCalls = getConfigValue(GENERAL, LOG_SERVER_CALLS)
 
     def __apicall(self, command, payload={}, transaction=False):
 

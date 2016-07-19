@@ -61,7 +61,7 @@ def syncLayer(layer):
     cursor.close()
     con.close()
     if changes:
-        user, email, logServerCalls = config.getUserInfo()
+        user, email = config.getUserInfo()
         if user is None:
             return
 
