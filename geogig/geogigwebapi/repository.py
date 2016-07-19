@@ -357,7 +357,7 @@ class Repository(object):
             except KeyError:
                 nconflicts = 0
             if nconflicts:
-                mergeCommitId = None
+                mergeCommitId = self.HEAD
                 importCommitId = checker.response["task"]["result"]["import"]["importCommit"]["id"]
                 ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
                 remote = checker.response["task"]["result"]["Merge"]["ours"]
@@ -401,6 +401,8 @@ class Repository(object):
                 conflicts = []
             featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
             return mergeCommitId, importCommitId, conflicts, featureIds
+        else:
+            self.closeTransaction(transactionId)
 
     def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
         payload = {"path": path, "ours": ours, "theirs": theirs,
