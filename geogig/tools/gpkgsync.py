@@ -144,6 +144,11 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     return gpkgfid
 
 def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
+    tracking = getTrackingInfo(layer)
+    repo = Repository(tracking.repoUrl)
+    repo.checkoutlayer(tracking.geopkg, tracking.layername, None, afterCommitId)
+    return
+
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
     print changesFilename
@@ -192,15 +197,16 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
         cursor.execute("DELETE FROM %s WHERE fid='%s'" % (layername, gpkgfid))
         cursor.execute("DELETE FROM %s_fids WHERE gpkg_fid='%s'" % (layername, gpkgfid))
 
-    cursor.execute("DELETE FROM %s_audit;" % layername)
-
-    cursor.execute("UPDATE geogig_audited_tables SET commit_id='%s' WHERE table_name='%s'" % (afterCommitId, layername))
-
-    cursor.close()
     changesCursor.close()
-    con.commit()
-    con.close()
     changesCon.close()
+
+    cursor.execute("DELETE FROM %s_audit;" % layername)
+    con.commit()
+    cursor.execute("UPDATE geogig_audited_tables SET commit_id='%s' WHERE table_name='%s'" % (afterCommitId, layername))
+    con.commit()
+    cursor.close()
+    con.close()
+
 
 def getCommitId(layer):
     filename, layername = namesFromLayer(layer)
