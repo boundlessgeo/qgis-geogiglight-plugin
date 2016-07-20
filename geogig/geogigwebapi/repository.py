@@ -96,6 +96,15 @@ class Repository(object):
         self.group = group
         self.logServerCalls = getConfigValue(GENERAL, LOG_SERVER_CALLS)
 
+    def __eq__(self, o):
+        try:
+            return o.url == self.url
+        except:
+            return False
+
+    def __ne__(self, o):
+        return not self.__eq__(o)
+
     def __apicall(self, command, payload={}, transaction=False):
 
         def __log(url, response, params):

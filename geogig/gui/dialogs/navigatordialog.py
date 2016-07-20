@@ -77,7 +77,6 @@ repoIcon = icon("repo-downloaded.png")
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
 
-
 class NavigatorDialog(BASE, WIDGET):
 
     def __init__(self):
@@ -307,13 +306,12 @@ class NavigatorDialog(BASE, WIDGET):
                                     msg % "See the logs for details.",
                                     QMessageBox.Ok)
 
-
     def updateCurrentRepo(self, repo, name):
         def _update():
             if repo != self.currentRepo:
                 self.tabWidget.setCurrentIndex(0)
-            self.tabWidget.setTabEnabled(1, False)
             if repo is None:
+                self.tabWidget.setTabEnabled(1, False)
                 self.currentRepo = None
                 self.currentRepoName = None
                 self.repoDescription.setText("")
