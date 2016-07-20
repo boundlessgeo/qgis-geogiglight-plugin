@@ -554,7 +554,7 @@ def readRepos():
         repoDescs = json.load(open(filename))
         for r in repoDescs:
             repoEndpoints[r["title"]] = r["url"]
-            repos.extend(repositoriesFromUrl(r["url"], r["title"]))
+            repos.extend(execute(lambda: repositoriesFromUrl(r["url"], r["title"])))
 
 
 readRepos()
