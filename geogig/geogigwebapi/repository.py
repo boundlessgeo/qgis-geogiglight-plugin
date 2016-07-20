@@ -126,8 +126,10 @@ class Repository(object):
                 r.raise_for_status()
                 resp = json.loads(r.text.replace(r"\/", "/"))["response"]
                 __log(url, resp, payload)
-                r = requests.get(self.url + "endTransaction", params = {"transactionId":transactionId})
+                params = {"transactionId":transactionId}
+                r = requests.get(self.url + "endTransaction", params = params)
                 r.raise_for_status()
+                __log(url, r.json(), params)
                 return resp
             else:
                 payload["output_format"] = "json"
