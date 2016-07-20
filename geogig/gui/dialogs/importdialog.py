@@ -114,7 +114,7 @@ class ImportDialog(QtGui.QDialog):
             text = self.layerCombo.currentText()
             self.layer = resolveLayer(text)
 
-        user, email, logServerCalls = config.getUserInfo()
+        user, email = config.getUserInfo()
         if user is None:
             self.close()
             return
