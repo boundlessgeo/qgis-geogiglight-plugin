@@ -120,8 +120,8 @@ def updateInfoActions(layer):
     setAsRepoLayer(layer)
 
 def _syncLayer(layer):
-    syncLayer(layer)
-    updateInfoActions(layer)
+    if syncLayer(layer):
+        updateInfoActions(layer)
 
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)

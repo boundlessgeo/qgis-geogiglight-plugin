@@ -137,7 +137,6 @@ class Repository(object):
     def _apicall(self, command, payload = {}, transaction = False):
         return execute(lambda: self.__apicall(command, payload, transaction))
 
-
     def branches(self):
         resp = self._apicall("branch", {"list":True})
         return [b["name"] for b in _ensurelist(resp["Local"]["Branch"])]
@@ -416,6 +415,13 @@ class Repository(object):
                    "transactionId": transactionId}
         r = requests.get(self.url + "resolveconflict", params = payload)
         r.raise_for_status()
+
+    def closeConflictSolving(self, user, email, message, transactionId):
+        params = {"all": True, "message": message, "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r= requests.get(self.url + "commit", params = params)
+        r.raise_for_status()
+        self.closeTransaction(transactionId)
 
     def closeTransaction(self, transactionId):
         r = requests.get(self.url + "endTransaction", params = {"transactionId": transactionId})

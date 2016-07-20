@@ -61,6 +61,20 @@ def syncLayer(layer):
     cursor.close()
     con.close()
     if changes:
+        con = sqlite3.connect(filename)
+        cursor = con.cursor()
+        beforeAttrs = set(v[1] for v in cursor.execute("PRAGMA table_info('%s');" % layername))
+        afterAttrs = set(v[1] for v in cursor.execute("PRAGMA table_info('%s_audit');" % layername)
+                         if v[1]not in ["audit_timestamp", "audit_op"])
+        cursor.close()
+        con.close()
+        if beforeAttrs != afterAttrs:
+            ret = QMessageBox.warning(iface.mainWindow(), "Cannot commit changes to repository",
+                          "The structure of attributes table has been modified.\n"
+                          "This type of change is not supported by GeoGig.",
+                          QMessageBox.Yes)
+            return
+
         user, email = config.getUserInfo()
         if user is None:
             return
@@ -95,7 +109,8 @@ def syncLayer(layer):
                     conflict.resolveWithRemoteVersion()
                 else:
                     conflict.resolveWithNewFeature(resolution)
-            repo.closeTransaction(conflicts[0].transactionId)
+            repo.closeConflictSolving(user, email, dlg.message, conflicts[0].transactionId)
+            #repo.closeTransaction(conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
         applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
@@ -115,6 +130,7 @@ def syncLayer(layer):
 
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
                                                   level=QgsMessageBar.INFO)
+    return True
 
 
 def changeVersionForLayer(layer):
