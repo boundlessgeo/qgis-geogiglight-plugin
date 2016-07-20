@@ -44,7 +44,7 @@ class Commit(Commitish):
         self.commitid = commitid
         self.treeid = treeid
         self._parents = parents or [NULL_ID]
-        self.message = message
+        self.message = unicode(message)
         self.authorname = authorname
         self.authordate = authordate
         self.committername = committername
