@@ -94,7 +94,6 @@ class Repository(object):
         self.rootUrl = url.split("/repos")[0] + "/"
         self.title = title
         self.group = group
-        self.logServerCalls = getConfigValue(GENERAL, LOG_SERVER_CALLS)
 
     def __eq__(self, o):
         try:
@@ -108,7 +107,7 @@ class Repository(object):
     def __apicall(self, command, payload={}, transaction=False):
 
         def __log(url, response, params):
-            if self.logServerCalls:
+            if getConfigValue(GENERAL, LOG_SERVER_CALLS):
                 msg = "GET: %s\nPARAMS: %s\nRESPONSE: %s" % (url, params, response)
                 QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
 
