@@ -28,13 +28,11 @@ import os
 import sys
 import inspect
 from geogig import config
-import traceback
 import logging
 from qgis.core import *
 from qgis.gui import *
 from geogig.tools.utils import *
 from gui.dialogs.configdialog import ConfigDialog
-from geogig.gui.dialogs.geogigerrordialog import GeoGigErrorDialog
 from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
@@ -146,18 +144,6 @@ class GeoGigPlugin:
             self.iface.addPluginToMenu(u"&GeoGig", self.explorerAction)
             self.iface.addPluginToMenu(u"&GeoGig", self.configAction)
             self.iface.addPluginToMenu(u"&GeoGig", self.toolAction)
-
-        self.qgisHook = sys.excepthook;
-
-        def pluginHook(t, value, tb):
-            trace = "".join(traceback.format_exception(t, value, tb))
-            if "geogig" in trace.lower():
-                QgsMessageLog.logMessage(trace, "GeoGig", QgsMessageLog.CRITICAL)
-                dlg = GeoGigErrorDialog(trace, self.iface.mainWindow())
-                dlg.exec_()
-            else:
-                self.qgisHook(t, value, tb)
-        sys.excepthook = pluginHook
 
         self.mapTool = MapToolGeoGigInfo(self.iface.mapCanvas())
         #This crashes QGIS, so we comment it out until finding a solution
