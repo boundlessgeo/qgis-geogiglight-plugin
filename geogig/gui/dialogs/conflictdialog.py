@@ -117,7 +117,7 @@ class ConflictDialog(WIDGET, BASE):
             item.addChild(conflictItem)
 
     def cellClicked(self, row, col):
-        if col > 1:
+        if col > 2:
             return
         value = self.attributesTable.item(row, col).value
         geoms = (self.oursgeom, self.theirsgeom)
