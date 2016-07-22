@@ -104,20 +104,19 @@ class Repository(object):
     def __ne__(self, o):
         return not self.__eq__(o)
 
+    def __log(self, url, response, params, operation = "GET"):
+        if getConfigValue(GENERAL, LOG_SERVER_CALLS):
+            msg = "%s: %s\nPARAMS: %s\nRESPONSE: %s" % (operation, url, params, response)
+            QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
+
     def __apicall(self, command, payload={}, transaction=False):
-
-        def __log(url, response, params):
-            if getConfigValue(GENERAL, LOG_SERVER_CALLS):
-                msg = "GET: %s\nPARAMS: %s\nRESPONSE: %s" % (url, params, response)
-                QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
-
         try:
             if transaction:
                 url = self.url + "beginTransaction"
                 params = {"output_format":"json"}
                 r = requests.get(url, params=params)
                 r.raise_for_status()
-                __log(url, r.json(), params)
+                self.__log(url, r.json(), params)
                 transactionId = r.json()["response"]["Transaction"]["ID"]
                 payload["output_format"] = "json"
                 payload["transactionId"] = transactionId
@@ -125,11 +124,11 @@ class Repository(object):
                 r = requests.get(url, params=payload)
                 r.raise_for_status()
                 resp = json.loads(r.text.replace(r"\/", "/"))["response"]
-                __log(url, resp, payload)
+                self.__log(url, resp, payload)
                 params = {"transactionId":transactionId}
                 r = requests.get(self.url + "endTransaction", params = params)
                 r.raise_for_status()
-                __log(url, r.json(), params)
+                self.__log(url, r.json(), params)
                 return resp
             else:
                 payload["output_format"] = "json"
@@ -137,7 +136,7 @@ class Repository(object):
                 r = requests.get(url, params=payload)
                 r.raise_for_status()
                 j = json.loads(r.text.replace(r"\/", "/"))
-                __log(url, r.json(), payload)
+                self.__log(url, r.json(), payload)
                 return j["response"]
         except ConnectionError, e:
             msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
@@ -343,7 +342,8 @@ class Repository(object):
         if interchange:
             payload["interchange"]= True
         files = {'fileUpload': open(filename, 'rb')}
-        r = requests.post(self.url + "import.json", params = payload, files=files)
+        r = requests.post(self.url + "import.json", params = payload, files = files)
+        self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         root = ET.fromstring(r.text)
         taskId = root.find("id").text
@@ -356,8 +356,6 @@ class Repository(object):
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
-        import json
-        print json.dumps(checker.response, indent=4, sort_keys=True)
         if interchange:
             try:
                 nconflicts = checker.response["task"]["result"]["Merge"]["conflicts"]
@@ -414,8 +412,8 @@ class Repository(object):
     def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
         payload = {"path": path, "ours": ours, "theirs": theirs,
                    "merges": feature}
-        print payload
         r = requests.post(self.url + "repo/mergefeature", json = payload)
+        self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         fid = r.text
         self.resolveConflictWithFeatureId(path, fid, transactionId)
@@ -424,17 +422,20 @@ class Repository(object):
         payload = {"path": path, "objectid": fid,
                    "transactionId": transactionId}
         r = requests.get(self.url + "resolveconflict", params = payload)
+        self.__log(r.url, r.text, payload)
         r.raise_for_status()
 
     def closeConflictSolving(self, user, email, message, transactionId):
         params = {"all": True, "message": message, "transactionId": transactionId,
                   "authorName": user, "authorEmail": email}
-        r= requests.get(self.url + "commit", params = params)
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
         r.raise_for_status()
         self.closeTransaction(transactionId)
 
     def closeTransaction(self, transactionId):
         r = requests.get(self.url + "endTransaction", params = {"transactionId": transactionId})
+        self.__log(r.url, r.text, {"transactionId": transactionId})
         r.raise_for_status()
 
     def fullDescription(self):
