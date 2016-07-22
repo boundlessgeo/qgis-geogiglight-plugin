@@ -410,8 +410,9 @@ class Repository(object):
             self.closeTransaction(transactionId)
 
     def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
+        merges = {k:{"value": v} for k,v in feature.iteritems()}
         payload = {"path": path, "ours": ours, "theirs": theirs,
-                   "merges": feature}
+                   "merges": merges}
         r = requests.post(self.url + "repo/mergefeature", json = payload)
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
