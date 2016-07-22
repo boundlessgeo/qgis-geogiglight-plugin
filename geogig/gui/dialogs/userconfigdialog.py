@@ -78,11 +78,9 @@ class UserConfigDialog(QtGui.QDialog):
     def okPressed(self):
         self.user = unicode(self.usernameBox.text())
         self.email = unicode(self.emailBox.text())
-        self.logCalls = self.logCheckBox.isChecked()
         self.close()
 
     def cancelPressed(self):
         self.user = None
         self.email = None
-        self.logCalls = None
         self.close()
