@@ -213,7 +213,7 @@ class BranchTreeItem(QtGui.QTreeWidgetItem):
             tags = defaultdict(list)
             for k, v in self.repo.tags().iteritems():
                 tags[v].append(k)
-            commits = self.repo.log(until = self.branch, path = self.treeWidget().filterLayers)
+            commits = self.repo.log(until = self.branch, path = self.treeWidget().filterLayers, limit = 100)
             for commit in commits:
                 item = CommitTreeItem(commit)
                 self.addChild(item)
