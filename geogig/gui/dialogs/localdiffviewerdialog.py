@@ -96,8 +96,16 @@ class LocalDiffViewerDialog(WIDGET, BASE):
             self.attributesTable.setItem(i, 0, DiffItem(oldfeature.get(attrib, None)))
             self.attributesTable.setItem(i, 1, DiffItem(newfeature.get(attrib, None)))
             attribChangeType = changeTypeName[changetype]
-            if changetype == LOCAL_FEATURE_MODIFIED and oldfeature.get(attrib, None) == newfeature.get(attrib, None):
-                attribChangeType = "NO_CHANGE"
+            if changetype == LOCAL_FEATURE_MODIFIED:
+                oldvalue = oldfeature.get(attrib, None)
+                newvalue = newfeature.get(attrib, None)
+                try:# to avoid false change detection due to different precisions
+                    oldvalue = QgsGeometry.fromWkt(oldvalue).exportToWkt(7)
+                    newvalue = QgsGeometry.fromWkt(newvalue).exportToWkt(7)
+                except:
+                    pass
+                if oldvalue == newvalue:
+                    attribChangeType = "NO_CHANGE"
             self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attribChangeType))
             for col in range(3):
                 self.attributesTable.item(i, col).setBackgroundColor(color[attribChangeType]);
@@ -186,7 +194,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                 else:
                     request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
                     qgsfeature = list(layer.getFeatures(request))[0]
-                    value = qgsfeature.geometry().exportToWkt()
+                    value = qgsfeature.geometry().exportToWkt().upper()
                 featurechanges[attr] = value
             path = geogigFidFromGpkgFid(tracking, path)
             changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
