@@ -93,7 +93,6 @@ class GeoGigPlugin:
         QgsMapLayerRegistry.instance().layerRemoved.disconnect(layerRemoved)
         self.menu.deleteLater()
         self.toolButton.deleteLater()
-        sys.excepthook = self.qgisHook
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
         for layer in layers:
             removeLayerActions(layer)
