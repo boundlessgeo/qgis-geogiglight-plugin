@@ -25,13 +25,14 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-from geogig.tests.testwebapilib import webapiSuite
 import os
+import sys
 import sqlite3
-from tests import _createTestRepo
 import tests
 import unittest
 import shutil
+from tests import _createTestRepo
+from geogig.tests.testwebapilib import webapiSuite
 from sqlite3 import OperationalError
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
@@ -371,10 +372,12 @@ class PluginTests(unittest.TestCase):
         dest = tempFilename("gpkg")
         shutil.copy(src, dest)
         layer = loadLayerNoCrsDialog(dest, "points", "ogr")
+        self.assertTrue(layer.isValid())
         features = list(layer.getFeatures())
         geom = QgsGeometry.fromPoint(QgsPoint(12,12))
-        with edit(layer):
-            layer.changeGeometry(features[0].id(), geom)
+        self.assertTrue(layer.startEditing())
+        self.assertTrue(layer.changeGeometry(features[0].id(), geom))
+        self.assertTrue(layer.commitChanges())
         con = sqlite3.connect(dest)
         cursor = con.cursor()
         cursor.execute("DELETE FROM points_audit;")
@@ -397,3 +400,7 @@ def unitTests():
     _tests.extend(webapiSuite())
     _tests.extend(pluginSuite())
     return _tests
+
+
+def run_tests():
+    unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(pluginSuite())
