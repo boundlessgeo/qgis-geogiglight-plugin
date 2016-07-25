@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -30,6 +31,8 @@ import sqlite3
 from tests import _createTestRepo
 import tests
 import unittest
+import shutil
+from sqlite3 import OperationalError
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
 from geogig.geogigwebapi import repository
@@ -364,23 +367,24 @@ class PluginTests(unittest.TestCase):
         self.assertEqual(getCommitId(layer), log[0].commitid)
 
     def testCanCleanAuditTableAfterEdit(self):
-        repo = _createTestRepo("simple", True)
-        log = repo.log()
-        self.assertEqual(3, len(log))
-        commitid = log[-1].commitid
-        filename = tempFilename("gpkg")
-        print filename
-        repo.checkoutlayer(filename, "points", ref = commitid)
-        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        src = os.path.join(os.path.dirname(__file__), "data", "layers", "points.gpkg")
+        dest = tempFilename("gpkg")
+        shutil.copy(src, dest)
+        layer = loadLayerNoCrsDialog(dest, "points", "ogr")
         features = list(layer.getFeatures())
         geom = QgsGeometry.fromPoint(QgsPoint(12,12))
         with edit(layer):
             layer.changeGeometry(features[0].id(), geom)
-        con = sqlite3.connect(filename)
+        con = sqlite3.connect(dest)
+        cursor = con.cursor()
+        cursor.execute("DELETE FROM points_audit;")
+        self.assertRaises(OperationalError, con.commit)
+        con.close()
+        layer.reload()
+        con = sqlite3.connect(dest)
         cursor = con.cursor()
         cursor.execute("DELETE FROM points_audit;")
         con.commit()
-        con.close()
 
 def pluginSuite():
     suite = unittest.TestSuite()
