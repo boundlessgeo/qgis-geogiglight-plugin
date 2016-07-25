@@ -26,6 +26,7 @@ __revision__ = '$Format:%H$'
 
 from geogig.tests.testwebapilib import webapiSuite
 import os
+import sqlite3
 from tests import _createTestRepo
 import tests
 import unittest
@@ -361,6 +362,25 @@ class PluginTests(unittest.TestCase):
         features = list(layer.getFeatures())
         self.assertEqual(2, len(features))
         self.assertEqual(getCommitId(layer), log[0].commitid)
+
+    def testCanCleanAuditTableAfterEdit(self):
+        repo = _createTestRepo("simple", True)
+        log = repo.log()
+        self.assertEqual(3, len(log))
+        commitid = log[-1].commitid
+        filename = tempFilename("gpkg")
+        print filename
+        repo.checkoutlayer(filename, "points", ref = commitid)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        geom = QgsGeometry.fromPoint(QgsPoint(12,12))
+        with edit(layer):
+            layer.changeGeometry(features[0].id(), geom)
+        con = sqlite3.connect(filename)
+        cursor = con.cursor()
+        cursor.execute("DELETE FROM points_audit;")
+        con.commit()
+        con.close()
 
 def pluginSuite():
     suite = unittest.TestSuite()
