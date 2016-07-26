@@ -36,11 +36,9 @@ from PyQt4.QtGui import (QIcon,
                          QVBoxLayout,
                          QAbstractItemView,
                          QTreeWidgetItem,
-                         QAction,
                          QMessageBox,
                          QBrush,
                          QColor,
-                         QToolButton,
                          QInputDialog)
 
 from qgis.core import QgsApplication, QgsMessageLog
@@ -70,9 +68,7 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
-#addIcon = icon("new-repo.png")
 repoIcon = icon("repo-downloaded.png")
-#deleteIcon = icon("delete.gif")
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -188,10 +184,9 @@ class NavigatorDialog(BASE, WIDGET):
         for repo in repos:
             groupedRepos[repo.group].append(repo)
 
-        for groupName, groupRepos in groupedRepos.iteritems():
-            groupItem = GroupItem()
-            groupItem.setText(0, groupName)
-            groupItem.setIcon(0, repoIcon)
+        for groupName in repository.repoEndpoints:
+            groupRepos = groupedRepos.get(groupName, [])
+            groupItem = GroupItem(groupName)
             for repo in groupRepos:
                 try:
                     item = RepoItem(repo)
@@ -199,8 +194,8 @@ class NavigatorDialog(BASE, WIDGET):
                 except:
                     #TODO: inform of failed repos
                     pass
-            if groupItem.childCount():
-                self.reposItem.addChild(groupItem)
+
+            self.reposItem.addChild(groupItem)
 
         self.repoTree.addTopLevelItem(self.reposItem)
         if self.reposItem.childCount():
@@ -294,7 +289,7 @@ class NavigatorDialog(BASE, WIDGET):
                 self.updateCurrentRepo(item.repo, item.text(0))
             else:
                 self.updateCurrentRepo(None, None)
-                if item.parent() == self.repoTree.invisibleRootItem():
+                if isinstance(item, RepositoriesItem):
                     url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
                     self.repoDescription.setSource(url)
                 else:
@@ -346,26 +341,26 @@ class NavigatorDialog(BASE, WIDGET):
         dlg = CreateRepoDialog()
         dlg.exec_()
         if dlg.title is not None:
+            groupItem = GroupItem(dlg.title)
             try:
-                repos = repositoriesFromUrl(dlg.url, dlg.title)
-                addRepoEndpoint(dlg.url, dlg.title)
-                groupItem = GroupItem()
-                groupItem.setText(0, dlg.title)
-                groupItem.setIcon(0, repoIcon)
+                repos = addRepoEndpoint(dlg.url, dlg.title)
+                if not repos:
+                    msg = "No repositories found at the specified server"
+                    QMessageBox.warning(self, 'Add repositories',
+                                    "No repositories found at the specified server",
+                                    QMessageBox.Ok)
                 for repo in repos:
                     item = RepoItem(repo)
-                    addRepo(repo)
                     groupItem.addChild(item)
-                if groupItem.childCount():
-                    self.reposItem.addChild(groupItem)
-                    self.reposItem.setExpanded(True)
-                    self.repoTree.sortItems(0, Qt.AscendingOrder)
             except Exception, e:
-                msg = "No repositories found at the specified url. %s"
+                msg = "No geogig server found at the specified url. %s"
                 QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
                 QMessageBox.warning(self, 'Add repositories',
                                     msg % "See the logs for details.",
                                     QMessageBox.Ok)
+            self.reposItem.addChild(groupItem)
+            self.reposItem.setExpanded(True)
+            self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showFilterWidget(self, visible):
         self.filterWidget.setVisible(visible)
@@ -386,7 +381,8 @@ class NavigatorDialog(BASE, WIDGET):
         if isinstance(item, RepositoriesItem):
             self.actionRefresh.setEnabled(True)
         elif isinstance(item, GroupItem):
-            self.actionCreateRepository.setEnabled(True)
+            if item.isRepoAvailable:
+                self.actionCreateRepository.setEnabled(True)
             self.actionDelete.setEnabled(True)
         else:
             self.actionDelete.setEnabled(True)
@@ -398,7 +394,15 @@ class RepositoriesItem(QTreeWidgetItem):
         self.setText(0, "Repositories")
 
 class GroupItem(QTreeWidgetItem):
-    pass
+    def __init__(self, name):
+        QTreeWidgetItem.__init__(self)
+        self.setIcon(0, repoIcon)
+        self.setText(0, name)
+        if name not in repository.availableRepoEndpoints:
+            self.setForeground(0,Qt.gray)
+            self.isRepoAvailable = False
+        else:
+            self.isRepoAvailable = True
 
 class RepoItem(QTreeWidgetItem):
     def __init__(self, repo):

@@ -491,6 +491,7 @@ class TaskChecker(QObject):
 
 repos = []
 repoEndpoints = {}
+availableRepoEndpoints = {}
 
 def addRepo(repo):
     global repos
@@ -508,6 +509,9 @@ def addRepoEndpoint(url, title):
     global repoEndpoints
     repoEndpoints[title] = url
     saveRepoEndpoints()
+    repos = execute(lambda: repositoriesFromUrl(url, title))
+    repos.extend(repos)
+    availableRepoEndpoints[title] = url
 
 def removeRepoEndpoint(title):
     global repoEndpoints
@@ -524,17 +528,16 @@ def saveRepoEndpoints():
 def repositoriesFromUrl(url, title):
     if not url.endswith("/"):
         url = url + "/"
-    try:
-        r = requests.get(url + "repos")
-        r.raise_for_status()
-    except:
-        return []
+
+    r = requests.get(url + "repos")
+    r.raise_for_status()
+
 
     root = ET.fromstring(r.text)
 
     repos = []
-    for country in root.findall('repo'):
-        name = country.find('name').text
+    for node in root.findall('repo'):
+        name = node.find('name').text
         repos.append(Repository(url + "repos/%s/" % name, title, name))
 
     return repos
@@ -550,14 +553,21 @@ def createRepoAtUrl(url, group, name):
 def readRepos():
     global repos
     global repoEndpoints
+    global availableRepoEndpoints
     repos = []
     repoEndpoints = {}
+    availableRepoEndpoints = {}
     filename = os.path.join(userFolder(), "repositories")
     if os.path.exists(filename):
         repoDescs = json.load(open(filename))
         for r in repoDescs:
             repoEndpoints[r["title"]] = r["url"]
-            repos.extend(execute(lambda: repositoriesFromUrl(r["url"], r["title"])))
+            try:
+                repos = execute(lambda: repositoriesFromUrl(r["url"], r["title"]))
+                repos.extend(repos)
+                availableRepoEndpoints[r["title"]] = r["url"]
+            except:
+                pass
 
 
 readRepos()
