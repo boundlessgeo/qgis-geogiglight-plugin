@@ -65,19 +65,6 @@ class HistoryViewer(QtGui.QTreeWidget):
         self.customContextMenuRequested.connect(self.showPopupMenu)
         self.itemExpanded.connect(self._itemExpanded)
 
-    def setFilterLayers(self, layers):
-        self._filterLayers = layers
-        for i in xrange(self.topLevelItemCount()):
-            item = self.topLevelItem(i)
-            if item.childCount():
-                item.takeChildren()
-                item.populate()
-
-    def getFilterLayers(self):
-        return self._filterLayers
-
-    filterLayers = property(getFilterLayers, setFilterLayers)
-
     def showPopupMenu(self, point):
         selected = self.selectedItems()
         if len(selected) == 1:
@@ -102,12 +89,13 @@ class HistoryViewer(QtGui.QTreeWidget):
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
-                menu = QtGui.QMenu()
-                deleteAction = QtGui.QAction(deleteIcon, "Delete this branch", None)
-                deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
-                menu.addAction(deleteAction)
-                point = self.mapToGlobal(point)
-                menu.exec_(point)
+                if self.topLevelItemCount() > 1:
+                    menu = QtGui.QMenu()
+                    deleteAction = QtGui.QAction(deleteIcon, "Delete this branch", None)
+                    deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
+                    menu.addAction(deleteAction)
+                    point = self.mapToGlobal(point)
+                    menu.exec_(point)
         elif len(selected) == 2:
             if isinstance(selected[0], CommitTreeItem) and isinstance(selected[1], CommitTreeItem):
                 menu = QtGui.QMenu()
@@ -213,7 +201,7 @@ class BranchTreeItem(QtGui.QTreeWidgetItem):
             tags = defaultdict(list)
             for k, v in self.repo.tags().iteritems():
                 tags[v].append(k)
-            commits = self.repo.log(until = self.branch, path = self.treeWidget().filterLayers, limit = 100)
+            commits = self.repo.log(until = self.branch, limit = 100)
             for commit in commits:
                 item = CommitTreeItem(commit)
                 self.addChild(item)
