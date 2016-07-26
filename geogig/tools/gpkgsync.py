@@ -160,13 +160,6 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     return gpkgfid
 
 def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
-    #===========================================================================
-    # tracking = getTrackingInfo(layer)
-    # repo = Repository(tracking.repoUrl)
-    # repo.checkoutlayer(tracking.geopkg, tracking.layername, None, afterCommitId)
-    # return
-    #===========================================================================
-
     layer.reload()
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
