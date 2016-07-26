@@ -31,6 +31,7 @@ import datetime
 import os
 import time
 from geogig.geogigwebapi.commitish import Commitish
+from qgis.utils import iface
 
 class RefWidget(QtGui.QWidget):
 
@@ -190,10 +191,12 @@ class CommitListItem(QtGui.QListWidgetItem):
 
 class CommitSelectDialog(QtGui.QDialog):
 
-    def __init__(self, repo, parent = None):
-        super(CommitSelectDialog, self).__init__()
+    def __init__(self, repo, until = None, path = None, parent = None):
+        super(CommitSelectDialog, self).__init__(parent or iface.mainWindow())
         self.repo = repo
         self.ref = None
+        self.path = path
+        self.until = until
         self.initGui()
 
     def initGui(self):
@@ -206,7 +209,7 @@ class CommitSelectDialog(QtGui.QDialog):
         self.list.setAlternatingRowColors(True)
         self.list.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.list.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        log = self.repo.log()
+        log = self.repo.log(until = self.until, path = self.path, limit = 100)
         for commit in log:
             item = CommitListItem(commit)
             self.list.addItem(item)

@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -44,7 +45,9 @@ from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
 from geogig.tools.gpkgsync import getCommitId
 from geogig.repowatcher import repoWatcher
 from geogig.gui.dialogs.geogigref import RefDialog
-
+from gui.dialogs.geogigref import CommitSelectDialog
+from tools.layertracking import getTrackingInfo
+from tools.gpkgsync import applyLayerChanges
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
@@ -65,6 +68,10 @@ def setAsRepoLayer(layer):
     changeVersionAction.triggered.connect(partial(changeVersion, layer))
     config.iface.legendInterface().addLegendLayerAction(changeVersionAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
+    revertChangeAction = QtGui.QAction(u"Revert changes introduced by a version...", config.iface.legendInterface())
+    revertChangeAction.triggered.connect(partial(revertChange, layer))
+    config.iface.legendInterface().addLegendLayerAction(revertChangeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
+    config.iface.legendInterface().addLegendLayerActionForLayer(revertChangeAction, layer)
     changesAction = QtGui.QAction(u"Show local changes...", config.iface.legendInterface())
     changesAction.triggered.connect(partial(showLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(changesAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
@@ -73,7 +80,7 @@ def setAsRepoLayer(layer):
     revertAction.triggered.connect(partial(revertLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
-    layer.geogigActions = [removeAction, separatorAction, syncAction, changeVersionAction, changesAction, revertAction]
+    layer.geogigActions = [removeAction, separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
     for action in layer.geogigActions:
         action.setEnabled(canConnect)
     if not canConnect:
@@ -139,6 +146,19 @@ def removeLayerActions(layer):
         layer.infoActions = []
     except AttributeError:
         pass
+
+def revertChange(layer):
+    tracking = getTrackingInfo(layer)
+    repo = Repository(tracking.repoUrl)
+    currentCommitId = getCommitId(layer)
+    filename, layername = namesFromLayer(layer)
+    dlg = CommitSelectDialog(repo, currentCommitId, layername)
+    dlg.exec_()
+    if dlg.ref is not None:
+        #TODO check that selected commit is in history line
+        applyLayerChanges(repo, layer, dlg.ref, dlg.ref.parent())
+        config.iface.messageBar().pushMessage("GeoGig", "Version changes have been reverted in local layer",
+                                                      level=QgsMessageBar.INFO)
 
 def changeVersion(layer):
     if hasLocalChanges(layer):
