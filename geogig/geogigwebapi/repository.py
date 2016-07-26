@@ -563,8 +563,8 @@ def readRepos():
         for r in repoDescs:
             repoEndpoints[r["title"]] = r["url"]
             try:
-                repos = execute(lambda: repositoriesFromUrl(r["url"], r["title"]))
-                repos.extend(repos)
+                _repos = execute(lambda: repositoriesFromUrl(r["url"], r["title"]))
+                repos.extend(_repos)
                 availableRepoEndpoints[r["title"]] = r["url"]
             except:
                 pass
