@@ -68,7 +68,7 @@ class VersionViewerDialog(QtGui.QDialog):
                 ''''w = CommitListItemWidget(commit)
                 self.ui.listWidget.setItemWidget(item, w)'''
         else:
-            raise GeoGigException("The feature id (%s) cannot be found in the repository" % (path))
+            raise GeoGigException("The selected feature is not versioned yet")
 
 
     def commitClicked(self):

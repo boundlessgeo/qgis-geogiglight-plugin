@@ -24,12 +24,15 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
+from geogig.geogigwebapi.repository import GeoGigException
 from PyQt4 import QtCore, QtGui
 
 class BlameDialog(QtGui.QDialog):
     def __init__(self, repo, path):
         QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        versions = repo.log(path = path, limit = 1)
+        if not versions:
+            raise GeoGigException("The selected feature is not versioned yet")
         self.blamedata = repo.blame(path)
         self.repo = repo
         self.commitText = {}
