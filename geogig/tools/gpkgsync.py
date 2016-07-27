@@ -206,7 +206,7 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
         geogigfid = r[0]
         gpkgfid = gpkgfidFromGeogigfid(cursor, layername, geogigfid)
         cursor.execute("DELETE FROM %s WHERE fid='%s'" % (layername, gpkgfid))
-        cursor.execute("DELETE FROM %s_fids WHERE gpkg_fid='%s'" % (layername, gpkgfid))
+        #cursor.execute("DELETE FROM %s_fids WHERE gpkg_fid='%s'" % (layername, gpkgfid))
 
     changesCursor.close()
     changesCon.close()
