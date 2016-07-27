@@ -507,15 +507,25 @@ def removeRepo(repo):
 
 def addRepoEndpoint(url, title):
     global repoEndpoints
+    global repos
     repoEndpoints[title] = url
     saveRepoEndpoints()
-    repos = execute(lambda: repositoriesFromUrl(url, title))
-    repos.extend(repos)
+    _repos = execute(lambda: repositoriesFromUrl(url, title))
+    repos.extend(_repos)
     availableRepoEndpoints[title] = url
+    return _repos
 
 def removeRepoEndpoint(title):
     global repoEndpoints
+    global repos
+    url = repoEndpoints[title]
+    for repo in repos[::-1]:
+        if url in repo.rootUrl:
+            repos.remove(repo)
+
     del repoEndpoints[title]
+    if title in availableRepoEndpoints:
+        del availableRepoEndpoints[title]
     saveRepoEndpoints()
 
 def saveRepoEndpoints():

@@ -48,7 +48,7 @@ from geogig import config
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.gui.dialogs.createrepodialog import CreateRepoDialog
+from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
 from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import (getAllLayers,
@@ -89,6 +89,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionAddGeoGigServer.setIcon(icon('geogig_server.png'))
         self.actionCreateRepository.setIcon(icon('new-repo.png'))
         self.actionAddLayer.setIcon(icon('layer_group.gif'))
+        self.actionEdit.setIcon(QgsApplication.getThemeIcon('/symbologyEdit.png'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
         self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
@@ -96,6 +97,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
         self.actionCreateRepository.triggered.connect(self.createRepo)
         self.actionAddLayer.triggered.connect(self.addLayer)
+        self.actionEdit.triggered.connect(self.editGeoGigServer)
         self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
         self.actionDelete.triggered.connect(self.deleteCurrentElement)
@@ -254,22 +256,15 @@ class NavigatorDialog(BASE, WIDGET):
                     setAsNonRepoLayer(layer)
             parent = item.parent()
             parent.removeChild(item)
-            if parent.childCount() == 0:
-                parent.parent().removeChild(parent)
             self.updateCurrentRepo(None, None)
         elif isinstance(item, GroupItem):
-            for i in range(item.childCount()):
-                repoItem = item.child(i)
-                tracked = getTrackedPathsForRepo(repoItem.repo)
-                layers = getVectorLayers()
-                for layer in layers:
-                    if formatSource(layer) in tracked:
-                        setAsNonRepoLayer(layer)
-                removeTrackedForRepo(repoItem.repo)
-            parent = item.parent()
-            parent.removeChild(item)
-            removeRepoEndpoint(item.text(0))
+            self._removeRepoEndpoint(item)
 
+
+    def _removeRepoEndpoint(self, item):
+        parent = item.parent()
+        parent.removeChild(item)
+        removeRepoEndpoint(item.text(0))
 
     def filterRepos(self):
         text = self.leFilter.text().strip()
@@ -337,30 +332,43 @@ class NavigatorDialog(BASE, WIDGET):
             addRepo(repo)
             groupItem.addChild(item)
 
-    def addGeoGigServer(self):
-        dlg = CreateRepoDialog()
+    def editGeoGigServer(self):
+        item = self.repoTree.selectedItems()[0]
+        dlg = GeoGigServerDialog(repository.repoEndpoints[item.name], item.name)
         dlg.exec_()
         if dlg.title is not None:
-            groupItem = GroupItem(dlg.title)
-            try:
-                repos = addRepoEndpoint(dlg.url, dlg.title)
-                if not repos:
-                    msg = "No repositories found at the specified server"
-                    QMessageBox.warning(self, 'Add repositories',
-                                    "No repositories found at the specified server",
-                                    QMessageBox.Ok)
+            self._removeRepoEndpoint(item)
+            self._addGeoGigServer(dlg.title, dlg.url)
+
+    def addGeoGigServer(self):
+        dlg = GeoGigServerDialog()
+        dlg.exec_()
+        if dlg.title is not None:
+            self._addGeoGigServer(dlg.title, dlg.url)
+
+    def _addGeoGigServer(self, title, url):
+        try:
+            repos = addRepoEndpoint(url, title)
+            if not repos:
+                msg = "No repositories found at the specified server"
+                QMessageBox.warning(self, 'Add repositories',
+                                "No repositories found at the specified server",
+                                QMessageBox.Ok)
+            else:
+                groupItem = GroupItem(title)
                 for repo in repos:
                     item = RepoItem(repo)
                     groupItem.addChild(item)
-            except Exception, e:
-                msg = "No geogig server found at the specified url. %s"
-                QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
-                QMessageBox.warning(self, 'Add repositories',
-                                    msg % "See the logs for details.",
-                                    QMessageBox.Ok)
-            self.reposItem.addChild(groupItem)
-            self.reposItem.setExpanded(True)
-            self.repoTree.sortItems(0, Qt.AscendingOrder)
+        except Exception, e:
+            msg = "No geogig server found at the specified url. %s"
+            QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
+            QMessageBox.warning(self, 'Add repositories',
+                                msg % "See the logs for details.",
+                                QMessageBox.Ok)
+            groupItem = GroupItem(title)
+        self.reposItem.addChild(groupItem)
+        self.reposItem.setExpanded(True)
+        self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showFilterWidget(self, visible):
         self.filterWidget.setVisible(visible)
@@ -374,6 +382,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionCreateRepository.setEnabled(False)
         self.actionRefresh.setEnabled(False)
         self.actionDelete.setEnabled(False)
+        self.actionEdit.setEnabled(False)
         if len(self.repoTree.selectedItems()) == 0:
             return
 
@@ -381,6 +390,7 @@ class NavigatorDialog(BASE, WIDGET):
         if isinstance(item, RepositoriesItem):
             self.actionRefresh.setEnabled(True)
         elif isinstance(item, GroupItem):
+            self.actionEdit.setEnabled(True)
             if item.isRepoAvailable:
                 self.actionCreateRepository.setEnabled(True)
             self.actionDelete.setEnabled(True)
@@ -403,6 +413,7 @@ class GroupItem(QTreeWidgetItem):
             self.isRepoAvailable = False
         else:
             self.isRepoAvailable = True
+        self.name = name
 
 class RepoItem(QTreeWidgetItem):
     def __init__(self, repo):

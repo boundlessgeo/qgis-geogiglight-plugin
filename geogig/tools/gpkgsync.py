@@ -101,7 +101,6 @@ def syncLayer(layer):
             if not solved:
                 repo.closeTransaction(conflicts[0].transactionId)
                 return
-            print resolvedConflicts
             for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
                 if resolution == ConflictDialog.LOCAL:
                     conflict.resolveWithLocalVersion()

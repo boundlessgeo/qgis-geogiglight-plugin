@@ -32,11 +32,11 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 WIDGET, BASE = uic.loadUiType(
-    os.path.join(pluginPath, 'ui', 'createrepodialog.ui'))
+    os.path.join(pluginPath, 'ui', 'geogigserverdialog.ui'))
 
-class CreateRepoDialog(WIDGET, BASE):
+class GeoGigServerDialog(WIDGET, BASE):
 
-    def __init__(self):
+    def __init__(self, url = None, title = None):
         QtGui.QDialog.__init__(self)
         self.setupUi(self)
 
@@ -44,6 +44,11 @@ class CreateRepoDialog(WIDGET, BASE):
         self.buttonBox.rejected.connect(self.cancelPressed)
 
         self.title = None
+
+        if url:
+            self.urlBox.setText(url)
+        if title:
+            self.titleBox.setText(title)
 
     def okPressed(self):
         self.urlBox.setStyleSheet("QLineEdit{background: white}")

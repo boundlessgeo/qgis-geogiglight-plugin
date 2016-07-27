@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>349</width>
+    <width>335</width>
     <height>602</height>
    </rect>
   </property>
@@ -41,6 +41,7 @@
       <addaction name="actionRefresh"/>
       <addaction name="actionShowFilter"/>
       <addaction name="actionDelete"/>
+      <addaction name="actionEdit"/>
      </widget>
     </item>
     <item>
@@ -242,6 +243,11 @@
    </property>
    <property name="toolTip">
     <string>Create new repository</string>
+   </property>
+  </action>
+  <action name="actionEdit">
+   <property name="text">
+    <string>Edit</string>
    </property>
   </action>
  </widget>
