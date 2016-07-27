@@ -189,12 +189,15 @@ class LocalDiffViewerDialog(WIDGET, BASE):
             featurechanges = {}
             path = str(c[attributes.index("fid")])
             for attr in attrnames:
-                if attr != geomField:
-                    value = c[attributes.index(attr)]
+                if c[-1] == LOCAL_FEATURE_REMOVED:
+                    value = None
                 else:
-                    request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
-                    qgsfeature = list(layer.getFeatures(request))[0]
-                    value = qgsfeature.geometry().exportToWkt().upper()
+                    if attr != geomField:
+                        value = c[attributes.index(attr)]
+                    else:
+                        request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
+                        qgsfeature = list(layer.getFeatures(request))[0]
+                        value = qgsfeature.geometry().exportToWkt().upper()
                 featurechanges[attr] = value
             path = geogigFidFromGpkgFid(tracking, path)
             changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
