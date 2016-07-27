@@ -160,7 +160,8 @@ def revertChange(layer):
         layer.reload()
         layer.triggerRepaint()
         config.iface.messageBar().pushMessage("GeoGig", "Version changes have been reverted in local layer",
-                                                      level=QgsMessageBar.INFO)
+                                                      level=QgsMessageBar.INFO,
+                                                      duration=5)
 
 def changeVersion(layer):
     if hasLocalChanges(layer):
@@ -176,7 +177,8 @@ def changeVersion(layer):
         if dlg.ref is not None:
             repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
             config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
-                                                   level=QgsMessageBar.INFO)
+                                                   level=QgsMessageBar.INFO,
+                                                   duration=5)
             layer.reload()
             layer.triggerRepaint()
             updateInfoActions(layer)
@@ -209,12 +211,14 @@ def revertLocalChanges(layer):
         commitid = getCommitId(layer)
         repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
         config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
-                                                      level=QgsMessageBar.INFO)
+                                                      level=QgsMessageBar.INFO,
+                                                      duration=5)
         layer.reload()
         layer.triggerRepaint()
     else:
         config.iface.messageBar().pushMessage("GeoGig", "No local changes were found",
-                                                      level=QgsMessageBar.INFO)
+                                                      level=QgsMessageBar.INFO,
+                                                      duration=5)
 
 def showLocalChanges(layer):
     dlg = LocalDiffViewerDialog(iface.mainWindow(), layer)
@@ -235,6 +239,6 @@ def removeLayer(layer):
 
     removeTrackedLayer(layer)
     config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                           level = QgsMessageBar.INFO, duration = 4)
+                                           level = QgsMessageBar.INFO, duration = 5)
     setAsNonRepoLayer(layer)
     repoWatcher.repoChanged.emit(repo)

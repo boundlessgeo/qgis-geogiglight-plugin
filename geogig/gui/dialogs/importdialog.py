@@ -128,7 +128,9 @@ class ImportDialog(QtGui.QDialog):
             self.layer.reload()
             self.layer.triggerRepaint()
         except GeoGigException, e:
-            iface.messageBar().pushMessage("Error", str(e), level=QgsMessageBar.CRITICAL)
+            iface.messageBar().pushMessage("Error", str(e),
+                                           level=QgsMessageBar.CRITICAL,
+                                           duration=5)
             self.close()
             return
 
@@ -137,7 +139,7 @@ class ImportDialog(QtGui.QDialog):
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",
                                        level=QgsMessageBar.INFO,
-                                       duration=4)
+                                       duration=5)
         self.close()
 
 

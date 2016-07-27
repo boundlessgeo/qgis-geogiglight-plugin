@@ -128,7 +128,8 @@ def syncLayer(layer):
     repoWatcher.repoChanged.emit(repo)
 
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
-                                                  level=QgsMessageBar.INFO)
+                                                  level=QgsMessageBar.INFO,
+                                                  duration=5)
     return True
 
 
@@ -266,11 +267,13 @@ def checkoutLayer(repo, layername, bbox):
     try:
         layer = resolveLayerFromSource(source)
         iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
-                              level=QgsMessageBar.INFO)
+                              level=QgsMessageBar.INFO,
+                              duration=5)
     except WrongLayerSourceException:
         layer = loadLayerNoCrsDialog(source, layername, "ogr")
         QgsMapLayerRegistry.instance().addMapLayers([layer])
         iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
-                                              level=QgsMessageBar.INFO)
+                                              level=QgsMessageBar.INFO,
+                                              duration=5)
     finally:
         return layer
