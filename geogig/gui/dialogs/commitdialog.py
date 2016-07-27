@@ -27,14 +27,16 @@ __revision__ = '$Format:%H$'
 
 from PyQt4 import QtGui
 
+suggestedMessage = ""
+
 class CommitDialog(QtGui.QDialog):
 
-    def __init__(self, repo, hasLocalChanges, parent = None):
+    def __init__(self, repo, _message = "", parent = None):
         super(CommitDialog, self).__init__(parent)
         self.repo = repo
         self.branch = None
+        self._message = _message or suggestedMessage
         self.message = None
-        self.hasLocalChanges = hasLocalChanges
         self.initGui()
 
     def initGui(self):
@@ -54,19 +56,18 @@ class CommitDialog(QtGui.QDialog):
         self.branchCombo.setEditable(True)
         self.verticalLayout.addWidget(self.branchCombo)
 
-        if self.hasLocalChanges:
-            self.msgLabel = QtGui.QLabel("Message to describe this update")
-            self.verticalLayout.addWidget(self.msgLabel)
+        self.msgLabel = QtGui.QLabel("Message to describe this update")
+        self.verticalLayout.addWidget(self.msgLabel)
 
-            self.text = QtGui.QPlainTextEdit()
-            self.text.textChanged.connect(self.textHasChanged)
-            self.verticalLayout.addWidget(self.text)
+        self.text = QtGui.QPlainTextEdit()
+        self.text.setPlainText(self._message)
+        self.text.textChanged.connect(self.textHasChanged)
+        self.verticalLayout.addWidget(self.text)
 
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
 
-        if self.hasLocalChanges:
-            self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(bool(self._message))
 
         self.setLayout(self.verticalLayout)
         self.buttonBox.accepted.connect(self.okPressed)
@@ -77,8 +78,7 @@ class CommitDialog(QtGui.QDialog):
 
     def okPressed(self):
         self.branch = self.branchCombo.currentText()
-        if self.hasLocalChanges:
-            self.message = self.text.toPlainText()
+        self.message = self.text.toPlainText()
         self.close()
 
 

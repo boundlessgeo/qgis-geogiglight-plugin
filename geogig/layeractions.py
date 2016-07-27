@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -48,6 +47,7 @@ from geogig.gui.dialogs.geogigref import RefDialog
 from gui.dialogs.geogigref import CommitSelectDialog
 from tools.layertracking import getTrackingInfo
 from tools.gpkgsync import applyLayerChanges
+from geogig.gui.dialogs import commitdialog
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
@@ -162,6 +162,7 @@ def revertChange(layer):
         config.iface.messageBar().pushMessage("GeoGig", "Version changes have been reverted in local layer",
                                                       level=QgsMessageBar.INFO,
                                                       duration=5)
+        commitdialog.suggestedMessage = "Reverted changes from version %s [%s] " % (dlg.ref.commitid, dlg.ref.message)
 
 def changeVersion(layer):
     if hasLocalChanges(layer):

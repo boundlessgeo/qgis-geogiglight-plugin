@@ -31,6 +31,7 @@ from geogig.geogigwebapi.repository import Repository
 from geogig.gui.dialogs.geogigref import RefDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
+from geogig.gui.dialogs import commitdialog
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import iface
@@ -79,7 +80,7 @@ def syncLayer(layer):
         if user is None:
             return
 
-        dlg = CommitDialog(repo, changes)
+        dlg = CommitDialog(repo)
         dlg.exec_()
         if dlg.branch is None:
             return
@@ -109,10 +110,10 @@ def syncLayer(layer):
                 else:
                     conflict.resolveWithNewFeature(resolution)
             repo.closeConflictSolving(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
-            #repo.closeTransaction(conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
         applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
+        commitdialog.suggestedMessage = ""
     else:
         branch, ok = QInputDialog.getItem(iface.mainWindow(), "Sync",
                                           "Select branch to update from",
