@@ -156,7 +156,9 @@ def revertChange(layer):
     dlg.exec_()
     if dlg.ref is not None:
         #TODO check that selected commit is in history line
-        applyLayerChanges(repo, layer, dlg.ref, dlg.ref.parent())
+        applyLayerChanges(repo, layer, dlg.ref.commitid, dlg.ref.parent.commitid, False)
+        layer.reload()
+        layer.triggerRepaint()
         config.iface.messageBar().pushMessage("GeoGig", "Version changes have been reverted in local layer",
                                                       level=QgsMessageBar.INFO)
 

@@ -158,7 +158,7 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     gpkgfid = cursor.fetchone()[0]
     return gpkgfid
 
-def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
+def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = True):
     layer.reload()
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
@@ -211,9 +211,10 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId):
     changesCursor.close()
     changesCon.close()
 
-    cursor.execute("DELETE FROM %s_audit;" % layername)
-    con.commit()
-    cursor.execute("UPDATE geogig_audited_tables SET commit_id='%s' WHERE table_name='%s'" % (afterCommitId, layername))
+    if clearAudit:
+        cursor.execute("DELETE FROM %s_audit;" % layername)
+        cursor.execute("UPDATE geogig_audited_tables SET commit_id='%s' WHERE table_name='%s'" % (afterCommitId, layername))
+
     con.commit()
     cursor.close()
     con.close()
