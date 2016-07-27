@@ -112,7 +112,12 @@ def syncLayer(layer):
             repo.closeConflictSolving(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
-        applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
+        try:
+            applyLayerChanges(repo, layer, importCommitId, mergeCommitId)
+        except:
+            QgsMessageLog.logMessage("Database locked while syncing. Using full layer checkout instead", level=QgsMessageLog.CRITICAL)
+            repo.checkoutlayer(tracking.geopkg, layername, None, mergeCommitId)
+
         commitdialog.suggestedMessage = ""
     else:
         branch, ok = QInputDialog.getItem(iface.mainWindow(), "Sync",
