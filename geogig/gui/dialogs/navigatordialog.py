@@ -241,7 +241,7 @@ class NavigatorDialog(BASE, WIDGET):
         item = self.repoTree.selectedItems()[0]
         if isinstance(item, RepoItem):
             ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
-                            "Are you sure you want to remove this repository?",
+                            "Are you sure you want to remove this repository and all the data in it?",
                             QMessageBox.Yes | QMessageBox.No,
                             QMessageBox.Yes);
             if ret == QMessageBox.No:
