@@ -501,7 +501,6 @@ def removeRepo(repo):
     global repos
     for r in repos:
         if repo.url == r.url:
-            print r.url
             repos.remove(r)
             break
 
