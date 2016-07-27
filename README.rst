@@ -6,9 +6,20 @@ This is a QGIS plugin to work with GeoGig repositories using the GeoGig Web API
 Installation
 *************
 
-To install, copy the ``geogig`` folder into ``[your_user_folder]/.qgis2/python/plugins/`` (You may need to create this directory). You should have a ``geogig`` folder under the QGIS plugins folder.
+To install the latest version for the repository sources, clone this repository, open a console in the repo folder and type
 
-Open QGIS and make sure that the plugin is enabled, by opening the QGIS Plugin Manager.
+::
+
+	paver setup
+
+This will get all the dependencies needed by the plugin.
+
+Install into QGIS by running
+
+::
+
+	paver install
+
 
 Usage
 ********
