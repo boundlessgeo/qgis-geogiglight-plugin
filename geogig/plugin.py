@@ -89,8 +89,11 @@ class GeoGigPlugin:
 
     def unload(self):
         navigatorInstance.setVisible(False)
-        QgsMapLayerRegistry.instance().layerWasAdded.disconnect(trackLayer)
-        QgsMapLayerRegistry.instance().layerRemoved.disconnect(layerRemoved)
+        try:
+            QgsMapLayerRegistry.instance().layerWasAdded.disconnect(trackLayer)
+            QgsMapLayerRegistry.instance().layerRemoved.disconnect(layerRemoved)
+        except:
+            pass
         self.menu.deleteLater()
         self.toolButton.deleteLater()
         layers = QgsMapLayerRegistry.instance().mapLayers().values()
