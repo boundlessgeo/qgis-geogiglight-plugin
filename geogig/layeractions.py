@@ -134,6 +134,7 @@ def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
     action = QtGui.QAction(u"Add layer to Repository...", config.iface.legendInterface())
     action.triggered.connect(partial(addLayer, layer))
+    action.setEnabled(layer.storageType() == 'GPKG')
     config.iface.legendInterface().addLegendLayerAction(action, u"GeoGig", u"id2", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
     layer.geogigActions = [action]
