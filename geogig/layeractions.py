@@ -232,9 +232,14 @@ def removeLayer(layer):
                         QtGui.QMessageBox.Yes);
     if ret == QtGui.QMessageBox.No:
         return
+
+    user, email = config.getUserInfo()
+    if user is None:
+        return
+
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
-    repo.removetree(tracking.layername)
+    repo.removetree(tracking.layername, user, email)
 
     #TODO remove triggers from layer
 

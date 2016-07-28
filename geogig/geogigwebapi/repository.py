@@ -125,7 +125,7 @@ class Repository(object):
                 r.raise_for_status()
                 resp = json.loads(r.text.replace(r"\/", "/"))["response"]
                 self.__log(url, resp, payload)
-                params = {"transactionId":transactionId}
+                params = {"transactionId":transactionId, "output_format":"json"}
                 r = requests.get(self.url + "endTransaction", params = params)
                 r.raise_for_status()
                 self.__log(url, r.json(), params)
@@ -290,8 +290,17 @@ class Repository(object):
             trees = resp["node"]
         return [t["path"] for t in trees]
 
-    def removetree(self, path):
-        self._apicall("remove", {"path":path, "recursive":"true"}, True)
+    def removetree(self, path, user, email):
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        payload = {"path":path, "recursive":"true", "output_format": "json",
+                   "transactionId": transactionId}
+        r = requests.get(self.url + "remove", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+        self.commitAndCloseTransaction(user, email, "removed layer %s" % path, transactionId)
 
 
     def revparse(self, rev):
@@ -426,7 +435,7 @@ class Repository(object):
         self.__log(r.url, r.text, payload)
         r.raise_for_status()
 
-    def closeConflictSolving(self, user, email, message, transactionId):
+    def commitAndCloseTransaction(self, user, email, message, transactionId):
         params = {"all": True, "message": message, "transactionId": transactionId,
                   "authorName": user, "authorEmail": email}
         r = requests.get(self.url + "commit", params = params)
