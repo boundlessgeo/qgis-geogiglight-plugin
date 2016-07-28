@@ -274,8 +274,8 @@ class ConflictDialog(WIDGET, BASE):
             except:
                 geom = None
             if geom is not None:
-                self.oursgeom = QgsGeometry().fromWkt(values[1])
-                self.theirsgeom = QgsGeometry.fromWkt(values[2])
+                self.theirsgeom = QgsGeometry().fromWkt(values[1])
+                self.oursgeom = QgsGeometry.fromWkt(values[2])
                 geoms = (self.oursgeom, self.theirsgeom)
 
             ok = values[0] == values[1] or values[1] == values[2] or values[0] == values[2]
