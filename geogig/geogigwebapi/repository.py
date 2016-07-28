@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -41,7 +40,7 @@ import sqlite3
 from geogig.gui.executor import execute
 import shutil
 from qgis.core import *
-from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject
+from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject, QPyNullVariant
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
 from geogig import config
@@ -389,7 +388,12 @@ class Repository(object):
                         feature = layer.getFeatures(request).next()
                     except:
                         return None
-                    local = {f.name():feature[f.name()] for f in layer.pendingFields()}
+                    def _ensureNone(v):
+                        if isinstance(v, QPyNullVariant):
+                            return None
+                        else:
+                            return v
+                    local = {f.name():_ensureNone(feature[f.name()]) for f in layer.pendingFields()}
                     try:
                         local[geomField] = feature.geometry().exportToWkt()
                     except:
