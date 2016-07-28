@@ -79,7 +79,6 @@ class DiffViewerDialog(WIDGET, BASE):
         self.commit1Panel.refChanged.connect(self.refsHaveChanged)
         self.commit2Panel.refChanged.connect(self.refsHaveChanged)
 
-        self.attributesTable.customContextMenuRequested.connect(self.showContextMenu)
         self.featuresTree.itemClicked.connect(self.treeItemClicked)
 
         self.featuresTree.header().hide()
@@ -126,6 +125,7 @@ class DiffViewerDialog(WIDGET, BASE):
             self.attributesTable.setItem(i, 0, DiffItem(oldvalue))
             self.attributesTable.setItem(i, 1, DiffItem(newvalue))
             try:
+                self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
                 qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
                 qgsgeom2 = QgsGeometry.fromWkt(newvalue)
                 if qgsgeom1 is not None and qgsgeom2 is not None:
@@ -141,7 +141,6 @@ class DiffViewerDialog(WIDGET, BASE):
                     layout.setContentsMargins(0, 0, 0, 0)
                     widget.setLayout(layout)
                     self.attributesTable.setCellWidget(i, 2, widget)
-                    self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
             except:
                 self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
             for col in range(3):
