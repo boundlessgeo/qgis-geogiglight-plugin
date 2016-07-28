@@ -186,6 +186,6 @@ class GeomDiffTableModel(QtCore.QAbstractTableModel):
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return ["Base geometry", "Compare geometry"][section]
+                return ["Old geometry", "New geometry"][section]
             else:
                 return str(section + 1)
