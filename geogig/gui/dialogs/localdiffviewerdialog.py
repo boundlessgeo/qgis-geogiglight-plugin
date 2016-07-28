@@ -196,7 +196,9 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                         value = c[attributes.index(attr)]
                     else:
                         request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
-                        qgsfeature = list(layer.getFeatures(request))[0]
+                        features = list(layer.getFeatures(request))
+                        if len(features) == 0:
+                            return dict()
                         value = qgsfeature.geometry().exportToWkt().upper()
                 featurechanges[attr] = value
             path = geogigFidFromGpkgFid(tracking, path)
