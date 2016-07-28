@@ -234,7 +234,7 @@
     <string>Remove</string>
    </property>
    <property name="toolTip">
-    <string>Remove</string>
+    <string>Remove selected element</string>
    </property>
   </action>
   <action name="actionCreateRepository">
