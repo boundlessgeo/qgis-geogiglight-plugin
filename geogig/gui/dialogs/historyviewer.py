@@ -136,7 +136,7 @@ class HistoryViewer(QtGui.QTreeWidget):
         if ok:
             self.repo.createtag(item.commit.commitid, tagname)
             w = self.itemWidget(item, 0)
-            w.tags = [tagname]
+            w.tags.append(tagname)
             w.updateText()
 
     def deleteTags(self, item):
