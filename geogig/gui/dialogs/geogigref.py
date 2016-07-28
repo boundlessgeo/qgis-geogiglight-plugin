@@ -72,8 +72,8 @@ class RefWidget(QtGui.QWidget):
         self.tagRadio.setMinimumWidth(200)
         horizontalLayout2.addWidget(self.tagRadio)
         self.comboTag = QtGui.QComboBox()
-        for tag in self.repo.tags():
-            self.comboTag.addItem(unicode(tag))
+        for tag, commitid in self.repo.tags().iteritems():
+            self.comboTag.addItem(unicode(tag), commitid)
         horizontalLayout2.addWidget(self.comboTag)
         verticalLayout2.addLayout(horizontalLayout2)
 
@@ -123,7 +123,7 @@ class RefWidget(QtGui.QWidget):
         if self.branchRadio.isChecked():
             return Commitish(self.repo, self.comboBranch.currentText())
         elif self.tagRadio.isChecked():
-            return Commitish(self.repo, self.comboTag.currentText())
+            return Commitish(self.repo, self.comboTag.itemData(self.comboTag.currentIndex()))
         else:
             idx = self.comboCommit.currentIndex()
             commit = self.comboCommit.itemData(idx)
