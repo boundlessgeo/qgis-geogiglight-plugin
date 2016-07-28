@@ -73,7 +73,7 @@ class RefWidget(QtGui.QWidget):
         horizontalLayout2.addWidget(self.tagRadio)
         self.comboTag = QtGui.QComboBox()
         for tag in self.repo.tags():
-            self.comboTag.addItem(tag)
+            self.comboTag.addItem(unicode(tag))
         horizontalLayout2.addWidget(self.comboTag)
         verticalLayout2.addLayout(horizontalLayout2)
 
