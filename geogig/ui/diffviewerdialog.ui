@@ -51,7 +51,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Base</string>
+             <string>Old</string>
             </property>
            </widget>
           </item>
@@ -125,7 +125,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Compare</string>
+             <string>New</string>
             </property>
            </widget>
           </item>
@@ -170,6 +170,12 @@
            <size>
             <width>0</width>
             <height>300</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
            </size>
           </property>
           <column>

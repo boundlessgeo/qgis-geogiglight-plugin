@@ -125,28 +125,29 @@ class DiffViewerDialog(WIDGET, BASE):
                 oldvalue = newvalue = ""
             self.attributesTable.setItem(i, 0, DiffItem(oldvalue))
             self.attributesTable.setItem(i, 1, DiffItem(newvalue))
-            self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
+            try:
+                qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
+                qgsgeom2 = QgsGeometry.fromWkt(newvalue)
+                if qgsgeom1 is not None and qgsgeom2 is not None:
+                    widget = QtGui.QWidget()
+                    btn = QtGui.QPushButton()
+                    btn.setText("View detail")
+                    btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
+                    label = QtGui.QLabel()
+                    label.setText(attrib["changetype"])
+                    layout = QtGui.QHBoxLayout(widget)
+                    layout.addWidget(label);
+                    layout.addWidget(btn);
+                    layout.setContentsMargins(0, 0, 0, 0)
+                    widget.setLayout(layout)
+                    self.attributesTable.setCellWidget(i, 2, widget)
+                    self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
+            except:
+                self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
             for col in range(3):
                 self.attributesTable.item(i, col).setBackgroundColor(color[attrib["changetype"]]);
         self.attributesTable.resizeColumnsToContents()
         self.attributesTable.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-
-    def showContextMenu(self, point):
-        row = self.attributesTable.selectionModel().currentIndex().row()
-        geom1 = self.attributesTable.item(row, 0).value
-        geom2 = self.attributesTable.item(row, 1).value
-        try:
-            qgsgeom1 = QgsGeometry.fromWkt(geom1)
-            qgsgeom2 = QgsGeometry.fromWkt(geom2)
-        except:
-            return
-        if qgsgeom1 is not None and qgsgeom2 is not None:
-            menu = QtGui.QMenu()
-            viewAction = QtGui.QAction("View geometry changes...", None)
-            viewAction.triggered.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
-            menu.addAction(viewAction)
-            globalPoint = self.attributesTable.mapToGlobal(point)
-            menu.exec_(globalPoint)
 
     def viewGeometryChanges(self, g1, g2):
         dlg = GeometryDiffViewerDialog([g1, g2], QgsCoordinateReferenceSystem("EPSG:4326")) #TODO set CRS correctly
