@@ -122,6 +122,21 @@ def _exportAndAddFeatureToLayer():
     layer.reload()
     layer.triggerRepaint()
 
+def _exportAndCreateConflictWithNulls():
+    layer = checkoutLayer(tests._lastRepo, "points", None)
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(123, 456)))
+        layer.changeAttributeValue(features[0].id(), 1, None)
+    filename = tempFilename("gpkg")
+    tests._lastRepo.checkoutlayer(filename, "points")
+    layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
+    features2 = list(layer2.getFeatures())
+    with edit(layer2):
+        layer2.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(124, 457)))
+        layer2.changeAttributeValue(features2[0].id(), 1, None)
+    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
+
 def _exportAndCreateConflict():
     layer = checkoutLayer(tests._lastRepo, "points", None)
     features = list(layer.getFeatures())
@@ -258,6 +273,15 @@ def functionalTests():
     test.addStep("Export and edit repo layer", _exportAndCreateConflict)
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Solve conflict'")
+    test.addStep("Check that new version has been created in the repo history")
+    tests.append(test)
+
+    test = Test("Sync with conflicts and null values")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export and edit repo layer", _exportAndCreateConflictWithNulls)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Solve conflict with a new feature'")
     test.addStep("Check that new version has been created in the repo history")
     tests.append(test)
 
