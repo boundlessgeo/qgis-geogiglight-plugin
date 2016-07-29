@@ -35,9 +35,10 @@ from qgis.utils import iface
 
 class RefWidget(QtGui.QWidget):
 
-    def __init__(self, repo):
+    def __init__(self, repo, path = None):
         super(RefWidget, self).__init__()
         self.repo = repo
+        self.path = path
         self.initGui()
 
     def initGui(self):
@@ -86,7 +87,7 @@ class RefWidget(QtGui.QWidget):
         self.commitRadio.setMinimumWidth(200)
         horizontalLayout3.addWidget(self.commitRadio)
         self.comboCommit = QtGui.QComboBox()
-        log = self.repo.log(limit = 100)
+        log = self.repo.log(path = self.path, limit = 100)
         for commit in log:
             self.comboCommit.addItem(commit.message.split("\n")[0], commit)
         horizontalLayout3.addWidget(self.comboCommit)
@@ -138,9 +139,10 @@ class RefWidget(QtGui.QWidget):
 
 class RefDialog(QtGui.QDialog):
 
-    def __init__(self, repo, parent = None):
+    def __init__(self, repo, path, parent = None):
         super(RefDialog, self).__init__(parent)
         self.repo = repo
+        self.path = path
         self.ref = None
         self.initGui()
 
@@ -148,7 +150,7 @@ class RefDialog(QtGui.QDialog):
     def initGui(self):
         layout = QtGui.QVBoxLayout()
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
-        self.refwidget = RefWidget(self.repo)
+        self.refwidget = RefWidget(self.repo, self.path)
         layout.addWidget(self.refwidget)
         layout.addWidget(buttonBox)
         self.setLayout(layout)

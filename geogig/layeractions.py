@@ -174,7 +174,7 @@ def changeVersion(layer):
     else:
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
-        dlg = RefDialog(repo)
+        dlg = RefDialog(repo, tracking.layername)
         dlg.exec_()
         if dlg.ref is not None:
             repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
