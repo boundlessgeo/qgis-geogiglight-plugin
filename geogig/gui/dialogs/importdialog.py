@@ -124,7 +124,7 @@ class ImportDialog(QtGui.QDialog):
         try:
             self.repo.importgeopkg(self.layer, branch, message, user, email, False)
             filename, layername = namesFromLayer(self.layer)
-            self.repo.checkoutlayer(filename, layername)
+            self.repo.checkoutlayer(filename, layername, ref = branch)
             self.layer.reload()
             self.layer.triggerRepaint()
         except GeoGigException, e:
