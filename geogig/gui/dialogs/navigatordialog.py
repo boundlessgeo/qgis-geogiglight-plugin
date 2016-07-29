@@ -230,8 +230,8 @@ class NavigatorDialog(BASE, WIDGET):
                 setAsRepoLayer(dlg.layer)
         else:
             QMessageBox.warning(self, 'Cannot add layer',
-                "No suitable Geopackage layers can be found in your current QGIS project.\n"
-                "Open Geopackage layers in QGIS before trying to add them.",
+                "No suitable layers can be found in your current QGIS project.\n"
+                "Only Geopackage layers that do not already belong to a repository can be added.",
                 QMessageBox.Ok)
 
     def deleteCurrentElement(self):
