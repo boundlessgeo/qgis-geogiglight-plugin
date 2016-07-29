@@ -198,8 +198,8 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                         request = QgsFeatureRequest().setFilterExpression("fid=%s" % path)
                         features = list(layer.getFeatures(request))
                         if len(features) == 0:
-                            return dict()
-                        value = qgsfeature.geometry().exportToWkt().upper()
+                            continue
+                        value = features[0].geometry().exportToWkt().upper()
                 featurechanges[attr] = value
             path = geogigFidFromGpkgFid(tracking, path)
             changesdict[path] = LocalDiff(layername, path, repo, featurechanges, commitid, c[-1])
