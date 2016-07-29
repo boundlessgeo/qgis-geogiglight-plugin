@@ -60,7 +60,7 @@ from geogig.tools.layers import (getAllLayers,
 from geogig.tools.layertracking import *
 from geogig.tools.utils import *
 from geogig.tools.gpkgsync import checkoutLayer
-
+from geogig.tools.layertracking import removeTrackedLayer, getProjectLayerForGeoGigLayer
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import *
 
@@ -153,23 +153,32 @@ class NavigatorDialog(BASE, WIDGET):
             for layername in layernames:
                 if layername:
                     self._checkoutLayer(layername, None)
-            #===================================================================
-            # item, ok = QInputDialog.getItem(self, "Layer download",
-            #                                       "Download mode", items, 0, False)
-            # if ok:
-            #     if item == items[0]:
-            #         bbox = None
-            #     elif item == items[1]:
-            #         bbox = (config.iface.mapCanvas().extent(),
-            #                 config.iface.mapCanvas().mapRenderer().destinationCrs())
-            #     else:
-            #         layer = allLayers[items.index(item) - 2]
-            #         bbox = (layer.extent(), layer.crs())
-            #     layernames = url.split(":")[-1].split(",")
-            #     for layername in layernames:
-            #         self._checkoutLayer(layername, bbox)
-            #
-            #===================================================================
+        elif url.startswith("remove"):
+            ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
+                        "Are you sure you want to delete this layer?",
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.Yes);
+            if ret == QMessageBox.No:
+                return
+
+            user, email = config.getUserInfo()
+            if user is None:
+                return
+
+            layername = url[url.find(":")+1:]
+            self.currentRepo.removetree(layername, user, email)
+
+            config.iface.messageBar().pushMessage("Layer correctly removed from repository",
+                                                   level = QgsMessageBar.INFO, duration = 5)
+
+            layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layername)
+            if layer:
+                setAsNonRepoLayer(layer)
+                removeTrackedLayer(layer)
+            #TODO remove triggers from layer
+            self.updateCurrentRepo(self.currentRepo, self.currentRepo.title)
+
+
 
     def _checkoutLayer(self, layername, bbox):
         checkoutLayer(self.currentRepo, layername, bbox)

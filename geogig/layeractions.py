@@ -233,6 +233,7 @@ def showLocalChanges(layer):
     dlg = LocalDiffViewerDialog(iface.mainWindow(), layer)
     dlg.exec_()
 
+
 def removeLayer(layer):
     ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
                         "Are you sure you want to delete this layer?",

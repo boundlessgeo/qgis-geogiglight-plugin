@@ -33,7 +33,7 @@ from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
 from geogig.tools.layers import  resolveLayerFromSource, WrongLayerSourceException
 from geogig import config
-from geogig.tools.layers import formatSource
+from geogig.tools.layers import formatSource, getAllLayers
 
 
 tracked = []
@@ -128,6 +128,14 @@ def getTrackingInfoForGeogigLayer(repoUrl, layername):
     for t in tracked:
         if (t.repoUrl == repoUrl and t.layername == layername):
             return t
+
+def getProjectLayerForGeoGigLayer(repoUrl, layername):
+    tracking = getTrackingInfoForGeogigLayer(repoUrl, layername)
+    if tracking:
+        layers = getAllLayers()
+        for layer in layers:
+            if formatSource(layer) == tracking.source:
+                return layer
 
 def getTrackedPathsForRepo(repo):
     repoLayers = repo.trees()
