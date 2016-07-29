@@ -1,4 +1,4 @@
-The GeoGig QGIS plugin allow you to manage GeoGig repositories from QGIS, adding layers to your QGIS projects from a GeoGig repository and updating it with the changes that you make to those layers using QGIS editing capabilities.
+The GeoGig QGIS plugin allow you to manage/view GeoGig (http://geogig.org/) repositories and layers as well as editing GeoGig layers using QGIS editing capabilities.
 
 This document describes a typical workflow with the GeoGig plugin, going through its main features.
 
@@ -10,7 +10,7 @@ This document describes a typical workflow with the GeoGig plugin, going through
 Starting the GeoGig server
 ***************************
 
-The GeoGig plugin connects to GeoGig using its WebAPI. If you want to work with local repositories, you must start the GeoGig by running
+The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/interaction/geoserver_web-api.html). If you want to work with local repositories, you must start the GeoGig by running
 
 ::
 
@@ -41,7 +41,7 @@ Click on the *Add GeoGig server* button and you will see the following dialog:
 .. image:: addrepos.png
 	:align: center
 
-Enter the URL to the WebAPI endpoint and a name to identify the service. Click on OK
+Enter the URL to the WebAPI endpoint (example: http://192.168.1.87:8182/) and a name to identify the service. Click on OK
 
 A new entry in the navigator will be added, which will contain all repositories served by the selected endpoint.
 
@@ -67,7 +67,7 @@ New repositories can be added to a GeoGig server. To do it, select the server in
 
 You will be prompted to enter the name of the repository. A repository with that name will be created in the GeoGig server and added to the navigator tree.
 
-To delete a repository (all its data will be removed from the server), select it and clik on the delete button in the navigator toolbar.
+To delete a repository (**all its data will be removed from the server**), select it and clik on the delete button in the navigator toolbar.
 
 
 Adding layers from a repository to the current QGIS project
@@ -85,7 +85,7 @@ If the layer had been previously downloaded, but it is not currently loaded into
 Recovering a given version of a layer
 **************************************
 
-If you have a Geogig layer in your project, you can update it's content to any existing version of that layer that is contained in the corresponding repository. 
+If you have a Geogig layer in your project, you can update its content to any existing version of that layer that is contained in the corresponding repository. 
 
 To do so, select the *GeoGig/Change to a different version...* menu entry in the context menu of the layer. It will open the reference selector, and you will be able to select the version you want to update to.
 
@@ -101,9 +101,9 @@ To add a layer to a repository, select the repository in the repositories list a
 
 The dropdown list shows all the layers that you have loaded in your current QGIS project and can be added to the repository. 
 
-At the moment only layers in geopackage format can be added. You can use QGIS core functionality to export your layer to a gpkg file in case it is in a different format and you want to add it to a GeoGig repository
+At the moment only layers in **geopackage** format can be added (http://www.geopackage.org/). You can use QGIS core functionality to export your layer to a gpkg file in case it is in a different format and you want to add it to a GeoGig repository
 
-Select the layer that you want to add to the repository and add a message to describe the change (for instance *Added roads layer*). Click on OK.
+Select the layer that you want to add to the repository and add a message to describe the change (for instance "*Added roads layer*"). Click on OK.
 
 Layers can be also added from the QGIS interface. Select the layer that you want to import in the QGIS legend and right-click on it. In the context menu, there will be a *GeoGig* section with a menu entry named *Add layer to repository...*.
 
@@ -126,7 +126,7 @@ Once a layer is imported into a GeoGig repository, it becomes linked to it. The 
 
 These entries will be explained in further sections of this document.
 
-If a repository is deleted, layer that were exported from it will not be removed from the current project or deleted locally. However, they will not be linked anymore to a repo, and the above context menu entries will not be available, just like it happens with any other regular QGIS layer.
+If a repository is deleted, layers that were exported from it will not be removed from the current project or deleted locally. However, they will not be linked anymore to a repo, and the above context menu entries will not be available, just like it happens with any other regular QGIS layer.
 
 .. note::
    
@@ -136,14 +136,14 @@ If a repository is deleted, layer that were exported from it will not be removed
 Editing a GeoGig layer and creating a new version in the repository
 *********************************************************************
 
-To edit a GeoGig layer, just edit it normally, using the QGIS edit functionality. Once you are done editing, you can transfer your changes to the repository by selecting the *Syncronize with repository branch..." in the layer context menu. You will see the following dialog.
+To edit a GeoGig layer, just edit it normally, using the QGIS edit functionality. Once you are done editing, you can transfer your changes to the repository by selecting the *Syncronize with repository branch...* in the layer context menu. You will see the following dialog.
 
 .. image:: syncdialog.png
 	:align: center
 
 You must enter a message to describe the new version to create (a message describing the changes that are going to be applied to the layer).
 
-The destination branch should also be selected. You can type the name of a branch instead of using a
+The destination branch should also be selected. You can type the name of a branch instead of using the provided combo box.
 
 If an existing branch is selected, the new changes in the repository that are not yet in the local layer will be downloaded and merged with the local ones.
 
@@ -158,7 +158,7 @@ If you want to confirm that the change has been applied to the repository, you c
 Conflicts
 **********
 
-When you synchronie your local layer 8uploading your local changes and fetching new remote ones), it might happen that the features that you have modified have also been modified in the repository by someone else. This causes a conflicting situation that has to be manually solved. For each feature in a conflicted situation (a feature that has been modified differently in your local layer and in the repository), you will have to decide which version of it you want to keep.
+When you synchronize your local layer (uploading your local changes and fetching new remote ones), it might happen that the features that you have modified have also been modified in the repository by someone else. This causes a conflicting situation that has to be manually solved. For each feature in a conflicted situation (a feature that has been modified differently in your local layer and in the repository), you will have to decide which version of it you want to keep.
 
 When a sync operation results in conflicts, you will see a message like this one:
 
@@ -180,11 +180,11 @@ The table shows all attributes and the corresponding values for the two versions
 * **Remote**: The feature as it was modified in the remote repository.
 * **Local**: The feature as it was modified in the local layer.
 
-It also shows the original value from which both edits come.
+It also shows the *original* value from which both edits come.
 
 Conflicting values will be shown in *yellow*, and the corresponding *Merged* cell in the table will be empty. If an attribute has no conflict, it will be displayed in *white*, and will also be shown in the *Merged* column.
 
-Solving a conflict is done by selecting the value to use from any of the three columns (*Remote*,  *Local*, *Origin). Click the version to use, and its value will be put in the *Merged* column. The row will not be shown as conflicted anymore.
+Solving a conflict is done by selecting the value to use from any of the three columns (*Remote*,  *Local*, *Origin*). Click the version to use, and its value will be put in the *Merged* column. The row will not be shown as conflicted anymore.
 
 .. image:: conflictunsolved.png
 	:align: center
@@ -250,7 +250,7 @@ The geometry comparison viewer will be opened, showing the geometries for both v
 Removing a layer from a repository
 ***********************************
 
-If you no longer want to have a layer in your repository, you can remove it by right-clicking on it in the QGIS legend and selecting *Remove this layer from repository* in the GeoGig submenu.
+If you no longer want to have a layer in your repository, you can remove it by right-clicking on it in the QGIS legend and selecting *Remove this layer from repository* in the *GeoGig* submenu.
 
 A new version will be added to the repository, which removes the selected layer.
 
