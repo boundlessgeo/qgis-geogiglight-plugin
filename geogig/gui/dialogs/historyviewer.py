@@ -16,6 +16,8 @@
 ***************************************************************************
 """
 
+
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -28,12 +30,18 @@ __revision__ = '$Format:%H$'
 import os
 from collections import defaultdict
 from qgis.core import *
+from qgis.gui import *
 from PyQt4 import QtGui, QtCore
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.htmldialog import HtmlDialog
 from geogig import config
+from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
+from functools import partial
+from geogig.repowatcher import repoWatcher
+from geogig.layeractions import updateInfoActions
+from geogig.tools.layers import hasLocalChanges
 
 def icon(f):
     return QtGui.QIcon(os.path.join(os.path.dirname(__file__),
@@ -46,6 +54,7 @@ diffIcon = icon("diff-selected.png")
 deleteIcon = icon("delete.gif")
 infoIcon = icon("repo-summary.png")
 tagIcon = icon("tag.gif")
+resetIcon = icon("reset.png")
 
 class HistoryViewer(QtGui.QTreeWidget):
 
@@ -70,6 +79,13 @@ class HistoryViewer(QtGui.QTreeWidget):
         if len(selected) == 1:
             item = selected[0]
             if isinstance(item, CommitTreeItem):
+                trees = self.repo.trees(item.commit.commitid)
+                changeVersionActions = []
+                for tree in trees:
+                    layer = getProjectLayerForGeoGigLayer(self.repo.url, tree)
+                    if layer is not None:
+                        changeVersionActions.append(QtGui.QAction(resetIcon, "Change '%s' layer to this version" % tree, None))
+                        changeVersionActions[-1].triggered.connect(partial(self.changeVersion, layer, item.commit.commitid))
                 menu = QtGui.QMenu()
                 describeAction = QtGui.QAction(infoIcon, "Show detailed description of this version", None)
                 describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
@@ -86,6 +102,13 @@ class HistoryViewer(QtGui.QTreeWidget):
                 deleteTagsAction = QtGui.QAction(tagIcon, "Delete tags at this version", None)
                 deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
                 menu.addAction(deleteTagsAction)
+                changeTagsAction = QtGui.QAction(tagIcon, "Change exported layers this version", None)
+                changeTagsAction.triggered.connect(lambda: self.deleteTags(item))
+                menu.addAction(deleteTagsAction)
+                if changeVersionActions:
+                    menu.addSeparator()
+                    for action in changeVersionActions:
+                        menu.addAction(action)
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
@@ -124,6 +147,22 @@ class HistoryViewer(QtGui.QTreeWidget):
         dlg = HtmlDialog("Version description", html, self)
         dlg.exec_()
 
+    def changeVersion(self, layer, commit):
+        if hasLocalChanges(layer):
+            QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                "There are local changes that would be overwritten.\n"
+                "Revert them before changing version.",
+                QtGui.QMessageBox.Ok)
+        else:
+            tracking = getTrackingInfo(layer)
+            self.repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commit)
+            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % commit,
+                                                   level=QgsMessageBar.INFO,
+                                                   duration=5)
+            layer.reload()
+            layer.triggerRepaint()
+            updateInfoActions(layer)
+            repoWatcher.repoChanged.emit(self.repo)
 
     def showDiffs(self, commit):
         dlg = DiffViewerDialog(self, self.repo, commit.parent, commit)

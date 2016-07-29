@@ -33,7 +33,6 @@ from geogig.tools.utils import *
 from geogig.tools.layers import namesFromLayer, hasLocalChanges
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from PyQt4 import QtGui
 from geogig.tools.gpkgsync import syncLayer, changeVersionForLayer
