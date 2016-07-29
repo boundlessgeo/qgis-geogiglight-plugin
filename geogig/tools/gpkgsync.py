@@ -28,7 +28,6 @@ __revision__ = '$Format:%H$'
 import os
 import sqlite3
 from geogig.geogigwebapi.repository import Repository
-from geogig.gui.dialogs.geogigref import RefDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from geogig.gui.dialogs import commitdialog
