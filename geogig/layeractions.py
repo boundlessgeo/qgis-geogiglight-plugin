@@ -177,14 +177,20 @@ def changeVersion(layer):
         dlg = RefDialog(repo, tracking.layername)
         dlg.exec_()
         if dlg.ref is not None:
-            repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
-            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
-                                                   level=QgsMessageBar.INFO,
-                                                   duration=5)
-            layer.reload()
-            layer.triggerRepaint()
-            updateInfoActions(layer)
-            repoWatcher.repoChanged.emit(repo)
+            layers = repo.trees(dlg.ref)
+            if tracking.layername not in layers:
+                QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                "The selected version does not contain the specified layer.",
+                QtGui.QMessageBox.Ok)
+            else:
+                repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
+                config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
+                                                       level=QgsMessageBar.INFO,
+                                                       duration=5)
+                layer.reload()
+                layer.triggerRepaint()
+                updateInfoActions(layer)
+                repoWatcher.repoChanged.emit(repo)
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
