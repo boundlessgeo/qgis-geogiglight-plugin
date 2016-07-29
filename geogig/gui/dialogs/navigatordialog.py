@@ -39,7 +39,8 @@ from PyQt4.QtGui import (QIcon,
                          QMessageBox,
                          QBrush,
                          QColor,
-                         QInputDialog)
+                         QInputDialog,
+                         QDesktopServices)
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
@@ -93,6 +94,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
         self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
+        self.actionHelp.setIcon(QgsApplication.getThemeIcon('/mActionHelpContents.svg'))
 
         self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
         self.actionCreateRepository.triggered.connect(self.createRepo)
@@ -101,6 +103,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionRefresh.triggered.connect(self.updateNavigator)
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
         self.actionDelete.triggered.connect(self.deleteCurrentElement)
+        self.actionHelp.triggered.connect(self.openHelp)
 
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
@@ -396,6 +399,11 @@ class NavigatorDialog(BASE, WIDGET):
             self.actionDelete.setEnabled(True)
         else:
             self.actionDelete.setEnabled(True)
+
+    def openHelp(self):
+        if not QDesktopServices.openUrl(QUrl('https://github.com/boundlessgeo/qgis-geogiglight-plugin/blob/master/doc/source/usage.rst')):
+            QMessageBox.warning(self, self.tr('Error'), self.tr('Can not open help URL in browser'))
+
 
 
 class RepositoriesItem(QTreeWidgetItem):
