@@ -10,7 +10,9 @@ This document describes a typical workflow with the GeoGig plugin, going through
 Starting the GeoGig server
 ***************************
 
-The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/interaction/geoserver_web-api.html). If you want to work with local repositories, you must start the GeoGig by running
+The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/interaction/geoserver_web-api.html). 
+
+On Linux you can start GeoGig server by running
 
 ::
 
@@ -18,12 +20,43 @@ The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/in
 
 from the folder that contains you repository folders.
 
-Creating repos is not currently supported through the WebAPI, so you must create your repositories in advance using 
+You can also run GeoGig server specifing what is the folder that contains the repositories that need to be published, for example:
 
 ::
 
+	./bin/geogig serve -m /path/to/folder_containing_repositories/
+ 
+
+If the server starts correctly you should see a message like
+
+::
+
+	Starting server on port 8182, use CTRL+C to exit.
+
+
+Creating repositories is not currently supported through the WebAPI, so you must create your repositories in advance using 
+
+::
+        
 	geogig init
 
+or also
+
+::
+        
+	./bin/geogig init /path/to/folder_containing_repositories/my_first_repository/
+
+
+.. note::
+
+	Initialzing a repository will cause the creation of a ".geogig" folder inside the repository one.
+
+
+On Windows you must ensure that you have defined the path to Java (ex: *c:\java\bin*) in the *path* enviroment variable of the operating system. Aftet that can start the GeoGig by running
+
+::
+
+	\bin\geogig.bat serve -m c:\path\to\folder_containing_repositories\
 
 
 Connecting to a repository server
@@ -57,7 +90,7 @@ The history is shown as a tree, with elements representing branches and under ea
 	:align: center
 
 
-To remove a GeoGig server from the list of available connections, select it in the repositories tree and clik on the delete button in the navigator toolbar. 
+To remove a GeoGig server from the list of available connections, select it in the repositories tree and click on the delete button in the navigator toolbar. 
 
 
 Creating and deleting repositories
@@ -267,6 +300,4 @@ When a version has a tag, it will be shown in the history tree
 	:align: center
 
 To remove a tag from a version, right-click on the version item and select *Delete tags from this version*.
-
-
 
