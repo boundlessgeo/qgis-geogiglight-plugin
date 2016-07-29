@@ -44,7 +44,7 @@ from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject, QPyNullVar
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
 from geogig import config
-from geogig.tools.layertracking import isRepoLayer
+from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
 import xml.etree.ElementTree as ET
 from geogig.tools.layers import formatSource, namesFromLayer
 from requests.exceptions import HTTPError, ConnectionError
@@ -469,7 +469,29 @@ class Repository(object):
             s = s.replace("[TITLE]", self.title)
             s = s.replace("[URL]", self.url)
             s = s.replace("[LAST_VERSION]", lastVersion)
-            layers = "<dl>%s</dl>" % "".join(["<dd>%s <a href='checkout:%s'>[Add to QGIS]</a></dd>" % (tree,tree) for tree in self.trees()])
+
+            layers = []
+            for tree in self.trees():
+                trackedlayer = getTrackingInfoForGeogigLayer(self.url, tree)
+                if trackedlayer:
+                    filepath = trackedlayer.geopkg
+                    try:
+                        con = sqlite3.connect(trackedlayer.geopkg)
+                        cursor = con.cursor()
+                        cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % tree)
+                        commitid = cursor.fetchone()[0]
+                        cursor.close()
+                        con.close()
+                        current = commitid
+                    except:
+                        current = "<p>Not available</p>"
+                else:
+                    filepath = "Not exported"
+                    current = "<p>Not available</p>"
+                layer = "<li><b>%s <a href='checkout:%s'>[Add to QGIS]</a></b><p><i>Filepath</i>:<b>%s</b></p><p><i>Current version</i>:<b>%s</b></p></li>" % (tree,tree, filepath, current)
+                layers.append(layer)
+
+            layers = "<ul>%s</ul>" % "".join(layers)
             s = s.replace("[LAYERS]", layers)
             s = s.replace("[LAYERNAMES]", ",".join(self.trees()))
             return s
