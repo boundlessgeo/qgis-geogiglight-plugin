@@ -128,6 +128,10 @@ These entries will be explained in further sections of this document.
 
 If a repository is deleted, layer that were exported from it will not be removed from the current project or deleted locally. However, they will not be linked anymore to a repo, and the above context menu entries will not be available, just like it happens with any other regular QGIS layer.
 
+.. note::
+   
+   A specific geopackage datasource/layer can be added in only one GeoGig repository. If you need to add the same original geopackage layer in different GeoGig 	repositories then you must create in advance different copies of the same datasource/layer.
+
 
 Editing a GeoGig layer and creating a new version in the repository
 *********************************************************************
@@ -146,6 +150,10 @@ If an existing branch is selected, the new changes in the repository that are no
 Click on *OK* and the data will be incorporated to the repository, and a new version will be created.
 
 If you want to confirm that the change has been applied to the repository, you can open the GeoGig navigator, select the repository and display the history of the current branch. You will see that it has a new entry with the same message that you entered in the version description dialog.
+
+.. note::
+   
+   Modifications to the stucture of attributes table are not supported at the moment.
 
 Conflicts
 **********
