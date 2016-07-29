@@ -80,6 +80,7 @@ class DiffViewerDialog(WIDGET, BASE):
         self.commit2Panel.refChanged.connect(self.refsHaveChanged)
 
         self.featuresTree.itemClicked.connect(self.treeItemClicked)
+        self.featuresTree.currentItemChanged.connect(self.treeItemChanged)
 
         self.featuresTree.header().hide()
 
@@ -91,11 +92,18 @@ class DiffViewerDialog(WIDGET, BASE):
     def refsHaveChanged(self):
         self.computeDiffs()
 
+    def treeItemChanged(self, current, previous):
+        self.treeItemClicked(current)
+
     def treeItemClicked(self, item):
         if item.childCount():
+            self.attributesTable.clear()
+            self.attributesTable.setRowCount(0)
             return
         parent = item.parent().parent()
         if parent is None:
+            self.attributesTable.clear()
+            self.attributesTable.setRowCount(0)
             return
         color = {"MODIFIED": QtGui.QColor(255, 170, 0), "ADDED":QtCore.Qt.green,
                  "REMOVED":QtCore.Qt.red , "NO_CHANGE":QtCore.Qt.white}
