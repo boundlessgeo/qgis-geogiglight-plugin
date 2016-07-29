@@ -3,7 +3,7 @@ GeoGig QGIS Plugin
 
 This is a QGIS plugin to work with GeoGig repositories using the GeoGig Web API. 
 
-GeoGig is an open source tool that draws inspiration from Git, but adapts its core concepts to handle distributed versioning of geospatial data. GeoGig is maintained by Boundless (http://boundlessgeo.com/). for more information on GeoGig see http://geogig.org/
+GeoGig is an open source tool that draws inspiration from Git, but adapts its core concepts to handle distributed versioning of geospatial data. GeoGig is maintained by Boundless (http://boundlessgeo.com/). For more information about GeoGig see http://geogig.org/
 
 Installation
 *************
