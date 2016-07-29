@@ -12,7 +12,7 @@ Starting the GeoGig server
 
 The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/interaction/geoserver_web-api.html). 
 
-On Linux you can start GeoGig server by running
+On **Linux** you can start GeoGig server by running
 
 ::
 
@@ -52,11 +52,17 @@ or also
 	Initialzing a repository will cause the creation of a ".geogig" folder inside the repository one.
 
 
-On Windows you must ensure that you have defined the path to Java (ex: *c:\java\bin*) in the *path* enviroment variable of the operating system. Aftet that can start the GeoGig by running
+On **Windows** you must ensure that you have defined the path to Java (ex: *c:\java\bin*) in the *path* enviroment variable of the operating system. Aftet that can start the GeoGig by running
 
 ::
 
-	\bin\geogig.bat serve -m c:\path\to\folder_containing_repositories\
+	bin\geogig.bat serve -m c:\path\to\folder_containing_repositories\
+
+In a similar way to initialize a repository
+
+::
+        
+	bin\geogig.bat init c:\path\to\folder_containing_repositories\my_first_repository\
 
 
 Connecting to a repository server
