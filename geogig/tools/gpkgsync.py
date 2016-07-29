@@ -48,7 +48,6 @@ from PyQt4.QtGui import QInputDialog, QMessageBox
 from geogig.tools.layers import WrongLayerSourceException, resolveLayerFromSource, \
     namesFromLayer
 
-
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
 def syncLayer(layer):
@@ -137,18 +136,6 @@ def syncLayer(layer):
                                                   level=QgsMessageBar.INFO,
                                                   duration=5)
     return True
-
-
-def changeVersionForLayer(layer):
-    tracking = getTrackingInfo(layer)
-    repo = Repository(tracking.repoUrl)
-    currentCommitId = getCommitId(layer)
-    dlg = RefDialog(repo)
-    dlg.exec_()
-    if dlg.ref is not None:
-        applyLayerChanges(repo, layer, currentCommitId, dlg.ref.commitid)
-        layer.reload()
-        layer.triggerRepaint()
 
 def updateFeatureIds(repo, layer, featureIds):
     filename, layername = namesFromLayer(layer)

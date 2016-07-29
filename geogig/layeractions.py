@@ -35,18 +35,18 @@ from geogig.tools.layertracking import *
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.userconfigdialog import *
 from PyQt4 import QtGui
-from geogig.tools.gpkgsync import syncLayer, changeVersionForLayer
+from geogig.tools.gpkgsync import syncLayer
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogigwebapi.commit import Commit
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
 from geogig.tools.gpkgsync import getCommitId
 from geogig.repowatcher import repoWatcher
-from geogig.gui.dialogs.geogigref import RefDialog
 from gui.dialogs.geogigref import CommitSelectDialog
 from tools.layertracking import getTrackingInfo
 from tools.gpkgsync import applyLayerChanges
 from geogig.gui.dialogs import commitdialog
+from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
@@ -173,7 +173,7 @@ def changeVersion(layer):
     else:
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
-        dlg = RefDialog(repo, tracking.layername)
+        dlg = HistoryViewerDialog(repo, tracking.layername)
         dlg.exec_()
         if dlg.ref is not None:
             layers = repo.trees(dlg.ref)
@@ -183,7 +183,7 @@ def changeVersion(layer):
                 QtGui.QMessageBox.Ok)
             else:
                 repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
-                config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref.commitid,
+                config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref,
                                                        level=QgsMessageBar.INFO,
                                                        duration=5)
                 layer.reload()

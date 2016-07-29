@@ -37,7 +37,6 @@ from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import *
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 from layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
 from PyQt4 import QtGui, QtCore
 from geogig.gui.dialogs.navigatordialog import navigatorInstance

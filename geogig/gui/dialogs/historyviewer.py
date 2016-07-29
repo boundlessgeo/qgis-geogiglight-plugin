@@ -16,8 +16,6 @@
 ***************************************************************************
 """
 
-
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -40,8 +38,8 @@ from geogig import config
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
 from functools import partial
 from geogig.repowatcher import repoWatcher
-from geogig.layeractions import updateInfoActions
 from geogig.tools.layers import hasLocalChanges
+
 
 def icon(f):
     return QtGui.QIcon(os.path.join(os.path.dirname(__file__),
@@ -58,21 +56,43 @@ resetIcon = icon("reset.png")
 
 class HistoryViewer(QtGui.QTreeWidget):
 
-    def __init__(self):
+    def __init__(self, showContextMenu = True):
         super(HistoryViewer, self).__init__()
         self.repo = None
-        self._filterLayers = None
-        self.initGui()
+        self.layername = None
+        self.initGui(showContextMenu)
 
-    def initGui(self):
+    def initGui(self, showContextMenu):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.header().setStretchLastSection(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.header().setVisible(False)
-        self.customContextMenuRequested.connect(self.showPopupMenu)
+        if showContextMenu:
+            self.customContextMenuRequested.connect(self.showPopupMenu)
         self.itemExpanded.connect(self._itemExpanded)
+
+    def getRef(self):
+        selected = self.selectedItems()
+        if len(selected) == 1:
+            return selected[0].ref
+
+    def changeVersion(self, repo, layer, commit):
+        if hasLocalChanges(layer):
+            QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                "There are local changes that would be overwritten.\n"
+                "Revert them before changing version.",
+                QtGui.QMessageBox.Ok)
+        else:
+            tracking = getTrackingInfo(layer)
+            repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commit)
+            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % commit,
+                                                   level=QgsMessageBar.INFO,
+                                                   duration=5)
+            layer.reload()
+            layer.triggerRepaint()
+            repoWatcher.repoChanged.emit(repo)
 
     def showPopupMenu(self, point):
         selected = self.selectedItems()
@@ -85,7 +105,7 @@ class HistoryViewer(QtGui.QTreeWidget):
                     layer = getProjectLayerForGeoGigLayer(self.repo.url, tree)
                     if layer is not None:
                         changeVersionActions.append(QtGui.QAction(resetIcon, "Change '%s' layer to this version" % tree, None))
-                        changeVersionActions[-1].triggered.connect(partial(self.changeVersion, layer, item.commit.commitid))
+                        changeVersionActions[-1].triggered.connect(partial(self.changeVersion, self.repo, layer, item.commit.commitid))
                 menu = QtGui.QMenu()
                 describeAction = QtGui.QAction(infoIcon, "Show detailed description of this version", None)
                 describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
@@ -147,22 +167,6 @@ class HistoryViewer(QtGui.QTreeWidget):
         dlg = HtmlDialog("Version description", html, self)
         dlg.exec_()
 
-    def changeVersion(self, layer, commit):
-        if hasLocalChanges(layer):
-            QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
-                "There are local changes that would be overwritten.\n"
-                "Revert them before changing version.",
-                QtGui.QMessageBox.Ok)
-        else:
-            tracking = getTrackingInfo(layer)
-            self.repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commit)
-            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % commit,
-                                                   level=QgsMessageBar.INFO,
-                                                   duration=5)
-            layer.reload()
-            layer.triggerRepaint()
-            updateInfoActions(layer)
-            repoWatcher.repoChanged.emit(self.repo)
 
     def showDiffs(self, commit):
         dlg = DiffViewerDialog(self, self.repo, commit.parent, commit)
@@ -190,7 +194,7 @@ class HistoryViewer(QtGui.QTreeWidget):
                                               'Enter the name for the new branch:')
         if ok:
             self.repo.createbranch(ref, text)
-            item = BranchTreeItem(text, self.repo)
+            item = BranchTreeItem(text, self.repo, self.layername)
             self.addTopLevelItem(item)
 
     def deleteBranch(self, branch):
@@ -208,29 +212,26 @@ class HistoryViewer(QtGui.QTreeWidget):
                 self.takeTopLevelItem(i)
                 return
 
-    def updateContent(self, repo):
+    def updateContent(self, repo, layername = None):
         self.repo = repo
+        self.layername = layername
         self.clear()
         branches = repo.branches()
         for branch in branches:
-            item = BranchTreeItem(branch, repo)
+            item = BranchTreeItem(branch, repo, self.layername)
             self.addTopLevelItem(item)
         self.resizeColumnToContents(0)
 
 
-    def updateCurrentBranchItem(self):
-        for i in xrange(self.topLevelItemCount()):
-            item = self.topLevelItem(i)
-            item.takeChildren()
-            item.populate()
-
 
 class BranchTreeItem(QtGui.QTreeWidgetItem):
 
-    def __init__(self, branch, repo):
+    def __init__(self, branch, repo, path):
         QtGui.QTreeWidgetItem.__init__(self)
         self.branch = branch
+        self.ref = branch
         self.repo = repo
+        self.path = path
         self.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
         self.setText(0, branch)
         self.setIcon(0, branchIcon)
@@ -240,7 +241,7 @@ class BranchTreeItem(QtGui.QTreeWidgetItem):
             tags = defaultdict(list)
             for k, v in self.repo.tags().iteritems():
                 tags[v].append(k)
-            commits = self.repo.log(until = self.branch, limit = 100)
+            commits = self.repo.log(until = self.branch, limit = 100, path = self.path)
             for commit in commits:
                 item = CommitTreeItem(commit)
                 self.addChild(item)
@@ -277,24 +278,42 @@ class CommitTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, commit):
         QtGui.QListWidgetItem.__init__(self)
         self.commit = commit
+        self.ref = commit.commitid
 
 class HistoryViewerDialog(QtGui.QDialog):
 
     def __init__(self, repo, layer):
         self.repo = repo
         self.layer = layer
+        self.ref = None
         QtGui.QDialog.__init__(self, config.iface.mainWindow(),
                                QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         execute(self.initGui)
 
     def initGui(self):
         layout = QtGui.QVBoxLayout()
-        history = HistoryViewer()
-        history.updateContent(self.repo.repo())
-        history.filterLayers = [self.layer]
-        layout.addWidget(history)
-
+        self.history = HistoryViewer(False)
+        self.history.updateContent(self.repo, self.layer)
+        layout.addWidget(self.history)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
+        buttonBox.accepted.connect(self.okPressed)
+        buttonBox.rejected.connect(self.cancelPressed)
+        layout.addWidget(buttonBox)
         self.setLayout(layout)
 
         self.resize(400, 500)
         self.setWindowTitle("Repository history")
+
+    def okPressed(self):
+        selected = self.history.getRef()
+        if selected is None:
+            QtGui.QMessageBox.warning(self, 'No reference selected',
+                    "Select a version or branch from the from the history tree.",
+                    QtGui.QMessageBox.Ok)
+        else:
+            self.ref = selected
+            self.close()
+
+    def cancelPressed(self):
+        self.ref = None
+        self.close()
