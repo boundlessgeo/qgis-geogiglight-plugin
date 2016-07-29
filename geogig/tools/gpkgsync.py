@@ -109,7 +109,7 @@ def syncLayer(layer):
                     conflict.resolveWithRemoteVersion()
                 else:
                     conflict.resolveWithNewFeature(resolution)
-            repo.commitAndCloseTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+            repo.closeConflictSolving(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
         try:
