@@ -490,12 +490,12 @@ class Repository(object):
                         con.close()
                         current = commitid
                     except:
-                        current = "<p>Not available</p>"
+                        current = "Not available"
                 else:
                     filepath = "Not exported"
-                    current = "<p>Not available</p>"
+                    current = "Not available"
                 layer = ("<li><b>%s <a href='checkout:%s'>[Add to QGIS]</a> <a href='remove:%s'>[Remove from repo]</a></b>"
-                        "<p><i>Filepath</i>:<b>%s</b></p><p><i>Current version</i>:<b>%s</b></p></li>") % (tree, tree, tree, filepath, current)
+                        "<p><i>Filepath</i>: <b>%s</b></p><p><i>Current version</i>: <b>%s</b></p></li>") % (tree, tree, tree, filepath, current)
                 layers.append(layer)
 
             layers = "<ul>%s</ul>" % "".join(layers)
