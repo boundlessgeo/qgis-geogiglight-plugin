@@ -92,6 +92,8 @@ class DiffViewerDialog(WIDGET, BASE):
         self.computeDiffs()
 
     def treeItemChanged(self, current, previous):
+        qgsgeom1 = None
+        qgsgeom2 = None
         if not isinstance(current, FeatureItem):
             self.attributesTable.clear()
             self.attributesTable.setRowCount(0)
@@ -125,21 +127,26 @@ class DiffViewerDialog(WIDGET, BASE):
             self.attributesTable.setItem(i, 1, DiffItem(newvalue))
             try:
                 self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
-                qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
-                qgsgeom2 = QgsGeometry.fromWkt(newvalue)
-                if qgsgeom1 is not None and qgsgeom2 is not None:
-                    widget = QtGui.QWidget()
-                    btn = QtGui.QPushButton()
-                    btn.setText("View detail")
-                    btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
-                    label = QtGui.QLabel()
-                    label.setText(attrib["changetype"])
-                    layout = QtGui.QHBoxLayout(widget)
-                    layout.addWidget(label);
-                    layout.addWidget(btn);
-                    layout.setContentsMargins(0, 0, 0, 0)
-                    widget.setLayout(layout)
-                    self.attributesTable.setCellWidget(i, 2, widget)
+                if qgsgeom1 is None or qgsgeom2 is None:
+                    qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
+                    qgsgeom2 = QgsGeometry.fromWkt(newvalue)
+                    if qgsgeom1 is not None and qgsgeom2 is not None:
+                        widget = QtGui.QWidget()
+                        btn = QtGui.QPushButton()
+                        btn.setText("View detail")
+                        btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
+                        label = QtGui.QLabel()
+                        label.setText(attrib["changetype"])
+                        layout = QtGui.QHBoxLayout(widget)
+                        layout.addWidget(label);
+                        layout.addWidget(btn);
+                        layout.setContentsMargins(0, 0, 0, 0)
+                        widget.setLayout(layout)
+                        self.attributesTable.setCellWidget(i, 2, widget)
+                    else:
+                        self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
+                else:
+                    self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
             except:
                 self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
             for col in range(3):
