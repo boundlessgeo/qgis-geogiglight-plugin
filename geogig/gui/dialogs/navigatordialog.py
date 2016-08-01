@@ -410,7 +410,7 @@ class NavigatorDialog(BASE, WIDGET):
             self.actionDelete.setEnabled(True)
 
     def openHelp(self):
-        if not QDesktopServices.openUrl(QUrl('https://github.com/boundlessgeo/qgis-geogiglight-plugin/blob/master/doc/source/usage.rst')):
+        if not QDesktopServices.openUrl(QUrl('http://boundlessgeo.github.io/qgis-plugins-documentation/geogig-light/index.html')):
             QMessageBox.warning(self, self.tr('Error'), self.tr('Can not open help URL in browser'))
 
 
