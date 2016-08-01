@@ -153,6 +153,7 @@ class NavigatorDialog(BASE, WIDGET):
             for layername in layernames:
                 if layername:
                     self._checkoutLayer(layername, None)
+            self.updateCurrentRepo(self.currentRepo, self.currentRepo.title)
         elif url.startswith("remove"):
             ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
                         "Are you sure you want to delete this layer?",
