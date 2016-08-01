@@ -31,7 +31,7 @@ import sqlite3
 import tests
 import unittest
 import shutil
-from tests import _createTestRepo
+from tests import _createTestRepo, REPOS_SERVER_URL
 from geogig.tests.testwebapilib import webapiSuite
 from sqlite3 import OperationalError
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
@@ -56,17 +56,26 @@ def openTestProject(name):
         iface.addProject(projectFile)
 
 _repos = []
+_repoEndpoints = {}
+_availableRepoEndpoints = {}
 _tracked = []
 
 def backupConfiguration():
     global _repos
-    global _tracked
+    global _repoEndpoints
+    global _availableRepoEndpoints
     _repos = repository.repos
+    _repoEndpoints = repository.repoEndpoints
+    _availableRepoEndpoints = repository.availableRepoEndpoints
     _tracked = layertracking.tracked
 
 def restoreConfiguration():
     global _repos
     global _tracked
+    global _repoEndpoints
+    global _availableRepoEndpoints
+    repository.repoEndpoints = _repoEndpoints
+    repository.availableRepoEndpoints = _availableRepoEndpoints
     repository.repos = _repos
     layertracking._tracked = _tracked
 
@@ -74,8 +83,12 @@ def _openNavigator(empty = False):
     print tests._lastRepo
     if empty:
         repository.repos = []
+        repository.repoEndpoints = {}
+        repository.availableRepoEndpoints = {}
     else:
         repository.repos = [tests._lastRepo]
+        repository.availableRepoEndpoints = {"test repositories":REPOS_SERVER_URL}
+        repository.repoEndpoints = {"test repositories":REPOS_SERVER_URL}
     action = navigatorInstance.toggleViewAction()
     if not action.isChecked():
         iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, navigatorInstance)
