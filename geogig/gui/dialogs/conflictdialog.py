@@ -77,7 +77,6 @@ class ConflictDialog(WIDGET, BASE):
         self.solveAllRemoteButton.clicked.connect(self.solveAllRemote)
         self.solveLocalButton.clicked.connect(self.solveLocal)
         self.solveRemoteButton.clicked.connect(self.solveRemote)
-        self.baseMapCombo.currentIndexChanged.connect(self.baseMapChanged)
 
         self.showRemoteCheck.stateChanged.connect(self.showGeoms)
         self.showLocalCheck.stateChanged.connect(self.showGeoms)
@@ -87,7 +86,6 @@ class ConflictDialog(WIDGET, BASE):
         self.currentConflict = None
         self.theirsLayer = None
         self.oursLayer = None
-        self.baseLayer = None
 
         settings = QtCore.QSettings()
         horizontalLayout = QtGui.QHBoxLayout()
@@ -134,27 +132,6 @@ class ConflictDialog(WIDGET, BASE):
             self.conflicted.remove(attrib)
         self.updateSolveButton()
 
-    def baseMapChanged(self, idx):
-        if idx == BASEMAP_OSM:
-            baseLayerFile = os.path.join(os.path.dirname(__file__),
-                                         os.pardir, os.pardir, "resources", "osm.xml")
-        elif idx == BASEMAP_GOOGLE:
-            baseLayerFile = os.path.join(os.path.dirname(__file__),
-                                         os.pardir, os.pardir, "resources", "gmaps.xml")
-        else:
-            self.baseLayer = None
-            self.showGeoms()
-            return
-
-        if self.baseLayer is not None:
-            QgsMapLayerRegistry.instance().removeMapLayer(self.baseLayer.id())
-            self.baseLayer = None
-        baseLayer = QgsRasterLayer(baseLayerFile, "base", "gdal")
-        if baseLayer.isValid():
-            self.baseLayer = baseLayer
-            QgsMapLayerRegistry.instance().addMapLayer(self.baseLayer, False)
-
-
         self.showGeoms()
 
     def treeItemClicked(self):
@@ -190,13 +167,12 @@ class ConflictDialog(WIDGET, BASE):
 
     def cleanCanvas(self):
         self.mapCanvas.setLayerSet([])
-        layers = [self.oursLayer, self.theirsLayer, self.baseLayer]
+        layers = [self.oursLayer, self.theirsLayer]
         for layer in layers:
             if layer is not None:
                 QgsMapLayerRegistry.instance().removeMapLayer(layer.id())
         self.oursLayer = None
         self.theirsLayer = None
-        self.baseLayer = None
 
     def solveAllRemote(self):
         ret = QtGui.QMessageBox.warning(self, "Solve conflict",
@@ -393,8 +369,6 @@ class ConflictDialog(WIDGET, BASE):
         for lay, chk in zip(layers, checks):
             if lay is not None and chk.isChecked():
                 toShow.append(lay)
-        if len(toShow) > 0 and self.baseLayer is not None:
-            toShow.append(self.baseLayer)
         self.mapCanvas.setRenderFlag(False)
         self.mapCanvas.setLayerSet([QgsMapCanvasLayer(layer) for layer in toShow])
         self.mapCanvas.setRenderFlag(True)
