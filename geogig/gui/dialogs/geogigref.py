@@ -87,7 +87,7 @@ class RefWidget(QtGui.QWidget):
         self.commitRadio.setMinimumWidth(200)
         horizontalLayout3.addWidget(self.commitRadio)
         self.comboCommit = QtGui.QComboBox()
-        log = self.repo.log(path = self.path, limit = 100)
+        log = self.repo.log(limit = 100)
         for commit in log:
             self.comboCommit.addItem(commit.message.split("\n")[0], commit)
         horizontalLayout3.addWidget(self.comboCommit)

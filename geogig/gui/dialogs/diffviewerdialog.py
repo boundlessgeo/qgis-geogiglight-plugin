@@ -92,22 +92,13 @@ class DiffViewerDialog(WIDGET, BASE):
         self.computeDiffs()
 
     def treeItemChanged(self, current, previous):
-        if current is None:
-            self.attributesTable.clear()
-            self.attributesTable.setRowCount(0)
-            return
-        if current.childCount():
-            self.attributesTable.clear()
-            self.attributesTable.setRowCount(0)
-            return
-        parent = current.parent().parent()
-        if parent is None:
+        if not isinstance(current, FeatureItem):
             self.attributesTable.clear()
             self.attributesTable.setRowCount(0)
             return
         color = {"MODIFIED": QtGui.QColor(255, 170, 0), "ADDED":QtCore.Qt.green,
                  "REMOVED":QtCore.Qt.red , "NO_CHANGE":QtCore.Qt.white}
-        path = parent.text(0) + "/" + current.text(0)
+        path = current.layername + "/" + current.featureid
         featurediff = self.changes[path].featurediff()
         self.attributesTable.clear()
         self.attributesTable.verticalHeader().show()
@@ -191,9 +182,7 @@ class DiffViewerDialog(WIDGET, BASE):
                 layerSubItems[layername] = {FEATURE_ADDED: addedItem,
                                             FEATURE_REMOVED: removedItem,
                                             FEATURE_MODIFIED:modifiedItem}
-            item = QtGui.QTreeWidgetItem()
-            item.setText(0, featureid)
-            item.setIcon(0, featureIcon)
+            item = FeatureItem(layername, featureid)
             layerSubItems[layername][c.changetype].addChild(item)
         for item in layerItems.values():
             for i in [FEATURE_ADDED, FEATURE_REMOVED, FEATURE_MODIFIED]:
@@ -211,6 +200,13 @@ class DiffViewerDialog(WIDGET, BASE):
     def reject(self):
         QtGui.QDialog.reject(self)
 
+class FeatureItem(QtGui.QTreeWidgetItem):
+    def __init__(self, layername, featureid):
+        QtGui.QTreeWidgetItem.__init__(self)
+        self.setIcon(0, featureIcon)
+        self.layername = layername
+        self.featureid = featureid
+        self.setText(0, featureid)
 
 class DiffItem(QtGui.QTableWidgetItem):
 
