@@ -91,6 +91,9 @@ class ConflictDiff(object):
         self.repo.resolveConflictWithFeature(self.path, feature, self.remoteCommit,
                                                self.localCommit, self.transactionId)
 
+    def resolveDeletingFeature(self):
+        self.repo.deleteFeature(self.path, self.transactionId)
+
 
 
 

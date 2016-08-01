@@ -439,6 +439,12 @@ class Repository(object):
         self.__log(r.url, r.text, payload)
         r.raise_for_status()
 
+    def deleteFeature(self, path, transactionId):
+        payload = {"path": path, "transactionId": transactionId}
+        r = requests.get(self.url + "remove", params = payload)
+        self.__log(r.url, r.text, payload)
+        r.raise_for_status()
+
     def commitAndCloseTransaction(self, user, email, message, transactionId):
         params = {"all": True, "message": message, "transactionId": transactionId,
                   "authorName": user, "authorEmail": email}

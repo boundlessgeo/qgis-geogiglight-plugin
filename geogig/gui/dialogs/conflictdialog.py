@@ -55,7 +55,7 @@ WIDGET, BASE = uic.loadUiType(
 
 class ConflictDialog(WIDGET, BASE):
 
-    LOCAL, REMOTE = 1,2
+    LOCAL, REMOTE, DELETE = 1,2, 3
 
     def __init__(self, conflicts, layername):
         QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
@@ -105,6 +105,10 @@ class ConflictDialog(WIDGET, BASE):
         self.canvasWidget.setLayout(horizontalLayout)
         self.panTool = QgsMapToolPan(self.mapCanvas)
         self.mapCanvas.setMapTool(self.panTool)
+
+        self.solveButton.setEnabled(False)
+        self.solveLocalButton.setEnabled(False)
+        self.solveRemoteButton.setEnabled(False)
 
         self.fillConflictsTree()
 
@@ -163,14 +167,17 @@ class ConflictDialog(WIDGET, BASE):
             self.updateCurrentPath()
             self.solveLocalButton.setEnabled(True)
             self.solveRemoteButton.setEnabled(True)
+            self.solveButton.setEnabled(False)
 
     def updateCurrentPath(self):
+        self.solveButton.setEnabled(False)
+        self.solveLocalButton.setEnabled(False)
+        self.solveRemoteButton.setEnabled(False)
         self.cleanCanvas()
         self.showFeatureAttributes()
         self.createLayers()
         self.showGeoms()
         self.zoomToFullExtent()
-        self.updateSolveButton()
 
     def zoomToFullExtent(self):
         layers = [lay.extent() for lay in self.mapCanvas.layers() if lay.type() == lay.VectorLayer]
@@ -212,14 +219,16 @@ class ConflictDialog(WIDGET, BASE):
             self.close()
 
 
-    def _afterSolve(self):
-        parent = self.lastSelectedItem.parent()
-        parent.removeChild(self.lastSelectedItem)
-        if parent.childCount() == 0:
-            self.conflictsTree.invisibleRootItem().removeChild(parent)
-            self.solved = True
-            self.close()
-        self.lastSelectedItem = None
+    def _afterSolve(self, remove = True):
+        if remove:
+            parent = self.lastSelectedItem.parent()
+            parent.removeChild(self.lastSelectedItem)
+            self.lastSelectedItem = None
+            if parent.childCount() == 0:
+                self.conflictsTree.invisibleRootItem().removeChild(parent)
+                self.solved = True
+                self.close()
+
         self.attributesTable.setRowCount(0)
         self.cleanCanvas()
         self.solveButton.setEnabled(False)
@@ -268,7 +277,16 @@ class ConflictDialog(WIDGET, BASE):
             self.attributesTable.setItem(idx, 4, ValueItem(None, False));
 
             #TODO check case of feature deleted in one branch and modified in another one
-            values = (conflictItem.origin[name], conflictItem.local[name], conflictItem.remote[name])
+            try:
+                values = (conflictItem.origin[name], conflictItem.local[name], conflictItem.remote[name])
+            except TypeError: #Local has been deleted
+                self._afterSolve(False)
+                self.solveModifyAndDelete(conflictItem.conflict.path, self.REMOTE)
+                return
+            except GeoGigException: #Remote has been deleted
+                self._afterSolve(False)
+                self.solveModifyAndDelete(conflictItem.conflict.path,self.LOCAL)
+                return
             try:
                 geom = QgsGeometry.fromWkt(values[0])
             except:
@@ -295,6 +313,27 @@ class ConflictDialog(WIDGET, BASE):
         self.attributesTable.resizeRowsToContents()
         self.attributesTable.horizontalHeader().setMinimumSectionSize(150)
         self.attributesTable.horizontalHeader().setStretchLastSection(True)
+
+
+    def solveModifyAndDelete(self, path, modified):
+        msgBox = QtGui.QMessageBox()
+        msgBox.setText("The feature has been modified in one version and deleted in the other one.\n"
+                       "How do you want to solve the conflict?")
+        msgBox.addButton(QtGui.QPushButton('Modify'), QtGui.QMessageBox.YesRole)
+        msgBox.addButton(QtGui.QPushButton('Delete'), QtGui.QMessageBox.NoRole)
+        msgBox.addButton(QtGui.QPushButton('Cancel'), QtGui.QMessageBox.RejectRole)
+        ret = msgBox.exec_()
+        if ret == 0:
+            self.resolvedConflicts[path] = modified
+            self._afterSolve()
+        elif ret == 1:
+            self.resolvedConflicts[path] = self.DELETE
+            self._afterSolve()
+        else:
+            print "weewqe"
+
+
+
 
     def createLayers(self):
         types = [("Point", ptOursStyle, ptTheirsStyle),

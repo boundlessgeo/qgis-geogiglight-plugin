@@ -163,6 +163,20 @@ def _exportAndCreateConflict():
         layer2.changeAttributeValue(features2[0].id(), 1, 1001)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
+def _exportAndCreateConflictWithRemoveAndModify():
+    layer = checkoutLayer(tests._lastRepo, "points", None)
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.deleteFeatures([features[0].id()])
+    filename = tempFilename("gpkg")
+    tests._lastRepo.checkoutlayer(filename, "points")
+    layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
+    features2 = list(layer2.getFeatures())
+    with edit(layer2):
+        layer2.changeAttributeValue(features[0].id(), 1, 1000)
+    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
+
+
 def _exportLayer():
     checkoutLayer(tests._lastRepo, "points", None)
 
@@ -284,6 +298,15 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Export and edit repo layer", _exportAndCreateConflict)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Solve conflict'")
+    test.addStep("Check that new version has been created in the repo history")
+    tests.append(test)
+
+    test = Test("Sync with conflict, with remove and modify")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export and edit repo layer", _exportAndCreateConflictWithRemoveAndModify)
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch. Solve conflict'")
     test.addStep("Check that new version has been created in the repo history")
