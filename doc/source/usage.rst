@@ -47,11 +47,6 @@ or also
 	./bin/geogig init /path/to/folder_containing_repositories/my_first_repository/
 
 
-.. note::
-
-	Initialzing a repository will cause the creation of a ".geogig" folder inside the repository one.
-
-
 On **Windows** you must ensure that you have defined the path to Java (ex: *c:\java\bin*) in the *path* enviroment variable of the operating system. Aftet that can start the GeoGig by running
 
 ::
@@ -64,6 +59,10 @@ In a similar way to initialize a repository
         
 	bin\geogig.bat init c:\path\to\folder_containing_repositories\my_first_repository\
 
+
+.. note::
+
+	Initialzing a repository will cause the creation of a ".geogig" folder inside the repository one.
 
 Connecting to a repository server
 **************************************
