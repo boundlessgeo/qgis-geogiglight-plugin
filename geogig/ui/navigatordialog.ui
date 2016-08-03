@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>274</width>
+    <width>282</width>
     <height>602</height>
    </rect>
   </property>
@@ -84,6 +84,13 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Filter by repo title</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QgsFilterLineEdit" name="leFilter">
             <property name="sizePolicy">
