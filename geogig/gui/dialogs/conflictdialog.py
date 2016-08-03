@@ -306,7 +306,7 @@ class ConflictDialog(WIDGET, BASE):
             self.resolvedConflicts[path] = self.DELETE
             self._afterSolve()
         else:
-            print "weewqe"
+            pass
 
 
 
