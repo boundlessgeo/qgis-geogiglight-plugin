@@ -91,7 +91,6 @@ class GeoGigPlugin:
             folder = os.path.join(os.path.dirname(__file__), "_lessons")
             addLessonsFolder(folder)
         except Exception as e:
-            raise
             pass
 
     def unload(self):
