@@ -53,7 +53,12 @@ class CommitDialog(QtGui.QDialog):
         self.branchCombo = QtGui.QComboBox()
         self.branches = self.repo.branches()
         self.branchCombo.addItems(self.branches)
+        try:
+            idx = self.branches.index("master")
+        except:
+            idx = 0
         self.branchCombo.setEditable(True)
+        self.branchCombo.setCurrentIndex(idx)
         self.verticalLayout.addWidget(self.branchCombo)
 
         self.msgLabel = QtGui.QLabel("Message to describe this update")
@@ -72,6 +77,7 @@ class CommitDialog(QtGui.QDialog):
         self.setLayout(self.verticalLayout)
         self.buttonBox.accepted.connect(self.okPressed)
 
+        self.text.setFocus()
 
     def textHasChanged(self):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "")

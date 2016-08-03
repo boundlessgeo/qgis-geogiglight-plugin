@@ -97,6 +97,8 @@ class ImportDialog(QtGui.QDialog):
 
         self.resize(600, 300)
 
+        self.messageBox.setFocus()
+
     def updateBranches(self):
         self.branchCombo.clear()
         repo = repository.repos[self.repoCombo.currentIndex()]
