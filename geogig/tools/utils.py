@@ -72,6 +72,11 @@ def deleteTempFolder():
     if _tempFolder is not None:
         shutil.rmtree(_tempFolder, True)
 
+def tempSubfolder():
+    path = tempFolder()
+    folder = os.path.join(path, str(uuid.uuid4()).replace("-", ""))
+    return folder
+
 def tempFilename(ext):
     path = tempFolder()
     ext = "" if ext is None else ext

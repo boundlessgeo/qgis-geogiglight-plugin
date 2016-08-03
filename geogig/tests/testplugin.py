@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -28,13 +27,13 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 import sqlite3
-import tests
+from geogig import tests
 import unittest
 import shutil
-from tests import _createTestRepo, REPOS_SERVER_URL
+from geogig.tests import _createTestRepo, REPOS_SERVER_URL
 from geogig.tests.testwebapilib import webapiSuite
 from sqlite3 import OperationalError
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog, tempSubfolder
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
 from geogig.geogigwebapi import repository
 from qgis.utils import iface
@@ -44,14 +43,16 @@ from PyQt4 import QtCore
 from geogig.tools import layertracking
 from geogig.layeractions import updateInfoActions
 
-
 try:
     from qgistester.utils import layerFromName
 except:
     pass
 
 def openTestProject(name):
-    projectFile = os.path.join(os.path.dirname(__file__), "data", "layers", name + ".qgs")
+    orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)
+    destPath = tempSubfolder()
+    shutil.copytree(orgPath, destPath)
+    projectFile = os.path.join(destPath, name + ".qgs")
     if projectFile != QgsProject.instance().fileName():
         iface.addProject(projectFile)
 
@@ -79,16 +80,15 @@ def restoreConfiguration():
     repository.repos = _repos
     layertracking._tracked = _tracked
 
-def _openNavigator(empty = False):
-    print tests._lastRepo
+def _openNavigator(empty = False, group = "test repositories"):
     if empty:
         repository.repos = []
         repository.repoEndpoints = {}
         repository.availableRepoEndpoints = {}
     else:
         repository.repos = [tests._lastRepo]
-        repository.availableRepoEndpoints = {"test repositories":REPOS_SERVER_URL}
-        repository.repoEndpoints = {"test repositories":REPOS_SERVER_URL}
+        repository.availableRepoEndpoints = {group:REPOS_SERVER_URL}
+        repository.repoEndpoints = {group:REPOS_SERVER_URL}
     action = navigatorInstance.toggleViewAction()
     if not action.isChecked():
         iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, navigatorInstance)

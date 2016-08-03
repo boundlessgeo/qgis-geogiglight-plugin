@@ -86,6 +86,14 @@ class GeoGigPlugin:
         except Exception as e:
             pass
 
+        try:
+            from lessons import addLessonsFolder
+            folder = os.path.join(os.path.dirname(__file__), "_lessons")
+            addLessonsFolder(folder)
+        except Exception as e:
+            raise
+            pass
+
     def unload(self):
         navigatorInstance.setVisible(False)
         try:

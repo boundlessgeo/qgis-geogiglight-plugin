@@ -5,11 +5,11 @@ from geogig.tools.utils import loadLayerNoCrsDialog
 
 
 REPOS_SERVER_URL = "http://localhost:8182/"
-REPOS_FOLDER = "d:\\repo" #fill this with your repos folder
+REPOS_FOLDER = os.path.expanduser("~/geogig/server")
 
 _lastRepo = None
 
-def _createTestRepo(name, modifiesRepo = False):
+def _createTestRepo(name, modifiesRepo = False, group = None , title = None):
     i = len(os.listdir(REPOS_FOLDER))
     if modifiesRepo:
         folderName = "%i_%s" % (i, name)
@@ -20,7 +20,8 @@ def _createTestRepo(name, modifiesRepo = False):
         orgPath = os.path.join(os.path.dirname(__file__), "data", "repos", name)
         shutil.copytree(orgPath, destPath)
     global _lastRepo
-    _lastRepo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName, "test repositories", "%s [%i]" % (name, i))
+    _lastRepo = Repository(REPOS_SERVER_URL + "repos/%s/" % folderName, group or "test repositories",
+                           title or ("%s [%i]" % (name, i)))
     return _lastRepo
 
 def _layer(name):
