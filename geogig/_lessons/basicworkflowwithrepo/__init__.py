@@ -23,13 +23,24 @@ def checkEdited():
     else:
         return False
 
+try:
+    from qgistester.utils import layerFromName
+except:
+    pass
 
-lesson = GeoGigLesson("Basic GeoGig workflow")
-lesson.addStep("Open test data", "Open test data", lambda: openTestProject("points"))
-lesson.addStep("Create empty repository", "Create empty repository",
-               function = lambda: _createTestRepo("empty", True, "Lesson repos", "repo"))
+def checkLayerInProject():
+    layer = layerFromName("points")
+    return layer is not None
+
+
+lesson = GeoGigLesson("Basic GeoGig workflow with an existing repo")
+lesson.addStep("Create repository", "Create repository",
+               function = lambda: _createTestRepo("simple", True, "Lesson repos", "repo"))
 lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator(group = "Lesson repos"))
-lesson.addStep("Import layer", "import.html", endcheck=lambda: checkVersions(1), steptype=Step.MANUALSTEP)
+lesson.addStep("Export layer", "export.html", endcheck=checkLayerInProject, steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "sync.html", endcheck=lambda: checkVersions(2), steptype=Step.MANUALSTEP)
+
+
+
 
