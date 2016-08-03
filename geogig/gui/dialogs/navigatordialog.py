@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -27,6 +28,7 @@ __revision__ = '$Format:%H$'
 
 import os
 import sys
+import sqlite3
 from collections import defaultdict
 
 from PyQt4 import uic
@@ -40,7 +42,8 @@ from PyQt4.QtGui import (QIcon,
                          QBrush,
                          QColor,
                          QInputDialog,
-                         QDesktopServices)
+                         QDesktopServices, QLabel, QHBoxLayout, QSizePolicy,
+    QLineEdit, QWidget)
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
@@ -70,6 +73,8 @@ def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
 repoIcon = icon("repo-downloaded.png")
+branchIcon = icon("branch-active.png")
+layerIcon = icon('geometry.png')
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -137,11 +142,17 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.updateNavigator()
 
+        self.repoTree.itemExpanded.connect(self._itemExpanded)
+
     def updateNavigator(self):
         readRepos()
         self.fillTree()
         self.updateCurrentRepo(None, None)
         self.checkButtons()
+
+    def _itemExpanded(self, item):
+        if item is not None and isinstance(item, (RepoItem, BranchItem)):
+            item.populate()
 
     def descriptionLinkClicked(self, url):
         url = url.toString()
@@ -180,7 +191,6 @@ class NavigatorDialog(BASE, WIDGET):
             self.updateCurrentRepo(self.currentRepo, self.currentRepo.title)
 
 
-
     def _checkoutLayer(self, layername, bbox):
         checkoutLayer(self.currentRepo, layername, bbox)
 
@@ -204,7 +214,7 @@ class NavigatorDialog(BASE, WIDGET):
             groupItem = GroupItem(groupName)
             for repo in groupRepos:
                 try:
-                    item = RepoItem(repo)
+                    item = RepoItem(self.repoTree,repo)
                     groupItem.addChild(item)
                 except:
                     #TODO: inform of failed repos
@@ -215,7 +225,10 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoTree.addTopLevelItem(self.reposItem)
         if self.reposItem.childCount():
             self.filterRepos()
-        self.repoTree.expandAll()
+        self.reposItem.setExpanded(True)
+        for i in xrange(self.reposItem.childCount()):
+            self.reposItem.child(i).setExpanded(True)
+        #self.repoTree.expandAll()
         self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showHistoryTab(self):
@@ -272,6 +285,14 @@ class NavigatorDialog(BASE, WIDGET):
             self.updateCurrentRepo(None, None)
         elif isinstance(item, GroupItem):
             self._removeRepoEndpoint(item)
+        elif isinstance(item, BranchItem):
+            ret = QMessageBox.question(self, 'Delete Branch',
+                    'Are you sure you want to delete this branch?',
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if ret == QMessageBox.No:
+                return
+            item.repo.deletebranch(item.branch)
+            repoWatcher.repoChanged.emit(item.repo)
 
 
     def _removeRepoEndpoint(self, item):
@@ -293,15 +314,13 @@ class NavigatorDialog(BASE, WIDGET):
             return
         self.lastSelectedRepoItem = item
         try:
-            if isinstance(item, RepoItem):
-                self.updateCurrentRepo(item.repo, item.text(0))
-            else:
+            if isinstance(item, (GroupItem, RepositoriesItem)):
                 self.updateCurrentRepo(None, None)
-                if isinstance(item, RepositoriesItem):
-                    url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
-                    self.repoDescription.setSource(url)
-                else:
-                    self.repoDescription.setText("")
+                url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
+                self.repoDescription.setSource(url)
+            else:
+                self.updateCurrentRepo(item.repo, item.repo.title)
+
         except Exception, e:
                 msg = "An error occurred while fetching repository data! %s"
                 QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
@@ -407,6 +426,8 @@ class NavigatorDialog(BASE, WIDGET):
             if item.isRepoAvailable:
                 self.actionCreateRepository.setEnabled(True)
             self.actionDelete.setEnabled(True)
+        elif isinstance(item, BranchItem):
+            self.actionDelete.setEnabled(item.parent().childCount() > 1)
         else:
             self.actionDelete.setEnabled(True)
 
@@ -434,18 +455,83 @@ class GroupItem(QTreeWidgetItem):
         self.name = name
 
 class RepoItem(QTreeWidgetItem):
-    def __init__(self, repo):
+    def __init__(self, tree, repo):
         QTreeWidgetItem.__init__(self)
         self.repo = repo
-        self.refreshTitle()
+        self.tree = tree
         self.setSizeHint(0, QSize(self.sizeHint(0).width(), 25))
-
-    def refreshTitle(self):
+        self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         self.setText(0, self.repo.title)
         self.setIcon(0, repoIcon)
-        self.setForeground(1, QBrush(QColor("#5f6b77")))
-        lastUpdate = self.repo.lastupdated()
-        lastUpdate = "Updated " + relativeDate(lastUpdate) if lastUpdate is not None else ""
-        self.setText(1, lastUpdate)
+
+    def populate(self):
+        if not self.childCount():
+            branches = self.repo.branches()
+            for branch in branches:
+                item = BranchItem(self.tree, self.repo, branch)
+                self.addChild(item)
+
+class BranchItem(QTreeWidgetItem):
+    def __init__(self, tree, repo, branch):
+        QTreeWidgetItem.__init__(self)
+        self.repo = repo
+        self.tree = tree
+        self.branch = branch
+        self.setText(0, branch)
+        self.setIcon(0, branchIcon)
+        self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+
+    def populate(self):
+        if not self.childCount():
+            layers = self.repo.trees(self.branch)
+            if layers:
+                branchCommitId = self.repo.revparse(self.branch)
+            for layer in layers:
+                item = LayerItem(self.tree, self, self.repo, layer, branchCommitId)
+                self.addChild(item)
+
+class LayerItem(QTreeWidgetItem):
+    def __init__(self, tree, parent, repo, layer, branchCommitId):
+        QTreeWidgetItem.__init__(self, parent)
+        self.repo = repo
+        self.tree = tree
+        self.layer = layer
+        self.setIcon(0, layerIcon)
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel()
+        self.label.setText(layer)
+        self.labelLinks = QLabel()
+        self.labelLinks.setText("<a href='#'>Add to QGIS</a>")
+        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        layout.addWidget(self.label)
+        layout.addWidget(self.labelLinks)
+        layout.addStretch()
+        def add():
+            checkoutLayer(self.repo, self.layer, None)
+        self.labelLinks.linkActivated.connect(add)
+        w = QWidget()
+        w.setLayout(layout)
+        self.tree.setItemWidget(self, 0, w)
+
+        trackedlayer = getTrackingInfoForGeogigLayer(self.repo.url, layer)
+        if trackedlayer:
+            try:
+                con = sqlite3.connect(trackedlayer.geopkg)
+                cursor = con.cursor()
+                cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
+                currentCommitId = cursor.fetchone()[0]
+                cursor.close()
+                con.close()
+                if branchCommitId == currentCommitId:
+                    self.label.setText("<font color='green'>%s</font>" % layer)
+                else:
+                    self.label.setText("<font color='orange'>%s</font>" % layer)
+            except:
+                pass
+
+
+
 
 navigatorInstance = NavigatorDialog()
