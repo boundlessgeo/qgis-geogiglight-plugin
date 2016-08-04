@@ -112,8 +112,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.leFilter.cleared.connect(self.filterRepos)
         self.leFilter.textChanged.connect(self.filterRepos)
 
-        self.repoTree.itemClicked.connect(self.treeItemClicked)
-        self.repoTree.itemSelectionChanged.connect(self.checkButtons)
+        self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
+        #self.repoTree.itemSelectionChanged.connect(self.checkButtons)
         self.repoDescription.setOpenLinks(False)
         self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
         self.repoTree.setFocusPolicy(Qt.NoFocus)
@@ -175,22 +175,25 @@ class NavigatorDialog(BASE, WIDGET):
             if ret == QMessageBox.No:
                 return
 
-            user, email = config.getUserInfo()
-            if user is None:
-                return
-
             layername = url[url.find(":")+1:]
-            self.currentRepo.removetree(layername, user, email)
+            self._removeLayer(layername)
 
-            config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                                   level = QgsMessageBar.INFO, duration = 5)
+    def _removeLayer(self, layername):
+        user, email = config.getUserInfo()
+        if user is None:
+            return
 
-            layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layername)
-            if layer:
-                setAsNonRepoLayer(layer)
-                removeTrackedLayer(layer)
-            #TODO remove triggers from layer
-            repoWatcher.repoChanged.emit(self.currentRepo)
+        self.currentRepo.removetree(layername, user, email)
+
+        config.iface.messageBar().pushMessage("Layer correctly removed from repository",
+                                               level = QgsMessageBar.INFO, duration = 5)
+
+        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layername)
+        if layer:
+            setAsNonRepoLayer(layer)
+            removeTrackedLayer(layer)
+        #TODO remove triggers from layer
+        repoWatcher.repoChanged.emit(self.currentRepo)
 
 
     def _checkoutLayer(self, layername, bbox):
@@ -285,13 +288,21 @@ class NavigatorDialog(BASE, WIDGET):
         elif isinstance(item, GroupItem):
             self._removeRepoEndpoint(item)
         elif isinstance(item, BranchItem):
-            ret = QMessageBox.question(self, 'Delete Branch',
+            ret = QMessageBox.question(self, 'Delete branch',
                     'Are you sure you want to delete this branch?',
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ret == QMessageBox.No:
                 return
             item.repo.deletebranch(item.branch)
             repoWatcher.repoChanged.emit(item.repo)
+
+        elif isinstance(item, LayerItem):
+            ret = QMessageBox.question(self, 'Delete layer',
+                'Are you sure you want to delete this layer from the repo?',
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if ret == QMessageBox.No:
+                return
+            self._removeLayer(item.layer)
 
 
     def _removeRepoEndpoint(self, item):
@@ -308,22 +319,28 @@ class NavigatorDialog(BASE, WIDGET):
                 itemText = item.text(0)
                 item.setHidden(text != "" and text not in itemText)
 
-    def treeItemClicked(self, item, i):
-        try:
-            if isinstance(item, (GroupItem, RepositoriesItem)):
-                self.updateCurrentRepo(None)
-                url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
-                self.repoDescription.setSource(url)
-            else:
-                if item.repo != self.currentRepo:
-                    self.updateCurrentRepo(item.repo)
+    def selectionChanged(self):
+        self.checkButtons()
+        items = self.repoTree.selectedItems()
+        if items:
+            item = items[0]
+            try:
+                if isinstance(item, (GroupItem, RepositoriesItem)):
+                    self.updateCurrentRepo(None)
+                    url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
+                    self.repoDescription.setSource(url)
+                else:
+                    if item.repo != self.currentRepo:
+                        self.updateCurrentRepo(item.repo)
 
-        except Exception, e:
-                msg = "An error occurred while fetching repository data! %s"
-                QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
-                QMessageBox.warning(self, 'Add repositories',
-                                    msg % "See the logs for details.",
-                                    QMessageBox.Ok)
+            except Exception, e:
+                    msg = "An error occurred while fetching repository data! %s"
+                    QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
+                    QMessageBox.warning(self, 'Add repositories',
+                                        msg % "See the logs for details.",
+                                        QMessageBox.Ok)
+        else:
+            self.updateCurrentRepo(None)
 
     def updateCurrentRepo(self, repo):
         def _update():
@@ -339,6 +356,7 @@ class NavigatorDialog(BASE, WIDGET):
                 self.versionsTree.updateContent(repo)
                 self.tabWidget.setTabEnabled(1, True)
         try:
+            self.checkButtons()
             self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
             self.repoTree.blockSignals(True)
             execute(_update)
@@ -513,7 +531,6 @@ class LayerItem(QTreeWidgetItem):
         layout.addStretch()
 
         def add():
-            self.tree.itemClicked.emit(self, 0)
             if self.status == self.NOT_IN_SYNC:
                 msgBox = QMessageBox()
                 msgBox.setText("This layer was exported already at a different version.\nWhich version would you like to add to your QGIS project?")
@@ -532,7 +549,7 @@ class LayerItem(QTreeWidgetItem):
                                             "There are local changes that would be overwritten.\n"
                                             "Revert them before changing version.",QMessageBox.Ok)
             else:
-                checkoutLayer(self.repo, self.layer, None)
+                checkoutLayer(self.repo, self.layer, None, branchCommitId)
 
         self.labelLinks.linkActivated.connect(add)
         w = QWidget()
