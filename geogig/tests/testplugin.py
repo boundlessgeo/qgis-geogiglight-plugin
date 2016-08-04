@@ -95,7 +95,7 @@ def _openNavigator(empty = False, group = "test repositories"):
     action.trigger()
     action.trigger()
     navigatorInstance.fillTree()
-    navigatorInstance.updateCurrentRepo(None, None)
+    navigatorInstance.updateCurrentRepo(None)
     navigatorInstance.checkButtons()
 
 
