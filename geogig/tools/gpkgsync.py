@@ -45,7 +45,7 @@ from geogig.tools.utils import layerGeopackageFilename, loadLayerNoCrsDialog, \
     tempFilename
 from PyQt4.QtGui import QInputDialog, QMessageBox
 from geogig.tools.layers import WrongLayerSourceException, resolveLayerFromSource, \
-    namesFromLayer
+    namesFromLayer, hasLocalChanges
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
@@ -201,7 +201,6 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
         geogigfid = r[0]
         gpkgfid = gpkgfidFromGeogigfid(cursor, layername, geogigfid)
         cursor.execute("DELETE FROM %s WHERE fid='%s'" % (layername, gpkgfid))
-        #cursor.execute("DELETE FROM %s_fids WHERE gpkg_fid='%s'" % (layername, gpkgfid))
 
     changesCursor.close()
     changesCon.close()
@@ -242,7 +241,10 @@ def isGeoGigGeopackage(layer):
     return "geogig_audited_tables" in tables
 
 
-def checkoutLayer(repo, layername, bbox):
+class HasLocalChangesError(Exception):
+    pass
+
+def checkoutLayer(repo, layername, bbox, ref = None):
     trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername)
     if trackedlayer is not None:
         if not os.path.exists(trackedlayer.geopkg):
@@ -255,9 +257,24 @@ def checkoutLayer(repo, layername, bbox):
     else:
         filename = layerGeopackageFilename(layername, repo.title, repo.group)
         source = "%s|layername=%s" % (filename, layername)
+
     if trackedlayer is None:
-        repo.checkoutlayer(filename, layername, bbox, repo.HEAD)
+        repo.checkoutlayer(filename, layername, bbox, ref or repo.HEAD)
         addTrackedLayer(source, repo.url)
+    elif ref is not None:
+        try:
+            layer = resolveLayerFromSource(source)
+        except WrongLayerSourceException:
+            layer = loadLayerNoCrsDialog(source, layername, "ogr")
+        if hasLocalChanges(layer):
+            raise HasLocalChangesError()
+
+        filename, layername = namesFromLayer(layer)
+        QgsMapLayerRegistry.instance().addMapLayers([layer])
+        repo.checkoutlayer(filename, layername, bbox, ref)
+        layer.reload()
+        layer.triggerRepaint()
+
     try:
         layer = resolveLayerFromSource(source)
         iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
@@ -270,4 +287,5 @@ def checkoutLayer(repo, layername, bbox):
                                               level=QgsMessageBar.INFO,
                                               duration=5)
     finally:
+        repoWatcher.repoChanged.emit(repo)
         return layer

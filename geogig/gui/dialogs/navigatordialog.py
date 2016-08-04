@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -39,11 +38,9 @@ from PyQt4.QtGui import (QIcon,
                          QAbstractItemView,
                          QTreeWidgetItem,
                          QMessageBox,
-                         QBrush,
-                         QColor,
                          QInputDialog,
                          QDesktopServices, QLabel, QHBoxLayout, QSizePolicy,
-    QLineEdit, QWidget)
+                         QWidget, QPushButton)
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
@@ -62,10 +59,12 @@ from geogig.tools.layers import (getAllLayers,
                                  formatSource)
 from geogig.tools.layertracking import *
 from geogig.tools.utils import *
-from geogig.tools.gpkgsync import checkoutLayer
+from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
 from geogig.tools.layertracking import removeTrackedLayer, getProjectLayerForGeoGigLayer
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import *
+from geogig.layeractions import updateInfoActions
+
 
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 
@@ -85,7 +84,6 @@ class NavigatorDialog(BASE, WIDGET):
         super(NavigatorDialog, self).__init__(None)
 
         self.currentRepo = None
-        self.currentRepoName = None
         self.reposItem = None
         self.setupUi(self)
 
@@ -133,11 +131,15 @@ class NavigatorDialog(BASE, WIDGET):
         layout.addWidget(self.versionsTree)
         self.versionsWidget.setLayout(layout)
 
-        self.lastSelectedRepoItem = None
-
         def _repoChanged(repo):
             if self.currentRepo is not None and repo.url == self.currentRepo.url:
-                self.updateCurrentRepo(repo, repo.title)
+                self.updateCurrentRepo(repo)
+            for i in range(self.reposItem.childCount()):
+                item = self.reposItem.child(i)
+                for j in range(item.childCount()):
+                    subitem = item.child(j)
+                    if subitem.repo == repo:
+                        subitem.refreshContent()
         repoWatcher.repoChanged.connect(_repoChanged)
 
         self.updateNavigator()
@@ -147,7 +149,7 @@ class NavigatorDialog(BASE, WIDGET):
     def updateNavigator(self):
         readRepos()
         self.fillTree()
-        self.updateCurrentRepo(None, None)
+        self.updateCurrentRepo(None)
         self.checkButtons()
 
     def _itemExpanded(self, item):
@@ -164,7 +166,7 @@ class NavigatorDialog(BASE, WIDGET):
             for layername in layernames:
                 if layername:
                     self._checkoutLayer(layername, None)
-            self.updateCurrentRepo(self.currentRepo, self.currentRepo.title)
+            #self.updateCurrentRepo(self.currentRepo)
         elif url.startswith("remove"):
             ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
                         "Are you sure you want to delete this layer?",
@@ -188,17 +190,14 @@ class NavigatorDialog(BASE, WIDGET):
                 setAsNonRepoLayer(layer)
                 removeTrackedLayer(layer)
             #TODO remove triggers from layer
-            self.updateCurrentRepo(self.currentRepo, self.currentRepo.title)
+            repoWatcher.repoChanged.emit(self.currentRepo)
 
 
     def _checkoutLayer(self, layername, bbox):
         checkoutLayer(self.currentRepo, layername, bbox)
 
-    def updateCurrentRepoDescription(self):
-        self.repoDescription.setText(self.currentRepo.fullDescription())
-
     def fillTree(self):
-        self.updateCurrentRepo(None, None)
+        self.updateCurrentRepo(None)
         self.repoTree.clear()
         self.reposItem = None
         repos = repository.repos
@@ -252,8 +251,8 @@ class NavigatorDialog(BASE, WIDGET):
             dlg.exec_()
             if dlg.ok:
                 self.versionsTree.updateCurrentBranchItem()
-                self.updateCurrentRepoDescription()
                 setAsRepoLayer(dlg.layer)
+                repoWatcher.repoChanged.emit(self.currentRepo)
         else:
             QMessageBox.warning(self, 'Cannot add layer',
                 "No suitable layers can be found in your current QGIS project.\n"
@@ -282,7 +281,7 @@ class NavigatorDialog(BASE, WIDGET):
                     setAsNonRepoLayer(layer)
             parent = item.parent()
             parent.removeChild(item)
-            self.updateCurrentRepo(None, None)
+            self.updateCurrentRepo(None)
         elif isinstance(item, GroupItem):
             self._removeRepoEndpoint(item)
         elif isinstance(item, BranchItem):
@@ -310,16 +309,14 @@ class NavigatorDialog(BASE, WIDGET):
                 item.setHidden(text != "" and text not in itemText)
 
     def treeItemClicked(self, item, i):
-        if self.lastSelectedRepoItem == item:
-            return
-        self.lastSelectedRepoItem = item
         try:
             if isinstance(item, (GroupItem, RepositoriesItem)):
-                self.updateCurrentRepo(None, None)
+                self.updateCurrentRepo(None)
                 url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
                 self.repoDescription.setSource(url)
             else:
-                self.updateCurrentRepo(item.repo, item.repo.title)
+                if item.repo != self.currentRepo:
+                    self.updateCurrentRepo(item.repo)
 
         except Exception, e:
                 msg = "An error occurred while fetching repository data! %s"
@@ -328,19 +325,16 @@ class NavigatorDialog(BASE, WIDGET):
                                     msg % "See the logs for details.",
                                     QMessageBox.Ok)
 
-    def updateCurrentRepo(self, repo, name):
+    def updateCurrentRepo(self, repo):
         def _update():
             if repo != self.currentRepo:
                 self.tabWidget.setCurrentIndex(0)
             if repo is None:
                 self.tabWidget.setTabEnabled(1, False)
                 self.currentRepo = None
-                self.currentRepoName = None
                 self.repoDescription.setText("")
-                self.lastSelectedRepoItem = None
             else:
                 self.currentRepo = repo
-                self.currentRepoName = name
                 self.repoDescription.setText(repo.fullDescription())
                 self.versionsTree.updateContent(repo)
                 self.tabWidget.setTabEnabled(1, True)
@@ -471,6 +465,12 @@ class RepoItem(QTreeWidgetItem):
                 item = BranchItem(self.tree, self.repo, branch)
                 self.addChild(item)
 
+    def refreshContent(self):
+        isPopulated = self.childCount()
+        self.takeChildren()
+        if isPopulated:
+            self.populate()
+
 class BranchItem(QTreeWidgetItem):
     def __init__(self, tree, repo, branch):
         QTreeWidgetItem.__init__(self)
@@ -491,6 +491,9 @@ class BranchItem(QTreeWidgetItem):
                 self.addChild(item)
 
 class LayerItem(QTreeWidgetItem):
+
+    NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = range(3)
+
     def __init__(self, tree, parent, repo, layer, branchCommitId):
         QTreeWidgetItem.__init__(self, parent)
         self.repo = repo
@@ -508,13 +511,35 @@ class LayerItem(QTreeWidgetItem):
         layout.addWidget(self.label)
         layout.addWidget(self.labelLinks)
         layout.addStretch()
+
         def add():
-            checkoutLayer(self.repo, self.layer, None)
+            self.tree.itemClicked.emit(self, 0)
+            if self.status == self.NOT_IN_SYNC:
+                msgBox = QMessageBox()
+                msgBox.setText("This layer was exported already at a different version.\nWhich version would you like to add to your QGIS project?")
+                msgBox.addButton(QPushButton('Use exported version'), QMessageBox.YesRole)
+                msgBox.addButton(QPushButton('Use version from this branch'), QMessageBox.NoRole)
+                msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
+                ret = msgBox.exec_()
+                if ret == 0:
+                    checkoutLayer(self.repo, self.layer, None)
+                elif ret == 1:
+                    try:
+                        layer = checkoutLayer(self.repo, self.layer, None, branchCommitId)
+                        updateInfoActions(layer)
+                    except HasLocalChangesError:
+                        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                                            "There are local changes that would be overwritten.\n"
+                                            "Revert them before changing version.",QMessageBox.Ok)
+            else:
+                checkoutLayer(self.repo, self.layer, None)
+
         self.labelLinks.linkActivated.connect(add)
         w = QWidget()
         w.setLayout(layout)
         self.tree.setItemWidget(self, 0, w)
 
+        self.status = self.NOT_EXPORTED
         trackedlayer = getTrackingInfoForGeogigLayer(self.repo.url, layer)
         if trackedlayer:
             try:
@@ -525,8 +550,10 @@ class LayerItem(QTreeWidgetItem):
                 cursor.close()
                 con.close()
                 if branchCommitId == currentCommitId:
+                    self.status = self.IN_SYNC
                     self.label.setText("<font color='green'>%s</font>" % layer)
                 else:
+                    self.status = self.NOT_IN_SYNC
                     self.label.setText("<font color='orange'>%s</font>" % layer)
             except:
                 pass
