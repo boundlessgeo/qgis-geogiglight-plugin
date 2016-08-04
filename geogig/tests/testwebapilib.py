@@ -100,7 +100,7 @@ class WebApiTests(unittest.TestCase):
     def testRemoveTree(self):
         repo = _createTestRepo("simple", True)
         self.assertEquals(["points"], repo.trees())
-        repo.removetree("points")
+        repo.removetree("points", "me", "me@email.com")
         self.assertEquals([], repo.trees())
 
     def testTags(self):
@@ -266,7 +266,7 @@ class WebApiTests(unittest.TestCase):
         repo, conflicts = self._createConflict()
         conflicts[0].resolveWithLocalVersion()
         conflicts[1].resolveWithLocalVersion()
-        repo.closeConflictSolving("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
+        repo.commitAndCloseTransaction("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
         self.assertTrue("conflict resolution" in repo.log()[0].message)
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = repo.HEAD)
@@ -279,7 +279,7 @@ class WebApiTests(unittest.TestCase):
         repo, conflicts = self._createConflict()
         conflicts[0].resolveWithRemoteVersion()
         conflicts[1].resolveWithRemoteVersion()
-        repo.closeConflictSolving("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
+        repo.commitAndCloseTransaction("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
         self.assertTrue("conflict resolution" in repo.log()[0].message)
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = repo.HEAD)
@@ -292,7 +292,7 @@ class WebApiTests(unittest.TestCase):
         repo, conflicts = self._createConflict()
         conflicts[0].resolveWithNewFeature({"fid": 1, "n": 1002})
         conflicts[1].resolveWithRemoteVersion()
-        repo.closeConflictSolving("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
+        repo.commitAndCloseTransaction("user", "email@email.com", "conflict resolution", conflicts[0].transactionId)
         self.assertTrue("conflict resolution" in repo.log()[0].message)
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = repo.HEAD)
