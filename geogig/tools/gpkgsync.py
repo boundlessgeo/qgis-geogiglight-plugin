@@ -245,6 +245,8 @@ class HasLocalChangesError(Exception):
     pass
 
 def checkoutLayer(repo, layername, bbox, ref = None):
+    ref = ref or repo.HEAD
+    newCommitId = repo.revparse(ref)
     trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername)
     if trackedlayer is not None:
         if not os.path.exists(trackedlayer.geopkg):
@@ -261,31 +263,51 @@ def checkoutLayer(repo, layername, bbox, ref = None):
     if trackedlayer is None:
         repo.checkoutlayer(filename, layername, bbox, ref or repo.HEAD)
         addTrackedLayer(source, repo.url)
-    elif ref is not None:
         try:
             layer = resolveLayerFromSource(source)
+            iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
+                                          level=QgsMessageBar.INFO,
+                                          duration=5)
         except WrongLayerSourceException:
             layer = loadLayerNoCrsDialog(source, layername, "ogr")
+            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
+                                          level=QgsMessageBar.INFO,
+                                          duration=5)
+    elif ref is not None:
+        currentCommitId = getCommitId(source)
+        try:
+            layer = resolveLayerFromSource(source)
+            wasLoaded = True
+        except WrongLayerSourceException:
+            layer = loadLayerNoCrsDialog(source, layername, "ogr")
+            wasLoaded = False
         if hasLocalChanges(layer):
             raise HasLocalChangesError()
 
-        filename, layername = namesFromLayer(layer)
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
-        repo.checkoutlayer(filename, layername, bbox, ref)
-        layer.reload()
-        layer.triggerRepaint()
-
-    try:
-        layer = resolveLayerFromSource(source)
-        iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
-                              level=QgsMessageBar.INFO,
-                              duration=5)
-    except WrongLayerSourceException:
-        layer = loadLayerNoCrsDialog(source, layername, "ogr")
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
-        iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
+        if newCommitId != currentCommitId:
+            filename, layername = namesFromLayer(layer)
+            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            repo.checkoutlayer(filename, layername, bbox, ref)
+            layer.reload()
+            layer.triggerRepaint()
+            if not wasLoaded:
+                iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
+                                  level=QgsMessageBar.INFO,
+                                  duration=5)
+            else:
+                iface.messageBar().pushMessage("GeoGig", "Layer correctly updated to specified version",
+                                  level=QgsMessageBar.INFO,
+                                  duration=5)
+        else:
+            if wasLoaded:
+                iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
+                                  level=QgsMessageBar.INFO,
+                                  duration=5)
+            else:
+                iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
                                               level=QgsMessageBar.INFO,
                                               duration=5)
-    finally:
-        repoWatcher.repoChanged.emit(repo)
-        return layer
+
+    repoWatcher.repoChanged.emit(repo)
+    return layer
