@@ -38,7 +38,9 @@ from geogig import config
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
 from functools import partial
 from geogig.repowatcher import repoWatcher
-from geogig.tools.layers import hasLocalChanges
+from geogig.tools.layers import hasLocalChanges, addDiffLayer
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+
 
 
 def icon(f):
@@ -93,6 +95,7 @@ class HistoryViewer(QtGui.QTreeWidget):
             layer.reload()
             layer.triggerRepaint()
             repoWatcher.repoChanged.emit(repo)
+            repoWatcher.layerUpdated.emit(layer)
 
     def showPopupMenu(self, point):
         selected = self.selectedItems()
@@ -113,6 +116,9 @@ class HistoryViewer(QtGui.QTreeWidget):
                 diffAction = QtGui.QAction(diffIcon, "Show changes introduced by this version...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
                 menu.addAction(diffAction)
+                exportDiffAction = QtGui.QAction(diffIcon, "Export changes introduced by this version as new layer", None)
+                exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
+                menu.addAction(exportDiffAction)
                 createBranchAction = QtGui.QAction(newBranchIcon, "Create new branch at this version...", None)
                 createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
                 menu.addAction(createBranchAction)
@@ -121,9 +127,6 @@ class HistoryViewer(QtGui.QTreeWidget):
                 menu.addAction(createTagAction)
                 deleteTagsAction = QtGui.QAction(tagIcon, "Delete tags at this version", None)
                 deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
-                menu.addAction(deleteTagsAction)
-                changeTagsAction = QtGui.QAction(tagIcon, "Change exported layers this version", None)
-                changeTagsAction.triggered.connect(lambda: self.deleteTags(item))
                 menu.addAction(deleteTagsAction)
                 if changeVersionActions:
                     menu.addSeparator()
@@ -166,6 +169,11 @@ class HistoryViewer(QtGui.QTreeWidget):
                    commit.removed))
         dlg = HtmlDialog("Version description", html, self)
         dlg.exec_()
+
+
+    def exportDiffs(self, commit):
+        for tree in self.repo.trees(commit.commitid):
+            addDiffLayer(self.repo, tree, commit)
 
 
     def showDiffs(self, commit):

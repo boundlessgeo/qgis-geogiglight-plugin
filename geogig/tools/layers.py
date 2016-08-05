@@ -29,6 +29,7 @@ import sqlite3
 from qgis.core import *
 import os
 from qgis.utils import iface
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 
 ALL_TYPES = -1
 
@@ -138,3 +139,103 @@ def hasLocalChanges(layer):
     cursor.close()
     con.close()
     return changes
+
+ADDED, REMOVED, MODIFIED_BEFORE, MODIFIED_AFTER = range(4)
+
+resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, "resources")
+diffStylePoints = os.path.join(resourcesPath, "diffpoints.qml")
+diffStyleLines = os.path.join(resourcesPath, "difflines.qml")
+diffStylePolygons = os.path.join(resourcesPath, "diffpolygons.qml")
+
+def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
+    cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, geogigfid))
+    gpkgfid = int(cursor.fetchone()[0])
+    return gpkgfid
+
+def addDiffLayer(repo, layername, commit):
+    styles = {QGis.Point: diffStylePoints, QGis.Line: diffStyleLines, QGis.Polygon: diffStylePolygons}
+    geomTypes = {QGis.Point: "Point", QGis.Line: "LineString", QGis.Polygon: "Polygon"}
+    beforeFilename = tempFilename("gpkg")
+    print beforeFilename
+    repo.exportdiff(layername, commit.commitid, commit.parent.commitid, beforeFilename)
+    beforeLayer = loadLayerNoCrsDialog(beforeFilename, layername, "ogr")
+    afterFilename = tempFilename("gpkg")
+    repo.exportdiff(layername, commit.parent.commitid, commit.commitid, afterFilename)
+    afterLayer = loadLayerNoCrsDialog(beforeFilename, layername, "ogr")
+
+    beforeCon = sqlite3.connect(beforeFilename)
+    beforeCursor = beforeCon.cursor()
+    afterCon = sqlite3.connect(afterFilename)
+    afterCursor = afterCon.cursor()
+
+    attributes = [v[1] for v in beforeCursor.execute("PRAGMA table_info('%s');" % layername)]
+    attrnames = [a for a in attributes if a != "fid"]
+
+    layerFeatures = []
+
+    beforeCursor.execute("SELECT * FROM %s_changes WHERE audit_op=2;" % layername)
+    modified = beforeCursor.fetchall()
+    for m in modified:
+        geogigfid = m[0]
+        beforeGpkgfid = gpkgfidFromGeogigfid(beforeCursor, layername, geogigfid)
+        beforeCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, beforeGpkgfid))
+        featureRow = beforeCursor.fetchone()
+        attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
+        attrs["changetype"] = MODIFIED_BEFORE
+        request = QgsFeatureRequest()
+        request.setFilterFid(beforeGpkgfid)
+        feature = beforeLayer.getFeatures(request).next()
+        layerFeatures.append({"attrs":attrs, "geom": feature.geometry()})
+        afterGpkgfid = gpkgfidFromGeogigfid(afterCursor, layername, geogigfid)
+        afterCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername,afterGpkgfid))
+        featureRow = afterCursor.fetchone()
+        attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
+        attr["changetype"] = MODIFIED_AFTER
+        request = QgsFeatureRequest()
+        request.setFilterFid(beforeGpkgfid)
+        feature = beforeLayer.getFeatures(request).next()
+        layerFeatures.append({"attrs":attrs, "geom": feature.geometry()})
+
+
+    afterCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
+    added = afterCursor.fetchall()
+    for a in added:
+        geogigfid = a[0]
+        afterGpkgfid = gpkgfidFromGeogigfid(afterCursor, layername, geogigfid)
+        afterCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, afterGpkgfid))
+        featureRow = afterCursor.fetchone()
+        attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
+        attrs["changetype"] = ADDED
+        request = QgsFeatureRequest()
+        request.setFilterFid(afterGpkgfid)
+        feature = afterLayer.getFeatures(request).next()
+        layerFeatures.append({"attrs":attrs, "geom": feature.geometry()})
+
+    beforeCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
+    removed = beforeCursor.fetchall()
+    for r in removed:
+        geogigfid = r[0]
+        beforeGpkgfid = gpkgfidFromGeogigfid(beforeCursor, layername, geogigfid)
+        beforeCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, afterGpkgfid))
+        featureRow = beforeCursor.fetchone()
+        attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
+        attrs["changetype"] = REMOVED
+        request = QgsFeatureRequest()
+        request.setFilterFid(afterGpkgfid)
+        feature = beforeLayer.getFeatures(request).next()
+        layerFeatures.append({"attrs":attrs, "geom": feature.geometry()})
+
+    attrnames.append("changetype")
+    uriFields = "&".join(["field=%s" % f for f in attrnames])
+    uri = "%s?crs=%S&%s" % (geomTypes[beforeLayer.geometryType()], beforeLayer.crs().authid(), uriFields)
+    layer = QgsVectorLayer(uri, "diff", "memory")
+    featuresList = []
+    for feature in layerFeatures:
+        qgsfeature = QgsFeature()
+        qgsfeature.setGeometry(feature["geom"])
+        qgsfeature.setAttributes(feature["attrs"][attr] for attr in attrnames)
+        featuresList.append(qgsfeature)
+    layer.addFeatures(featuresList)
+
+    QgsMapLayerRegistry.instance().addMapLayers([layer])
+    layer.loadNamedStyle(styles[layer.geometryType()])
