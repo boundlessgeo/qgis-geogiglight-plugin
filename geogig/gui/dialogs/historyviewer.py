@@ -132,7 +132,7 @@ class HistoryViewer(QtGui.QTreeWidget):
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
-                if self.topLevelItemCount() > 1:
+                if self.topLevelItemCount() > 1 and item.branch != "master":
                     menu = QtGui.QMenu()
                     deleteAction = QtGui.QAction(deleteIcon, "Delete this branch", None)
                     deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
