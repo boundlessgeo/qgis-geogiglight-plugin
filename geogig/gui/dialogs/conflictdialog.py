@@ -317,12 +317,6 @@ class ConflictDialog(WIDGET, BASE):
                   ("Polygon", polygonOursStyle, polygonTheirsStyle)]
         if self.oursgeom is not None:
             geomtype = types[int(self.oursgeom.type())][0]
-            #===================================================================
-            # if self.oursgeom.crs is not None:
-            #     targetCrs = self.mapCanvas.mapRenderer().destinationCrs()
-            #     crsTransform = QgsCoordinateTransform(QgsCoordinateReferenceSystem(self.oursgeom.crs), targetCrs)
-            #     qgsgeom.transform(crsTransform)
-            #===================================================================
             style = types[int(self.oursgeom.type())][1]
             self.oursLayer = loadLayerNoCrsDialog(geomtype + "?crs=EPSG:4326", "ours", "memory")
             pr = self.oursLayer.dataProvider()
@@ -331,21 +325,11 @@ class ConflictDialog(WIDGET, BASE):
             pr.addFeatures([feat])
             self.oursLayer.loadNamedStyle(style)
             self.oursLayer.updateExtents()
-            #this is to correct a problem with memory layers in qgis 2.2
-            self.oursLayer.selectAll()
-            self.oursLayer.setExtent(self.oursLayer.boundingBoxOfSelected())
-            self.oursLayer.invertSelection()
             QgsMapLayerRegistry.instance().addMapLayer(self.oursLayer, False)
         else:
             self.oursLayer = None
         if self.theirsgeom is not None:
             geomtype = types[int(self.theirsgeom.type())][0]
-            #===================================================================
-            # if self.theirsgeom.crs is not None:
-            #     targetCrs = self.mapCanvas.mapRenderer().destinationCrs()
-            #     crsTransform = QgsCoordinateTransform(QgsCoordinateReferenceSystem(self.theirsgeom.crs), targetCrs)
-            #     qgsgeom.transform(crsTransform)
-            #===================================================================
             style = types[int(self.theirsgeom.type())][2]
             self.theirsLayer = loadLayerNoCrsDialog(geomtype + "?crs=EPSG:4326", "theirs", "memory")
             pr = self.theirsLayer.dataProvider()
@@ -354,10 +338,6 @@ class ConflictDialog(WIDGET, BASE):
             pr.addFeatures([feat])
             self.theirsLayer.loadNamedStyle(style)
             self.theirsLayer.updateExtents()
-            #this is to correct a problem with memory layers in qgis 2.2
-            self.theirsLayer.selectAll()
-            self.theirsLayer.setExtent(self.theirsLayer.boundingBoxOfSelected())
-            self.theirsLayer.invertSelection()
             QgsMapLayerRegistry.instance().addMapLayer(self.theirsLayer, False)
         else:
             self.theirsLayer = None
