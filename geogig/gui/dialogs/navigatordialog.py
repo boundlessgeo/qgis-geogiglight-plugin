@@ -216,7 +216,7 @@ class NavigatorDialog(BASE, WIDGET):
             groupItem = GroupItem(groupName)
             for repo in groupRepos:
                 try:
-                    item = RepoItem(self.repoTree,repo)
+                    item = RepoItem(self.repoTree, repo)
                     groupItem.addChild(item)
                 except:
                     #TODO: inform of failed repos
@@ -372,7 +372,7 @@ class NavigatorDialog(BASE, WIDGET):
             group = groupItem.text(0)
             url = repository.repoEndpoints[group]
             repo = createRepoAtUrl(url, group, name)
-            item = RepoItem(repo)
+            item = RepoItem(self.repoTree, repo)
             addRepo(repo)
             groupItem.addChild(item)
 
@@ -401,7 +401,7 @@ class NavigatorDialog(BASE, WIDGET):
             else:
                 groupItem = GroupItem(title)
                 for repo in repos:
-                    item = RepoItem(repo)
+                    item = RepoItem(self.repoTree, repo)
                     groupItem.addChild(item)
         except Exception, e:
             msg = "No geogig server found at the specified url. %s"
@@ -439,7 +439,7 @@ class NavigatorDialog(BASE, WIDGET):
                 self.actionCreateRepository.setEnabled(True)
             self.actionDelete.setEnabled(True)
         elif isinstance(item, BranchItem):
-            self.actionDelete.setEnabled(item.parent().childCount() > 1)
+            self.actionDelete.setEnabled(item.parent().childCount() > 1 and item.branch != "master")
         else:
             self.actionDelete.setEnabled(True)
 
