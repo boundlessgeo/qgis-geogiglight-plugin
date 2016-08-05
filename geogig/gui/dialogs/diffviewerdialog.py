@@ -94,6 +94,7 @@ class DiffViewerDialog(WIDGET, BASE):
     def treeItemChanged(self, current, previous):
         qgsgeom1 = None
         qgsgeom2 = None
+        crs = "EPSG:4326"
         if not isinstance(current, FeatureItem):
             self.attributesTable.clear()
             self.attributesTable.setRowCount(0)
@@ -128,13 +129,15 @@ class DiffViewerDialog(WIDGET, BASE):
             try:
                 self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
                 if qgsgeom1 is None or qgsgeom2 is None:
+                    if "crs" in attrib:
+                        crs = attrib["crs"]
                     qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
                     qgsgeom2 = QgsGeometry.fromWkt(newvalue)
                     if qgsgeom1 is not None and qgsgeom2 is not None:
                         widget = QtGui.QWidget()
                         btn = QtGui.QPushButton()
                         btn.setText("View detail")
-                        btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
+                        btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2, crs))
                         label = QtGui.QLabel()
                         label.setText(attrib["changetype"])
                         layout = QtGui.QHBoxLayout(widget)
@@ -154,8 +157,8 @@ class DiffViewerDialog(WIDGET, BASE):
         self.attributesTable.resizeColumnsToContents()
         self.attributesTable.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
-    def viewGeometryChanges(self, g1, g2):
-        dlg = GeometryDiffViewerDialog([g1, g2], QgsCoordinateReferenceSystem("EPSG:4326")) #TODO set CRS correctly
+    def viewGeometryChanges(self, g1, g2, crs):
+        dlg = GeometryDiffViewerDialog([g1, g2], QgsCoordinateReferenceSystem(crs))
         dlg.exec_()
 
 
