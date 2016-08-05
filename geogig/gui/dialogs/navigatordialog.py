@@ -568,7 +568,6 @@ class LayerItem(QTreeWidgetItem):
                 con.close()
                 if branchCommitId == currentCommitId:
                     self.status = self.IN_SYNC
-                    self.label.setText("<font color='green'>%s</font>" % layer)
                 else:
                     self.status = self.NOT_IN_SYNC
                     self.label.setText("<font color='orange'>%s</font>" % layer)
