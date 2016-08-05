@@ -3,12 +3,15 @@
 
 import unittest
 import os
-from geogig.geogigwebapi.repository import Repository
+from geogig.geogigwebapi.repository import Repository, createRepoAtUrl
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from qgis.core import *
 from geogig.tools.gpkgsync import getCommitId
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.tests import _createTestRepo, _layer
+from geogig.tests import REPOS_SERVER_URL
+from geogig.geogigwebapi.repository import repositoriesFromUrl
+import uuid
 
 
 
@@ -16,6 +19,15 @@ class WebApiTests(unittest.TestCase):
 
     def setUp(self):
         pass
+
+    def testCreateRepo(self):
+        repos = repositoriesFromUrl(REPOS_SERVER_URL, "test")
+        n = len(repos)
+        name = str(uuid.uuid4()).replace("-", "")
+        createRepoAtUrl(REPOS_SERVER_URL, "test", name)
+        repos = repositoriesFromUrl(REPOS_SERVER_URL, "test")
+        self.assertEqual(n + 1, len(repos))
+        self.assertTrue(name in [r.title for r in repos])
 
     def testLog(self):
         repo = _createTestRepo("simple")
