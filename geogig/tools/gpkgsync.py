@@ -287,11 +287,10 @@ def checkoutLayer(repo, layername, bbox, ref = None):
 
         if newCommitId != currentCommitId:
             filename, layername = namesFromLayer(layer)
-            QgsMapLayerRegistry.instance().addMapLayers([layer])
             repo.checkoutlayer(filename, layername, bbox, ref)
             layer.reload()
-            layer.triggerRepaint()
             if not wasLoaded:
+                QgsMapLayerRegistry.instance().addMapLayers([layer])
                 iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
                                   level=QgsMessageBar.INFO,
                                   duration=5)
@@ -299,12 +298,15 @@ def checkoutLayer(repo, layername, bbox, ref = None):
                 iface.messageBar().pushMessage("GeoGig", "Layer correctly updated to specified version",
                                   level=QgsMessageBar.INFO,
                                   duration=5)
+
+                layer.triggerRepaint()
         else:
             if wasLoaded:
                 iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
                                   level=QgsMessageBar.INFO,
                                   duration=5)
             else:
+                QgsMapLayerRegistry.instance().addMapLayers([layer])
                 iface.messageBar().pushMessage("GeoGig", "Layer correctly added to the current QGIS project",
                                               level=QgsMessageBar.INFO,
                                               duration=5)
