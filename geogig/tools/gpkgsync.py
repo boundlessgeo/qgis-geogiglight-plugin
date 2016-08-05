@@ -136,7 +136,7 @@ def syncLayer(layer):
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
                                                   level=QgsMessageBar.INFO,
                                                   duration=5)
-    return True
+    repoWatcher.layerUpdated.emit(layer)
 
 def updateFeatureIds(repo, layer, featureIds):
     filename, layername = namesFromLayer(layer)
@@ -298,7 +298,6 @@ def checkoutLayer(repo, layername, bbox, ref = None):
                 iface.messageBar().pushMessage("GeoGig", "Layer correctly updated to specified version",
                                   level=QgsMessageBar.INFO,
                                   duration=5)
-
                 layer.triggerRepaint()
         else:
             if wasLoaded:

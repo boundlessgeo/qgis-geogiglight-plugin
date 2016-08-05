@@ -60,7 +60,7 @@ def setAsRepoLayer(layer):
     config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(removeAction, layer)
     syncAction = QtGui.QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
-    syncAction.triggered.connect(partial(_syncLayer, layer))
+    syncAction.triggered.connect(partial(syncLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
     changeVersionAction = QtGui.QAction(u"Change to a different version...", config.iface.legendInterface())
@@ -89,6 +89,7 @@ def setAsRepoLayer(layer):
         config.iface.legendInterface().addLegendLayerActionForLayer(refreshAction, layer)
         layer.geogigActions.append(refreshAction)
     layer.geogigActions.extend(layer.infoActions)
+    repoWatcher.layerUpdated.connect(updateInfoActions)
 
 def addInfoActions(layer):
     commitId = getCommitId(layer)
@@ -125,10 +126,6 @@ def addInfoActions(layer):
 def updateInfoActions(layer):
     setAsRepoLayer(layer)
 
-def _syncLayer(layer):
-    if syncLayer(layer):
-        updateInfoActions(layer)
-
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
     action = QtGui.QAction(u"Add layer to Repository...", config.iface.legendInterface())
@@ -138,6 +135,10 @@ def setAsNonRepoLayer(layer):
     config.iface.legendInterface().addLegendLayerAction(action, u"GeoGig", u"id2", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
     layer.geogigActions = [action]
+    try:
+        repoWatcher.layerUpdated.disconnect(updateInfoActions)
+    except:
+        pass #In case it is a layer that was never a repo layer
 
 def removeLayerActions(layer):
     try:
@@ -189,7 +190,7 @@ def changeVersion(layer):
                                                        duration=5)
                 layer.reload()
                 layer.triggerRepaint()
-                updateInfoActions(layer)
+                repoWatcher.layerUpdated.emit(layer)
                 repoWatcher.repoChanged.emit(repo)
 
 def addLayer(layer):

@@ -543,7 +543,7 @@ class LayerItem(QTreeWidgetItem):
                 elif ret == 1:
                     try:
                         layer = checkoutLayer(self.repo, self.layer, None, branchCommitId)
-                        updateInfoActions(layer)
+                        repoWatcher.layerUpdated.emit(layer)
                     except HasLocalChangesError:
                         QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
                                             "There are local changes that would be overwritten.\n"
