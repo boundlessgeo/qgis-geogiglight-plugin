@@ -371,10 +371,19 @@ class NavigatorDialog(BASE, WIDGET):
             groupItem = self.repoTree.selectedItems()[0]
             group = groupItem.text(0)
             url = repository.repoEndpoints[group]
-            repo = createRepoAtUrl(url, group, name)
+            try:
+                repo = execute(lambda: createRepoAtUrl(url, group, name))
+            except GeoGigException, e:
+                config.iface.messageBar().pushMessage("Error", str(e),
+                               level=QgsMessageBar.CRITICAL,
+                               duration=5)
+                return
             item = RepoItem(self.repoTree, repo)
             addRepo(repo)
             groupItem.addChild(item)
+            config.iface.messageBar().pushMessage("Create repository", "Repository correctly created",
+                                           level=QgsMessageBar.INFO,
+                                           duration=5)
 
     def editGeoGigServer(self):
         item = self.repoTree.selectedItems()[0]

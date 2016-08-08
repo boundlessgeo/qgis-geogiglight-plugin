@@ -596,7 +596,9 @@ def repositoriesFromUrl(url, title):
 def createRepoAtUrl(url, group, name):
     if not url.endswith("/"):
         url = url + "/"
-    r = requests.put(url + "repos/%s/init" % name)
+    r = requests.put(url + "repos/%s/init.json" % name, data = "dummy")
+    if not r.json()["response"]["success"]:
+        raise GeoGigException("A repository with that name already exists")
     r.raise_for_status()
     return Repository(url + "repos/%s/" % name, group, name)
 
