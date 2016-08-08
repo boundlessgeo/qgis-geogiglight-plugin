@@ -279,6 +279,7 @@ def functionalTests():
     test = Test("Sync with only upstream changes")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator",  _openNavigator)
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch'")
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
