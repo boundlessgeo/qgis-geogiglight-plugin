@@ -10,9 +10,8 @@ from geogig.tools.gpkgsync import getCommitId
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.tests import _createTestRepo, _layer
 from geogig.tests import REPOS_SERVER_URL
-from geogig.geogigwebapi.repository import repositoriesFromUrl
+from geogig.geogigwebapi.repository import repositoriesFromUrl, GeoGigException
 import uuid
-
 
 
 class WebApiTests(unittest.TestCase):
@@ -28,6 +27,10 @@ class WebApiTests(unittest.TestCase):
         repos = repositoriesFromUrl(REPOS_SERVER_URL, "test")
         self.assertEqual(n + 1, len(repos))
         self.assertTrue(name in [r.title for r in repos])
+
+    def testCreateRepoWithNameThatAlreadyExists(self):
+        repo = _createTestRepo("simple")
+        self.assertRaises(GeoGigException, lambda: createRepoAtUrl(REPOS_SERVER_URL, "test", "original_simple"))
 
     def testLog(self):
         repo = _createTestRepo("simple")
