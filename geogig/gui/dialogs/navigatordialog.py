@@ -40,7 +40,7 @@ from PyQt4.QtGui import (QIcon,
                          QMessageBox,
                          QInputDialog,
                          QDesktopServices, QLabel, QHBoxLayout, QSizePolicy,
-                         QWidget, QPushButton)
+                         QWidget, QPushButton, QApplication)
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
@@ -546,6 +546,7 @@ class LayerItem(QTreeWidgetItem):
                 msgBox.addButton(QPushButton('Use exported version'), QMessageBox.YesRole)
                 msgBox.addButton(QPushButton('Use version from this branch'), QMessageBox.NoRole)
                 msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
+                QApplication.restoreOverrideCursor()
                 ret = msgBox.exec_()
                 if ret == 0:
                     checkoutLayer(self.repo, self.layer, None)
