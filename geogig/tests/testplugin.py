@@ -120,6 +120,19 @@ def _exportAndChangeToFirstVersion():
     layer.reload()
     layer.triggerRepaint()
 
+def _exportChangetoFirstVersionAndEditLayer():
+    log = tests._lastRepo.log()
+    assert len(log) == 3
+    commitid = log[-1].commitid
+    layer = checkoutLayer(tests._lastRepo, "points", None, commitid)
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        feat = QgsFeature(layer.pendingFields())
+        feat.setAttributes(["5", 5])
+        feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(123, 456)))
+        layer.addFeatures([feat])
+
 def _exportAndAddFeatureToLayer():
     layer = checkoutLayer(tests._lastRepo, "points", None)
     log = tests._lastRepo.log()
@@ -271,7 +284,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color)."
+    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color). "
                  "Verify that is asks you for confirmation. Select 'Use branch version'", isVerifyStep = True)
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
@@ -281,9 +294,18 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Export repo layer", _exportAndEditLayer)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color)."
-                 "Check it is not permitted due to local changes in the layer", isVerifyStep = True)
-    test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
+    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree. "
+                 "Verify it show a message in the message bar saying that the layer was already loaded", isVerifyStep = True)
+    tests.append(test)
+
+    test = GeoGigTest("Open already exported layers in QGIS to an older version, with local changes")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export repo layer", _exportChangetoFirstVersionAndEditLayer)
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color).  "
+                 "Verify that is asks you for confirmation. Select 'Use branch version'. Check it is not permitted due to local changes in the layer",
+                 isVerifyStep = True)
     tests.append(test)
 
     test = GeoGigTest("Change layer version")
