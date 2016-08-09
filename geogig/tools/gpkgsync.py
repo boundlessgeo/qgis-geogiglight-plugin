@@ -282,10 +282,10 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         except WrongLayerSourceException:
             layer = loadLayerNoCrsDialog(source, layername, "ogr")
             wasLoaded = False
-        if hasLocalChanges(layer):
-            raise HasLocalChangesError()
 
         if newCommitId != currentCommitId:
+            if hasLocalChanges(layer):
+                raise HasLocalChangesError()
             filename, layername = namesFromLayer(layer)
             repo.checkoutlayer(filename, layername, bbox, ref)
             layer.reload()
