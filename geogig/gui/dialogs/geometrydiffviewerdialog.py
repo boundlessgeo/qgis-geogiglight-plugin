@@ -145,12 +145,6 @@ class GeometryDiffViewerDialog(QtGui.QDialog):
 
     def reject(self):
         QtGui.QDialog.reject(self)
-        self.unloadLayers()
-
-    def unloadLayers(self):
-        return
-        for layer in self.mapLayers:
-            QgsMapLayerRegistry.instance().removeMapLayer(layer.layer().id())
 
 
 class GeomDiffTableModel(QtCore.QAbstractTableModel):
