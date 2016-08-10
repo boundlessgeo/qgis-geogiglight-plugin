@@ -445,7 +445,27 @@ def functionalTests():
     test = GeoGigTest("Delete branch")
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Delete 'mybranch' and verify the versions tree is updated")
+    test.addStep("Verify that 'master' branch cannot be deleted from history tree", isVerifyStep = True)
+    test.addStep("Delete 'mybranch' using repo history panel and verify the versions tree is updated")
+    tests.append(test)
+
+    test = GeoGigTest("Delete branch in repositories tree")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Verify that 'master' branch cannot be deleted from repositories tree", isVerifyStep = True)
+    test.addStep("Delete 'mybranch' from the versions tree and verify the repositories tree is updated")
+    tests.append(test)
+
+    test = GeoGigTest("Delete layer in repositories tree, in 'master' branch")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Delete 'points' layer in 'master' branch in repositories tree, and verify the repositories tree is updated correctly")
+    tests.append(test)
+
+    test = GeoGigTest("Delete layer in tree, in non-master branch")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Delete 'points' layer in 'mybranch' branch in repositories tree, and verify the versions tree is updated correctly")
     tests.append(test)
 
     test = GeoGigTest("Create new tag")
