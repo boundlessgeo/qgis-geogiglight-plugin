@@ -118,6 +118,13 @@ class WebApiTests(unittest.TestCase):
         repo.removetree("points", "me", "me@email.com")
         self.assertEquals([], repo.trees())
 
+    def testRemoveTreeFromBranch(self):
+        repo = _createTestRepo("simple", True)
+        self.assertEquals(["points"], repo.trees("mybranch"))
+        repo.removetree("points", "me", "me@email.com", "mybranch")
+        self.assertEquals([], repo.trees("mybranch"))
+        self.assertEquals(["points"], repo.trees())
+
     def testTags(self):
         repo = _createTestRepo("simple")
         tags = repo.tags()
