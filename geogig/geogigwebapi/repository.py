@@ -289,17 +289,34 @@ class Repository(object):
             trees = resp["node"]
         return [t["path"] for t in trees]
 
-    def removetree(self, path, user, email):
+    def _checkoutbranch(self, branch, transactionId):
+        payload = {"branch": branch,"transactionId": transactionId}
+        r = requests.get(self.url + "checkout", params = payload)
+        self.__log(r.url, r.text, payload)
+        r.raise_for_status()
+
+    def removetree(self, path, user, email, branch = None):
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
         r.raise_for_status()
         transactionId = r.json()["response"]["Transaction"]["ID"]
         self.__log(r.url, r.json(), params = {"output_format":"json"})
+        if branch:
+            self._checkoutbranch(branch, transactionId)
         payload = {"path":path, "recursive":"true", "output_format": "json",
                    "transactionId": transactionId}
         r = requests.get(self.url + "remove", params=payload)
         r.raise_for_status()
         self.__log(r.url, r.json(), payload)
-        self.commitAndCloseTransaction(user, email, "removed layer %s" % path, transactionId)
+
+        params = {"all": True, "message": "removed layer %s" % path,
+                  "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
+        r.raise_for_status()
+        if branch:
+            self._checkoutbranch("refs/heads/master", transactionId)
+        self.closeTransaction(transactionId)
 
 
     def revparse(self, rev):
