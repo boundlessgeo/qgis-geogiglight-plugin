@@ -178,20 +178,22 @@ class NavigatorDialog(BASE, WIDGET):
             layername = url[url.find(":")+1:]
             self._removeLayer(layername)
 
-    def _removeLayer(self, layername):
+    def _removeLayer(self, layeritem):
         user, email = config.getUserInfo()
         if user is None:
             return
 
-        self.currentRepo.removetree(layername, user, email)
+        self.currentRepo.removetree(layeritem.layer, user, email, layeritem.branch)
 
         config.iface.messageBar().pushMessage("Layer correctly removed from repository",
                                                level = QgsMessageBar.INFO, duration = 5)
 
-        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layername)
+        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layeritem.layer)
         if layer:
             setAsNonRepoLayer(layer)
-            removeTrackedLayer(layer)
+        tracking = getTrackingInfoForGeogigLayer(self.currentRepo.url, layeritem.layer)
+        if tracking:
+            removeTrackedLayer(tracking.source)
         #TODO remove triggers from layer
         repoWatcher.repoChanged.emit(self.currentRepo)
 
@@ -302,7 +304,7 @@ class NavigatorDialog(BASE, WIDGET):
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ret == QMessageBox.No:
                 return
-            self._removeLayer(item.layer)
+            self._removeLayer(item)
 
 
     def _removeRepoEndpoint(self, item):
@@ -514,18 +516,19 @@ class BranchItem(QTreeWidgetItem):
             if layers:
                 branchCommitId = self.repo.revparse(self.branch)
             for layer in layers:
-                item = LayerItem(self.tree, self, self.repo, layer, branchCommitId)
+                item = LayerItem(self.tree, self, self.repo, layer, self.branch, branchCommitId)
                 self.addChild(item)
 
 class LayerItem(QTreeWidgetItem):
 
     NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = range(3)
 
-    def __init__(self, tree, parent, repo, layer, branchCommitId):
+    def __init__(self, tree, parent, repo, layer, branch, branchCommitId):
         QTreeWidgetItem.__init__(self, parent)
         self.repo = repo
         self.tree = tree
         self.layer = layer
+        self.branch = branch
         self.setIcon(0, layerIcon)
 
         layout = QHBoxLayout()
