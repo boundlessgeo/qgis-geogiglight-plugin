@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
    usage
-
+   testing
 
 Indices and tables
 ==================

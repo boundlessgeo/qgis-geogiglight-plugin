@@ -1,5 +1,5 @@
 Manual and automatic tests of GeoGig QGIS Plugin
-==============================
+================================================
 
 The GeoGig QGIS plugin includes a set of manual and automatic tests to be run using the "Tester" QGIS plugin (https://github.com/boundlessgeo/qgis-tester-plugin).
 
