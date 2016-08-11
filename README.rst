@@ -1,5 +1,5 @@
 GeoGig QGIS Plugin
-==============================
+==================
 
 This is a QGIS plugin to work with GeoGig repositories using the GeoGig Web API. 
 
