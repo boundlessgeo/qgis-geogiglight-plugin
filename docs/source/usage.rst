@@ -1,3 +1,6 @@
+Usage
+=====
+
 The GeoGig QGIS plugin allow you to manage/view GeoGig (http://geogig.org/) repositories and layers as well as editing GeoGig layers using QGIS editing capabilities.
 
 This document describes a typical workflow with the GeoGig plugin, going through its main features.
