@@ -409,11 +409,13 @@ class NavigatorDialog(BASE, WIDGET):
                 QMessageBox.warning(self, 'Add repositories',
                                 "No repositories found at the specified server",
                                 QMessageBox.Ok)
+                groupItem = GroupItem(title)
             else:
                 groupItem = GroupItem(title)
                 for repo in repos:
                     item = RepoItem(self.repoTree, repo)
                     groupItem.addChild(item)
+
         except Exception, e:
             msg = "No geogig server found at the specified url. %s"
             QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
