@@ -40,7 +40,8 @@ from functools import partial
 from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import hasLocalChanges, addDiffLayer
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
-
+from qgis.utils import iface
+from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 
 def icon(f):
@@ -172,16 +173,19 @@ class HistoryViewer(QtGui.QTreeWidget):
     def mergeInto(self, mergeInto, branch):
         conflicts = self.repo.merge(branch, mergeInto)
         if conflicts:
-            ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+            ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
                                       "There are conflicts between local and remote changes.\n"
                                       "Do you want to continue and fix them?",
-                                      QMessageBox.Yes | QMessageBox.No)
-            if ret == QMessageBox.No:
-                repo.closeTransaction(conflicts[0].transactionId)
+                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            if ret == QtGui.QMessageBox.No:
+                self.repo.closeTransaction(conflicts[0].transactionId)
                 return
-            solved, resolvedConflicts = solveConflicts(conflicts, layername)
+
+            dlg = ConflictDialog(conflicts, conflicts[0].path.split("/")[0]) #TODO: what if several layers are conflicted?
+            dlg.exec_()
+            solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
             if not solved:
-                repo.closeTransaction(conflicts[0].transactionId)
+                self.repo.closeTransaction(conflicts[0].transactionId)
                 return
             for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
                 if resolution == ConflictDialog.LOCAL:
@@ -192,7 +196,11 @@ class HistoryViewer(QtGui.QTreeWidget):
                     conflict.resolveDeletingFeature()
                 else:
                     conflict.resolveWithNewFeature(resolution)
-            repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+            user, email = config.getUserInfo()
+            if user is None:
+                return
+            self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+
 
         iface.messageBar().pushMessage("GeoGig", "Branch has been correctly merged",
                                               level=QgsMessageBar.INFO, duration=5)

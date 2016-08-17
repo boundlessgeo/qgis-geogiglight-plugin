@@ -487,7 +487,7 @@ class Repository(object):
         self.__log(r.url, r.json(), payload)
         response = r.json()["response"]["Merge"]
         try:
-            nconflicts = response["Merge"]["conflicts"]
+            nconflicts = response["conflicts"]
         except KeyError:
             nconflicts = 0
         if nconflicts:
@@ -499,7 +499,7 @@ class Repository(object):
             conflictsResponse = _ensurelist(response["Feature"])
             for c in conflictsResponse:
                 if c["change"] == "CONFLICT":
-                    conflicts.append(ConflictDiff(self, repo, path, ancestor, ours, theirs, None, 
+                    conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
                                     c["ourvalue"], c["theirvalue"], transactionId))
             return conflicts
         else:

@@ -252,7 +252,6 @@ class ConflictDialog(WIDGET, BASE):
 
             self.attributesTable.setItem(idx, 4, ValueItem(None, False));
 
-            #TODO check case of feature deleted in one branch and modified in another one
             try:
                 values = (conflictItem.origin[name], conflictItem.local[name], conflictItem.remote[name])
             except TypeError: #Local has been deleted
@@ -307,9 +306,6 @@ class ConflictDialog(WIDGET, BASE):
             self._afterSolve()
         else:
             pass
-
-
-
 
     def createLayers(self):
         types = [("Point", ptOursStyle, ptTheirsStyle),
@@ -377,18 +373,6 @@ class ValueItem(QtGui.QTableWidgetItem):
             s = value
         else:
             s = str(value)
-        #=======================================================================
-        # try:
-        #     geom = QgsGeometry.fromWkt(value)
-        # except:
-        #     geom = None
-        # if geom is not None:
-        #     if value == geoms[0]:
-        #         idx = 1
-        #     else:
-        #         idx = 2
-        #     s = value.split("(")[0] + "[" + str(idx) + "]"
-        #=======================================================================
         if conflicted:
             self.setBackgroundColor(QtCore.Qt.yellow);
         self.setText(s)
@@ -409,7 +393,12 @@ class ConflictItem(QtGui.QTreeWidgetItem):
 
     @property
     def local(self):
-        return self.conflict.localFeature
+        if self.conflict.localFeature is None:
+            if self._local is None:
+                self._local = self.conflict.repo.feature(self.conflict.path, self.conflict.localCommit)
+            return self._local
+        else:
+            return self.conflict.localFeature
 
     @property
     def remote(self):
