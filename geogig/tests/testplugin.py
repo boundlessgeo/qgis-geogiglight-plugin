@@ -25,6 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
+import ogr
 import sys
 import sqlite3
 from geogig import tests
@@ -42,6 +43,7 @@ from qgis.core import *
 from PyQt4 import QtCore
 from geogig.tools import layertracking
 from geogig.layeractions import updateInfoActions
+from geogig.tests.testgpkg import GeoPackageEditTests
 
 try:
     from qgistester.utils import layerFromName
@@ -189,6 +191,24 @@ def _exportAndCreateConflictWithRemoveAndModify():
         layer2.changeAttributeValue(features[0].id(), 1, 1000)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
+def _createMergeScenario():
+    filename = tempFilename("gpkg")
+    tests._lastRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), 1, 1000)
+    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer, "mybranch", "message2", "me", "me@mysite.com", True)
+
+def _createMergeConflict():
+    _createMergeScenario()
+    filename = tempFilename("gpkg")
+    tests._lastRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), 1, 1001)
+    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
 
 def _exportLayer():
     checkoutLayer(tests._lastRepo, "points", None)
@@ -240,6 +260,18 @@ def functionalTests():
 
     tests = []
 
+
+    test = GeoGigTest("Connect to endpoint")
+    test.addStep("Open navigator", lambda:  _openNavigator(True))
+    test.addStep("Add a new geogig server at '%s'" % REPOS_SERVER_URL)
+    test.addStep("Verify the endpoint item has been correctly added (might contain child repos or not)")
+    tests.append(test)
+
+    test = GeoGigTest("Connect to wrong endpoint")
+    test.addStep("Open navigator", lambda:  _openNavigator(True))
+    test.addStep("Add a new geogig server at 'http://wrong.url'")
+    test.addStep("Verify a warning indicating that the url is wrong is shown. Verify endpoint item is added to tree and grayed out.")
+    tests.append(test)
 
     test = GeoGigTest("Add layer without repo")
     test.addStep("Open test data", lambda: openTestProject("points"))
@@ -360,6 +392,24 @@ def functionalTests():
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Sync with master branch'")
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     test.addStep("Check that no changes are made in the layer or the history")
+    tests.append(test)
+
+    test = Test("Merge without conflicts")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Create merge conflict", _createMergeScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Merge 'mybranch' branch into 'master' branch")
+    test.addStep("Check that the merge was correctly completed")
+    tests.append(test)
+
+    test = Test("Merge with conflicts")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Create merge conflict", _createMergeConflict)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Merge 'mybranch' branch into 'master' branch. Solve conflict")
+    test.addStep("Check that the merge was correctly completed")
     tests.append(test)
 
     test = Test("Sync with conflicts")
@@ -537,9 +587,11 @@ class PluginTests(unittest.TestCase):
         cursor.execute("DELETE FROM points_audit;")
         con.commit()
 
+
 def pluginSuite():
     suite = unittest.TestSuite()
     suite.addTests(unittest.makeSuite(PluginTests, 'test'))
+    suite.addTests(unittest.makeSuite(GeoPackageEditTests, 'test'))
     return suite
 
 

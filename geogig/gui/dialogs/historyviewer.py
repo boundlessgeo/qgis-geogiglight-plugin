@@ -55,6 +55,7 @@ deleteIcon = icon("delete.gif")
 infoIcon = icon("repo-summary.png")
 tagIcon = icon("tag.gif")
 resetIcon = icon("reset.png")
+mergeIcon = icon("merge-24.png")
 
 class HistoryViewer(QtGui.QTreeWidget):
 
@@ -135,10 +136,23 @@ class HistoryViewer(QtGui.QTreeWidget):
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
+                menu = QtGui.QMenu()
+                mergeActions = []
+                menu = QtGui.QMenu()
+                for branch in self.repo.branches():
+                    if branch != item.branch:
+                        mergeAction = QtGui.QAction(mergeIcon, branch, None)
+                        mergeAction.triggered.connect(partial(self.mergeInto, branch, item.branch))
+                        mergeActions.append(mergeAction)
+                if mergeActions:
+                    mergeMenu = QtGui.QMenu("Merge this branch into")
+                    menu.addMenu(mergeMenu)
+                    for action in mergeActions:
+                        mergeMenu.addAction(action)
                 if self.topLevelItemCount() > 1 and item.branch != "master":
-                    menu = QtGui.QMenu()
                     deleteAction = QtGui.QAction(deleteIcon, "Delete this branch", None)
                     deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
+                if not menu.isEmpty():
                     menu.addAction(deleteAction)
                     point = self.mapToGlobal(point)
                     menu.exec_(point)
@@ -154,6 +168,9 @@ class HistoryViewer(QtGui.QTreeWidget):
     def _itemExpanded(self, item):
         if item is not None and isinstance(item, BranchTreeItem):
             item.populate()
+
+    def mergeInto(self, mergeInto, branch):
+        self.repo.merge(branch, mergeInto)
 
     def describeVersion(self, commit):
         html = ("<p><b>Full commit Id:</b> %s </p>"

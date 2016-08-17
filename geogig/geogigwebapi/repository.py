@@ -475,6 +475,31 @@ class Repository(object):
         self.__log(r.url, r.text, {"transactionId": transactionId})
         r.raise_for_status()
 
+    def merge(self, branchToMerge, branchToMergeInto):
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        self._checkoutbranch(branchToMergeInto, transactionId)
+        payload = {"commit":branchToMerge, "transactionId": transactionId, "output_format":"json"}
+        r = requests.get(self.url + "merge", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+        nconflicts = 0
+        if nconflicts:
+            pass
+        else:
+            self.closeTransaction(transactionId)
+
+    def commitAndCloseMergeAndTransaction(self, user, email, message, transactionId):
+        params = {"all": True, "message": message, "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
+        r.raise_for_status()
+        self._checkoutbranch("refs/heads/master", transactionId)
+        self.closeTransaction(transactionId)
+
     def fullDescription(self):
         def _prepareDescription():
             try:
