@@ -170,7 +170,33 @@ class HistoryViewer(QtGui.QTreeWidget):
             item.populate()
 
     def mergeInto(self, mergeInto, branch):
-        self.repo.merge(branch, mergeInto)
+        conflicts = self.repo.merge(branch, mergeInto)
+        if conflicts:
+            ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+                                      "There are conflicts between local and remote changes.\n"
+                                      "Do you want to continue and fix them?",
+                                      QMessageBox.Yes | QMessageBox.No)
+            if ret == QMessageBox.No:
+                repo.closeTransaction(conflicts[0].transactionId)
+                return
+            solved, resolvedConflicts = solveConflicts(conflicts, layername)
+            if not solved:
+                repo.closeTransaction(conflicts[0].transactionId)
+                return
+            for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
+                if resolution == ConflictDialog.LOCAL:
+                    conflict.resolveWithLocalVersion()
+                elif resolution == ConflictDialog.REMOTE:
+                    conflict.resolveWithRemoteVersion()
+                elif resolution == ConflictDialog.DELETE:
+                    conflict.resolveDeletingFeature()
+                else:
+                    conflict.resolveWithNewFeature(resolution)
+            repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+
+        iface.messageBar().pushMessage("GeoGig", "Branch has been correctly merged",
+                                              level=QgsMessageBar.INFO, duration=5)
+        repoWatcher.repoChanged.emit(self.repo)
 
     def describeVersion(self, commit):
         html = ("<p><b>Full commit Id:</b> %s </p>"

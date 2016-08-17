@@ -485,11 +485,26 @@ class Repository(object):
         r = requests.get(self.url + "merge", params=payload)
         r.raise_for_status()
         self.__log(r.url, r.json(), payload)
-        nconflicts = 0
+        response = r.json()["response"]["Merge"]
+        try:
+            nconflicts = response["Merge"]["conflicts"]
+        except KeyError:
+            nconflicts = 0
         if nconflicts:
-            pass
+            ancestor = response["ancestor"]
+            ours = response["ours"]
+            theirs = response["theirs"]
+
+            conflicts = []
+            conflictsResponse = _ensurelist(response["Feature"])
+            for c in conflictsResponse:
+                if c["change"] == "CONFLICT":
+                    conflicts.append(ConflictDiff(self, repo, path, ancestor, ours, theirs, None, 
+                                    c["ourvalue"], c["theirvalue"], transactionId))
+            return conflicts
         else:
             self.closeTransaction(transactionId)
+            return []
 
     def commitAndCloseMergeAndTransaction(self, user, email, message, transactionId):
         params = {"all": True, "message": message, "transactionId": transactionId,
