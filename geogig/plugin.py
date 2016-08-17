@@ -28,7 +28,6 @@ import os
 import sys
 import inspect
 from geogig import config
-import logging
 from qgis.core import *
 from qgis.gui import *
 from geogig.tools.utils import *
@@ -44,8 +43,6 @@ from geogig.gui.dialogs.navigatordialog import navigatorInstance
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
-
-logger = logging.getLogger("geogigpy")
 
 def trackLayer(layer):
     if isRepoLayer(layer):
@@ -63,16 +60,6 @@ class GeoGigPlugin:
     def __init__(self, iface):
         self.iface = iface
         config.iface = iface
-
-        class QgisLogHandler(logging.Handler):
-            def __init__(self):
-                logging.Handler.__init__(self)
-
-            def emit(self, record):
-                try:
-                    QgsMessageLog.logMessage(self.format(record), "GeoGig")
-                except AttributeError: #prevent error in case the log object is None
-                    pass
 
         config.initConfigParams()
 
