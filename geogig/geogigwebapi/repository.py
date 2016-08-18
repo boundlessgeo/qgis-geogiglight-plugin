@@ -361,9 +361,10 @@ class Repository(object):
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
         r.raise_for_status()
         transactionId = r.json()["response"]["Transaction"]["ID"]
+        self._checkoutbranch(branch, transactionId)
         payload = {"authorEmail": authorEmail, "authorName": authorName,
                    "message": message, 'destPath':layername, "format": "gpkg",
-                   "transactionId": transactionId, "root": branch}
+                   "transactionId": transactionId}
         if interchange:
             payload["interchange"]= True
         files = {'fileUpload': open(filename, 'rb')}
@@ -419,6 +420,7 @@ class Repository(object):
 
                 conflicts = []
                 conflictsResponse = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
+                print conflictsResponse
                 for c in conflictsResponse:
                     if c["change"] == "CONFLICT":
                         remoteFeatureId = c["ourvalue"]
@@ -429,6 +431,7 @@ class Repository(object):
                 cursor.close()
                 con.close()
             else:
+                self._checkoutbranch("master", transactionId)
                 self.closeTransaction(transactionId)
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
@@ -503,6 +506,7 @@ class Repository(object):
                                     c["ourvalue"], c["theirvalue"], transactionId))
             return conflicts
         else:
+            self._checkoutbranch("master", transactionId)
             self.closeTransaction(transactionId)
             return []
 
@@ -512,7 +516,7 @@ class Repository(object):
         r = requests.get(self.url + "commit", params = params)
         self.__log(r.url, r.text, params)
         r.raise_for_status()
-        self._checkoutbranch("refs/heads/master", transactionId)
+        self._checkoutbranch("master", transactionId)
         self.closeTransaction(transactionId)
 
     def fullDescription(self):

@@ -191,24 +191,33 @@ def _exportAndCreateConflictWithRemoveAndModify():
         layer2.changeAttributeValue(features[0].id(), 1, 1000)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
-def _createMergeScenario():
+def _createMergeScenario(layername = "points"):
     filename = tempFilename("gpkg")
-    tests._lastRepo.checkoutlayer(filename, "points")
-    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    tests._lastRepo.checkoutlayer(filename, layername)
+    layer = loadLayerNoCrsDialog(filename, layername, "ogr")
     features = list(layer.getFeatures())
     with edit(layer):
         layer.changeAttributeValue(features[0].id(), 1, 1000)
-    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer, "mybranch", "message2", "me", "me@mysite.com", True)
+    tests._lastRepo.importgeopkg(layer, "mybranch", "changed_%s_1" % layername, "me", "me@mysite.com", True)
 
-def _createMergeConflict():
-    _createMergeScenario()
+def _doConflictImport(layername = "points"):
     filename = tempFilename("gpkg")
-    tests._lastRepo.checkoutlayer(filename, "points")
-    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    tests._lastRepo.checkoutlayer(filename, layername)
+    layer = loadLayerNoCrsDialog(filename, layername, "ogr")
     features = list(layer.getFeatures())
     with edit(layer):
         layer.changeAttributeValue(features[0].id(), 1, 1001)
-    _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+    tests._lastRepo.importgeopkg(layer, "master", "changed_%s_2" % layername, "me", "me@mysite.com", True)
+
+def _createMergeConflict():
+    _createMergeScenario("points")
+    _doConflictImport("points")
+
+def _createMergeConflictInSeveralLayers():
+    _createMergeScenario("points")
+    _createMergeScenario("lines")
+    _doConflictImport("points")
+    _doConflictImport("lines")
 
 def _exportLayer():
     checkoutLayer(tests._lastRepo, "points", None)
@@ -366,6 +375,16 @@ def functionalTests():
     test.addStep("Check in repo history that a new version has been created")
     tests.append(test)
 
+    test = Test("Sync to non-master branch")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Export and edit repo layer", _exportAndEditLayer)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Select 'mybranch' in the branch box and sync'")
+    test.addStep("Check in repo history that the 'mybranch' branch has been updated with the changes")
+    tests.append(test)
+
+
     test = Test("Sync to new branch")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
@@ -407,6 +426,15 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Create merge conflict", _createMergeConflict)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Merge 'mybranch' branch into 'master' branch. Solve conflict")
+    test.addStep("Check that the merge was correctly completed")
+    tests.append(test)
+
+    test = Test("Merge with conflicts in several layers")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("severallayers", True))
+    test.addStep("Create merge conflict", _createMergeConflictInSeveralLayers)
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Merge 'mybranch' branch into 'master' branch. Solve conflict")
     test.addStep("Check that the merge was correctly completed")

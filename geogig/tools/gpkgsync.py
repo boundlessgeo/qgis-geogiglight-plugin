@@ -109,7 +109,7 @@ def syncLayer(layer):
                     conflict.resolveDeletingFeature()
                 else:
                     conflict.resolveWithNewFeature(resolution)
-            repo.commitAndCloseTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+            repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
 
         updateFeatureIds(repo, layer, featureIds)
         try:

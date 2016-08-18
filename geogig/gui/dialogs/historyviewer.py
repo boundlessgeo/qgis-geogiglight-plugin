@@ -181,7 +181,7 @@ class HistoryViewer(QtGui.QTreeWidget):
                 self.repo.closeTransaction(conflicts[0].transactionId)
                 return
 
-            dlg = ConflictDialog(conflicts, conflicts[0].path.split("/")[0]) #TODO: what if several layers are conflicted?
+            dlg = ConflictDialog(conflicts)
             dlg.exec_()
             solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
             if not solved:

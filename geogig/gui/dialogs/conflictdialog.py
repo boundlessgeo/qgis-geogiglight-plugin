@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -30,11 +31,8 @@ from PyQt4 import QtGui, QtCore, uic
 from qgis.core import *
 from qgis.gui import *
 from geogig.tools.utils import loadLayerNoCrsDialog
+from geogig.gui.executor import execute
 import sys
-
-BASEMAP_NONE = 0
-BASEMAP_OSM = 1
-BASEMAP_GOOGLE = 2
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")
 ptOursStyle = os.path.join(resourcesPath, "pt_ours.qml")
@@ -57,11 +55,10 @@ class ConflictDialog(WIDGET, BASE):
 
     LOCAL, REMOTE, DELETE = 1,2, 3
 
-    def __init__(self, conflicts, layername):
+    def __init__(self, conflicts):
         QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.solved = False
         self.resolvedConflicts = {}
-        self.layername = layername
         self.conflicts = conflicts
         self.setupUi(self)
 
@@ -111,12 +108,20 @@ class ConflictDialog(WIDGET, BASE):
         self.fillConflictsTree()
 
     def fillConflictsTree(self):
-        item = QtGui.QTreeWidgetItem([self.layername])
-        item.setIcon(0, layerIcon)
-        self.conflictsTree.addTopLevelItem(item)
+        topTreeItems = {}
         for c in self.conflicts:
+            path = os.path.dirname(c.path)
+            if path in topTreeItems:
+                topItem = topTreeItems[path]
+            else:
+                topItem = QtGui.QTreeWidgetItem()
+                topItem.setText(0, path)
+                topItem.setIcon(0, layerIcon)
+                topTreeItems[path] = topItem
             conflictItem = ConflictItem(c)
-            item.addChild(conflictItem)
+            topItem.addChild(conflictItem)
+        for item in topTreeItems.values():
+            self.conflictsTree.addTopLevelItem(item)
 
     def cellClicked(self, row, col):
         if col > 2:
@@ -138,8 +143,8 @@ class ConflictDialog(WIDGET, BASE):
         item = self.conflictsTree.selectedItems()[0]
         if self.lastSelectedItem == item:
             return
-        self.lastSelectedItem = item
         if isinstance(item, ConflictItem):
+            self.lastSelectedItem = item
             self.currentPath = item.conflict.path
             self.updateCurrentPath()
             self.solveLocalButton.setEnabled(True)
@@ -202,8 +207,9 @@ class ConflictDialog(WIDGET, BASE):
             self.lastSelectedItem = None
             if parent.childCount() == 0:
                 self.conflictsTree.invisibleRootItem().removeChild(parent)
-                self.solved = True
-                self.close()
+                if self.conflictsTree.topLevelItemCount() == 0:
+                    self.solved = True
+                    self.close()
 
         self.attributesTable.setRowCount(0)
         self.cleanCanvas()
@@ -395,7 +401,7 @@ class ConflictItem(QtGui.QTreeWidgetItem):
     def local(self):
         if self.conflict.localFeature is None:
             if self._local is None:
-                self._local = self.conflict.repo.feature(self.conflict.path, self.conflict.localCommit)
+                self._local = execute(lambda: self.conflict.repo.feature(self.conflict.path, self.conflict.localCommit))
             return self._local
         else:
             return self.conflict.localFeature
@@ -403,11 +409,11 @@ class ConflictItem(QtGui.QTreeWidgetItem):
     @property
     def remote(self):
         if self._remote is None:
-            self._remote = self.conflict.repo.feature(self.conflict.path, self.conflict.remoteCommit)
+            self._remote = execute(lambda: self.conflict.repo.feature(self.conflict.path, self.conflict.remoteCommit))
         return self._remote
 
     @property
     def origin(self):
         if self._origin is None:
-            self._origin = self.conflict.repo.feature(self.conflict.path, self.conflict.originCommit)
+            self._origin = execute(lambda: self.conflict.repo.feature(self.conflict.path, self.conflict.originCommit))
         return self._origin
