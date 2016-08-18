@@ -15,7 +15,9 @@ Starting the GeoGig server
 
 The GeoGig plugin connects to GeoGig using its WebAPI (http://geogig.org/docs/interaction/geoserver_web-api.html). 
 
-On **Linux** you can start GeoGig server by running
+First, make sure that the GeoGig Folder and the Java JVM folder are in your PATH, so you can call and run GeoGig from any folder in your system.
+
+You can start GeoGig server by running
 
 ::
 
@@ -23,11 +25,12 @@ On **Linux** you can start GeoGig server by running
 
 from the folder that contains you repository folders.
 
+
 You can also run GeoGig server specifing what is the folder that contains the repositories that need to be published, for example:
 
 ::
 
-	./bin/geogig serve -m /path/to/folder_containing_repositories/
+	geogig serve -m /path/to/folder_containing_repositories/
  
 
 If the server starts correctly you should see a message like
@@ -37,40 +40,12 @@ If the server starts correctly you should see a message like
 	Starting server on port 8182, use CTRL+C to exit.
 
 
-Creating repositories is not currently supported through the WebAPI, so you must create your repositories in advance using 
 
-::
-        
-	geogig init
-
-or also
-
-::
-        
-	./bin/geogig init /path/to/folder_containing_repositories/my_first_repository/
-
-
-On **Windows** you must ensure that you have defined the path to Java (ex: *c:\java\bin*) in the *path* enviroment variable of the operating system. Aftet that can start the GeoGig by running
-
-::
-
-	bin\geogig.bat serve -m c:\path\to\folder_containing_repositories\
-
-In a similar way to initialize a repository
-
-::
-        
-	bin\geogig.bat init c:\path\to\folder_containing_repositories\my_first_repository\
-
-
-.. note::
-
-	Initialzing a repository will cause the creation of a ".geogig" folder inside the repository one.
 
 Connecting to a repository server
 **************************************
 
-The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI endpoint, which serves one or multiple repositories.
+The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI endpoint, which serves a collection repositories.
 
 Open the GeoGig navigator by selecting the *GeoGig/GeoGig Navigator* menu.
 
@@ -89,7 +64,6 @@ A new entry in the navigator will be added, which will contain all repositories 
 .. image:: reposinnavigator.png
 	:align: center
 
-
 Clicking on a repository will update the elements in the lower part of the navigator. There you can find the repository information and its history.
 
 The history is shown as a tree, with elements representing branches and under each branch all the versions it contains.
@@ -106,9 +80,15 @@ Creating and deleting repositories
 
 New repositories can be added to a GeoGig server. To do it, select the server in the list of available ones in the navigator, and then click on the *Create new repository* icon.
 
-You will be prompted to enter the name of the repository. A repository with that name will be created in the GeoGig server and added to the navigator tree.
+You will be prompted to enter the name of the repository. 
 
-To delete a repository (**all its data will be removed from the server**), select it and clik on the delete button in the navigator toolbar.
+
+.. image:: createrepo.png
+	:align: center
+
+A repository with that name will be created in the GeoGig server and added to the navigator tree.
+
+To delete a repository (**all its data will be removed from the server**), select it and click on the delete button in the navigator toolbar.
 
 
 Adding layers from a repository to the current QGIS project
@@ -122,6 +102,17 @@ If it is the first time you add that layer, it will be downloaded before opening
 
 If the layer had been previously downloaded, but it is not currently loaded into your QGIS project, the downloaded file will be loaded.
 
+You can also add layers from the navigator tree. Expand the item representing the repo and you will see the list of branches. Expanding a branch item will show a list of subitems with the layers available in that branch. A link to add the layer at the version corresponding to the parent branch is shown as well.
+
+If a layer has already been exported (even if it is not in the current QGIS project), but using a version different to the one in the branch, the name of the layer will be rendered in orange. 
+
+.. image:: exportfromtreeorangename.png
+	:align: center
+
+If you try to add that layer to your project, you will be asked whether you want to use that previously exported version, or the one from the selected branch.
+
+.. image:: confirmexportname.png
+	:align: center
 
 Recovering a given version of a layer
 **************************************
