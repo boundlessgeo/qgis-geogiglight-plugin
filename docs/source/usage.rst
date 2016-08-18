@@ -175,9 +175,9 @@ To edit a GeoGig layer, just edit it normally, using the QGIS edit functionality
 
 You must enter a message to describe the new version to create (a message describing the changes that are going to be applied to the layer).
 
-The destination branch should also be selected. You can type the name of a branch instead of using the provided combo box.
+The destination branch should also be selected. Only branches that contain the layer to sync will be shown
 
-If an existing branch is selected, the new changes in the repository that are not yet in the local layer will be downloaded and merged with the local ones.
+All new changes in the repository, in the selected branch, that are not yet in the local layer will be downloaded and merged with the local ones.
 
 Click on *OK* and the data will be incorporated to the repository, and a new version will be created.
 
@@ -282,11 +282,9 @@ The geometry comparison viewer will be opened, showing the geometries for both v
 Removing a layer from a repository
 ***********************************
 
-If you no longer want to have a layer in your repository, you can remove it by right-clicking on it in the QGIS legend and selecting *Remove this layer from repository* in the *GeoGig* submenu.
+If you no longer want to have a layer in a repository branch, you can select the layer item in the repository tree of the GeoGig navigator, and click on the delete button in the navigator toolbar. A new version will be added to the selected branch, which removes the selected layer from that branch.
 
-A new version will be added to the repository, which removes the selected layer.
-
-The layer will not be unloaded from QGIS and will still be part of you QGIS project, but it will not be tracked anymore. The layer file and the repository are now independent and not linked.
+The layer will not be unloaded from QGIS and will still be part of you QGIS project. If, after removing the layer from the selected branch, it is not found in any other branch in the repopsitory, the layer won't be tracked anymore. The layer file and the repository will now independent and not linked. Otherwise, the layer will remained tracked, since it can still be synced with ther branches of the repo.
 
 Tags
 *****

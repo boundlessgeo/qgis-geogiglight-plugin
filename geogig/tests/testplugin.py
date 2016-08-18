@@ -191,6 +191,9 @@ def _exportAndCreateConflictWithRemoveAndModify():
         layer2.changeAttributeValue(features[0].id(), 1, 1000)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
+def _deleteLayerFromBranch():
+    tests._lastRepo.removetree("points", "me", "me@mysite.com", "mybranch")
+
 def _createMergeScenario(layername = "points"):
     filename = tempFilename("gpkg")
     tests._lastRepo.checkoutlayer(filename, layername)
@@ -385,15 +388,6 @@ def functionalTests():
     tests.append(test)
 
 
-    test = Test("Sync to new branch")
-    test.addStep("New project", iface.newProject)
-    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
-    test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Export and edit repo layer", _exportAndEditLayer)
-    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Type 'newbranch' in the branch box and sync'")
-    test.addStep("Check in repo history that a branch called 'newbranch' has been created with the changes")
-    tests.append(test)
-
     test = Test("Sync with only upstream changes")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
@@ -485,6 +479,15 @@ def functionalTests():
     test.addStep("Check that layer has been modified and a new version has been created in the repo history")
     tests.append(test)
 
+    test = Test("Sync with layer only in one branch")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Export repo layer", _exportLayer)
+    test.addStep("Delete layer from branch", _deleteLayerFromBranch)
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Verify that only 'master'branch is available")
+    tests.append(test)
+
     test = Test("Check diff viewer")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createTestRepo("simple"))
@@ -545,6 +548,17 @@ def functionalTests():
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Delete 'points' layer in 'mybranch' branch in repositories tree, and verify the versions tree is updated correctly")
     tests.append(test)
+
+    test = GeoGigTest("Delete layer in tree, in all branches")
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Export repo layer", _exportLayer)
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Delete 'points' layer in 'mybranch' branch in repositories tree, and verify the versions tree is updated correctly."
+                 "Verify that the context menu of the layer still shows the tracked layer menus")
+    test.addStep("Delete 'points' layer in 'master' branch in repositories tree, and verify the versions tree is updated correctly."
+                 "Verify that the context menu of the layer shows the layer as untracked")
+    tests.append(test)
+
 
     test = GeoGigTest("Create new tag")
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))

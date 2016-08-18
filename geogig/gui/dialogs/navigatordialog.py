@@ -113,9 +113,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.leFilter.textChanged.connect(self.filterRepos)
 
         self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
-        #self.repoTree.itemSelectionChanged.connect(self.checkButtons)
         self.repoDescription.setOpenLinks(False)
-        self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
         self.repoTree.setFocusPolicy(Qt.NoFocus)
 
         with open(resourceFile("repodescription.css")) as f:
@@ -156,28 +154,6 @@ class NavigatorDialog(BASE, WIDGET):
         if item is not None and isinstance(item, (RepoItem, BranchItem)):
             item.populate()
 
-    def descriptionLinkClicked(self, url):
-        url = url.toString()
-        if url.startswith("checkout"):
-            allLayers = getAllLayers()
-            items = ["Download complete layer", "Filter using bounding box of current project"]
-            items.extend(["Filter using bounding box of layer " + lay.name() for lay in allLayers])
-            layernames = url[url.find(":")+1:].split(",")
-            for layername in layernames:
-                if layername:
-                    self._checkoutLayer(layername, None)
-            #self.updateCurrentRepo(self.currentRepo)
-        elif url.startswith("remove"):
-            ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
-                        "Are you sure you want to delete this layer?",
-                        QMessageBox.Yes | QMessageBox.No,
-                        QMessageBox.Yes);
-            if ret == QMessageBox.No:
-                return
-
-            layername = url[url.find(":")+1:]
-            self._removeLayer(layername)
-
     def _removeLayer(self, layeritem):
         user, email = config.getUserInfo()
         if user is None:
@@ -190,10 +166,18 @@ class NavigatorDialog(BASE, WIDGET):
 
         layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layeritem.layer)
         if layer:
-            setAsNonRepoLayer(layer)
-        tracking = getTrackingInfoForGeogigLayer(self.currentRepo.url, layeritem.layer)
-        if tracking:
-            removeTrackedLayer(tracking.source)
+            branches = self.currentRepo.branches()
+            layerInRepo = False
+            for branch in branches:
+                layers = self.currentRepo.trees(branch)
+                if layeritem.layer in layers:
+                    layerInRepo = True
+                    break
+            if not layerInRepo:
+                setAsNonRepoLayer(layer)
+                tracking = getTrackingInfoForGeogigLayer(self.currentRepo.url, layeritem.layer)
+                if tracking:
+                    removeTrackedLayer(tracking.source)
         #TODO remove triggers from layer
         repoWatcher.repoChanged.emit(self.currentRepo)
 
@@ -300,11 +284,11 @@ class NavigatorDialog(BASE, WIDGET):
 
         elif isinstance(item, LayerItem):
             ret = QMessageBox.question(self, 'Delete layer',
-                'Are you sure you want to delete this layer from the repo?',
+                'Are you sure you want to delete this layer from the selected branch?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ret == QMessageBox.No:
                 return
-            self._removeLayer(item)
+            execute(lambda: self._removeLayer(item))
 
 
     def _removeRepoEndpoint(self, item):

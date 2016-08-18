@@ -78,7 +78,7 @@ def syncLayer(layer):
         if user is None:
             return
 
-        dlg = CommitDialog(repo)
+        dlg = CommitDialog(repo, layername)
         dlg.exec_()
         if dlg.branch is None:
             return

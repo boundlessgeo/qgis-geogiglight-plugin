@@ -31,10 +31,11 @@ suggestedMessage = ""
 
 class CommitDialog(QtGui.QDialog):
 
-    def __init__(self, repo, _message = "", parent = None):
+    def __init__(self, repo, layername,  _message = "", parent = None):
         super(CommitDialog, self).__init__(parent)
         self.repo = repo
         self.branch = None
+        self.layername = layername
         self._message = _message or suggestedMessage
         self.message = None
         self.initGui()
@@ -47,17 +48,21 @@ class CommitDialog(QtGui.QDialog):
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setMargin(5)
 
-        self.branchLabel = QtGui.QLabel("Branch (select a branch or type a name to create a new branch)")
+        self.branchLabel = QtGui.QLabel("Branch")
         self.verticalLayout.addWidget(self.branchLabel)
 
         self.branchCombo = QtGui.QComboBox()
-        self.branches = self.repo.branches()
+        self.branches = []
+        branches = self.repo.branches()
+        for branch in branches:
+            trees = self.repo.trees(branch)
+            if self.layername in trees:
+                self.branches.append(branch)
         self.branchCombo.addItems(self.branches)
         try:
             idx = self.branches.index("master")
         except:
             idx = 0
-        self.branchCombo.setEditable(True)
         self.branchCombo.setCurrentIndex(idx)
         self.verticalLayout.addWidget(self.branchCombo)
 
@@ -72,7 +77,7 @@ class CommitDialog(QtGui.QDialog):
         self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(bool(self._message))
+        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(bool(self._message) and bool(self.branches))
 
         self.setLayout(self.verticalLayout)
         self.buttonBox.accepted.connect(self.okPressed)
@@ -80,7 +85,7 @@ class CommitDialog(QtGui.QDialog):
         self.text.setFocus()
 
     def textHasChanged(self):
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "")
+        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "" and bool(self.branches))
 
     def okPressed(self):
         self.branch = self.branchCombo.currentText()

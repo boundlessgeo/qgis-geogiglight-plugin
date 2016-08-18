@@ -55,10 +55,6 @@ def setAsRepoLayer(layer):
     separatorAction.setSeparator(True)
     config.iface.legendInterface().addLegendLayerAction(separatorAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(separatorAction, layer)
-    removeAction = QtGui.QAction(u"Remove layer from repository", config.iface.legendInterface())
-    removeAction.triggered.connect(partial(removeLayer, layer))
-    config.iface.legendInterface().addLegendLayerAction(removeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(removeAction, layer)
     syncAction = QtGui.QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
     syncAction.triggered.connect(partial(syncLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
@@ -79,7 +75,7 @@ def setAsRepoLayer(layer):
     revertAction.triggered.connect(partial(revertLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
-    layer.geogigActions = [removeAction, separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
+    layer.geogigActions = [separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
     for action in layer.geogigActions:
         action.setEnabled(canConnect)
     if not canConnect:
