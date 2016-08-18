@@ -8,9 +8,21 @@ GeoGig is an open source tool that draws inspiration from Git, but adapts its co
 Installation
 *************
 
-To install the latest version of the plugin on **Linux**:
+To install the latest version of the plugin:
 
-- clone this repository, open a console in the repository folder and type
+- Clone this repository or download and unzip the latest code of the plugin using the following URL
+
+::
+
+	https://github.com/boundlessgeo/qgis-geogiglight-plugin/archive/master.zip
+	
+- If you do not have paver (https://github.com/paver/paver) installed, install it by typing the following in a console:
+
+::
+
+	pip install paver
+	
+- Open a console in the folder created in the first step, and type
 
 ::
 
@@ -18,50 +30,16 @@ To install the latest version of the plugin on **Linux**:
 
 This will get all the dependencies needed by the plugin.
 
-- install into QGIS by running
+- Install into QGIS by running
 
 ::
 
 	paver install
 
 
-To install the latest version of the plugin on **Windows**:
-
-- open as Administrator the "OSGeo command shell" available in any QGIS installation
-
-- launch the following command to install paver (https://github.com/paver/paver)
-
-::
-
-	pip install paver
-
-
-- download and unzip the latest code of the plugin using the following URL
-
-::
-
-	https://github.com/boundlessgeo/qgis-geogiglight-plugin/archive/master.zip
-
-
-- using the OSGeo command shell enter the unzipped folder and run
-
-::
-
-	paver setup
-
-This will get all the dependencies needed by the plugin
-
-
-- copy the "geogig" folder inside of
-
-::
-
-	c:\users\yourusername\.qgis2\python\plugins\
-
-
 Usage
 ********
 
-Usage is documented `here <./doc/source/usage.rst>`_
+Usage is documented `here <./docs/source/usage.rst>`_
 
 
