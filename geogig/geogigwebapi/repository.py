@@ -571,6 +571,32 @@ class Repository(object):
         r = requests.delete(self.url, params = params)
         r.raise_for_status()
 
+    def addremote(self, name, url):
+        payload = {"remoteURL": url, "remoteName": name}
+        self._apicall("remote", payload)
+
+    def removeremote(self, name):
+        payload = {"remove": True, "remoteName": name}
+        self._apicall("remote", payload)
+
+    def remotes(self):
+        payload = {"list": True}
+        response = self._apicall("remote", payload)
+        if "Remote" in response:
+            remotes = _ensurelist(response["Remote"])
+            remotes = [r["name"] for r in remotes]
+            return remotes
+        else:
+            return []
+
+    def push(self, remote, branch):
+        payload = {"ref": branch, "remoteName": remote}
+        r = self._apicall("push", payload)
+
+    def pull (self, remote, branch):
+        payload = {"ref": branch, "remoteName": remote}
+        r = self._apicall("pull", payload)
+
 class TaskChecker(QObject):
     taskIsFinished = pyqtSignal()
     def __init__(self, url, taskid):

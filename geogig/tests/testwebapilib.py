@@ -358,6 +358,19 @@ class WebApiTests(unittest.TestCase):
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
         self.assertTrue(log[1].commitid, getCommitId(layer))
 
+    def testRemotes(self):
+        repo = _createTestRepo("simple", True)
+        #=======================================================================
+        # remotes = repo.remotes()
+        # self.assertEqual([], remotes)
+        #=======================================================================
+        repo.addremote("myremote", "http://myurl.com")
+        remotes = repo.remotes()
+        self.assertEqual(["myremote"], remotes)
+        repo.removeremote("myremote")
+        remotes = repo.remotes()
+        self.assertEqual([], remotes)
+
 
 def webapiSuite():
     suite = unittest.TestSuite()
