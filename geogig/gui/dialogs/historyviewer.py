@@ -147,14 +147,15 @@ class HistoryViewer(QtGui.QTreeWidget):
                         mergeActions.append(mergeAction)
                 if mergeActions:
                     mergeMenu = QtGui.QMenu("Merge this branch into")
+                    mergeMenu.setIcon(mergeIcon)
                     menu.addMenu(mergeMenu)
                     for action in mergeActions:
                         mergeMenu.addAction(action)
                 if self.topLevelItemCount() > 1 and item.branch != "master":
-                    deleteAction = QtGui.QAction(deleteIcon, "Delete this branch", None)
+                    deleteAction = QtGui.QAction("Delete this branch", None)
                     deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
-                if not menu.isEmpty():
                     menu.addAction(deleteAction)
+                if not menu.isEmpty():
                     point = self.mapToGlobal(point)
                     menu.exec_(point)
         elif len(selected) == 2:
