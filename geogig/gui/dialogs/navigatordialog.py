@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -44,12 +45,14 @@ from PyQt4.QtGui import (QIcon,
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
+from qgis.utils import iface
 
 from geogig import config
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
+from geogig.gui.dialogs.remotesdialog import RemotesDialog
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
 from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import (getAllLayers,
@@ -93,6 +96,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionAddGeoGigServer.setIcon(icon('geogig_server.png'))
         self.actionCreateRepository.setIcon(icon('new-repo.png'))
         self.actionAddLayer.setIcon(icon('layer_group.gif'))
+        self.actionManageRemotes.setIcon(icon('geogig.png'))
         self.actionEdit.setIcon(QgsApplication.getThemeIcon('/symbologyEdit.png'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
@@ -107,6 +111,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionShowFilter.triggered.connect(self.showFilterWidget)
         self.actionDelete.triggered.connect(self.deleteCurrentElement)
         self.actionHelp.triggered.connect(self.openHelp)
+        self.actionManageRemotes.triggered.connect(self.manageRemotes)
 
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
@@ -424,6 +429,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionRefresh.setEnabled(False)
         self.actionDelete.setEnabled(False)
         self.actionEdit.setEnabled(False)
+        self.actionManageRemotes.setEnabled(False)
         if len(self.repoTree.selectedItems()) == 0:
             return
 
@@ -437,6 +443,9 @@ class NavigatorDialog(BASE, WIDGET):
             self.actionDelete.setEnabled(True)
         elif isinstance(item, BranchItem):
             self.actionDelete.setEnabled(item.parent().childCount() > 1 and item.branch != "master")
+        elif isinstance(item, RepoItem):
+            self.actionDelete.setEnabled(True)
+            self.actionManageRemotes.setEnabled(True)
         else:
             self.actionDelete.setEnabled(True)
 
@@ -444,6 +453,10 @@ class NavigatorDialog(BASE, WIDGET):
         if not QDesktopServices.openUrl(QUrl('http://boundlessgeo.github.io/qgis-plugins-documentation/geogig-light/index.html')):
             QMessageBox.warning(self, self.tr('Error'), self.tr('Can not open help URL in browser'))
 
+
+    def manageRemotes(self):
+        dlg = RemotesDialog(iface.mainWindow(), self.currentRepo)
+        dlg.exec_()
 
 
 class RepositoriesItem(QTreeWidgetItem):

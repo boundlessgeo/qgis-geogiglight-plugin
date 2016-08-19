@@ -580,14 +580,14 @@ class Repository(object):
         self._apicall("remote", payload)
 
     def remotes(self):
-        payload = {"list": True}
+        payload = {"list": True, "verbose": True}
         response = self._apicall("remote", payload)
         if "Remote" in response:
             remotes = _ensurelist(response["Remote"])
-            remotes = [r["name"] for r in remotes]
+            remotes = {r["name"]:r["url"] for r in remotes}
             return remotes
         else:
-            return []
+            return {}
 
     def push(self, remote, branch):
         payload = {"ref": branch, "remoteName": remote}

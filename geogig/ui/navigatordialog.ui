@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>282</width>
+    <width>364</width>
     <height>602</height>
    </rect>
   </property>
@@ -42,6 +42,7 @@
       <addaction name="actionShowFilter"/>
       <addaction name="actionDelete"/>
       <addaction name="actionEdit"/>
+      <addaction name="actionManageRemotes"/>
       <addaction name="actionHelp"/>
      </widget>
     </item>
@@ -259,6 +260,14 @@
    </property>
    <property name="toolTip">
     <string>Help</string>
+   </property>
+  </action>
+  <action name="actionManageRemotes">
+   <property name="text">
+    <string>Manage remotes</string>
+   </property>
+   <property name="toolTip">
+    <string>Manage remotes</string>
    </property>
   </action>
  </widget>
