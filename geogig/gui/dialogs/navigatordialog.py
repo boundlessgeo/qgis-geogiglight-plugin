@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -53,6 +52,7 @@ from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
 from geogig.gui.dialogs.remotesdialog import RemotesDialog
+from geogig.gui.dialogs.remoterefdialog import RemoteRefDialog
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
 from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import (getAllLayers,
@@ -102,6 +102,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
         self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
         self.actionHelp.setIcon(QgsApplication.getThemeIcon('/mActionHelpContents.svg'))
+        self.actionPull.setIcon(icon('pull.png'))
+        self.actionPush.setIcon(icon('push.png'))
 
         self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
         self.actionCreateRepository.triggered.connect(self.createRepo)
@@ -112,6 +114,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionDelete.triggered.connect(self.deleteCurrentElement)
         self.actionHelp.triggered.connect(self.openHelp)
         self.actionManageRemotes.triggered.connect(self.manageRemotes)
+        self.actionPull.triggered.connect(self.pull)
+        self.actionPush.triggered.connect(self.push)
 
         self.leFilter.returnPressed.connect(self.filterRepos)
         self.leFilter.cleared.connect(self.filterRepos)
@@ -457,6 +461,30 @@ class NavigatorDialog(BASE, WIDGET):
     def manageRemotes(self):
         dlg = RemotesDialog(iface.mainWindow(), self.currentRepo)
         dlg.exec_()
+
+    def pull(self):
+        dlg = RemoteRefDialog(self.currentRepo)
+        dlg.exec_()
+        if dlg.remote is not None:
+            conflicts = self.currentRepo.pull(dlg.remote, dlg.branch)
+            if conflicts:
+                pass #TODO
+            else:
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from remote",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.currentRepo)
+
+    def push(self):
+        dlg = RemoteRefDialog(self.currentRepo)
+        dlg.exec_()
+        if dlg.remote is not None:
+            try:
+                self.currentRepo.push(dlg.remote, dlg.branch)
+                config.iface.messageBar().pushMessage("Changes have been correctly pushed to remote",
+                                               level = QgsMessageBar.INFO, duration = 5)
+            except CannotPushException:
+                config.iface.messageBar().pushMessage("Changes could not be pushed to remote. Make sure you have pulled changed from the remote first.",
+                                               level = QgsMessageBar.WARNING, duration = 5)
 
 
 class RepositoriesItem(QTreeWidgetItem):

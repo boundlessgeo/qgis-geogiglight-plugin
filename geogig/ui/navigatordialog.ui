@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>364</width>
+    <width>376</width>
     <height>602</height>
    </rect>
   </property>
@@ -43,6 +43,8 @@
       <addaction name="actionDelete"/>
       <addaction name="actionEdit"/>
       <addaction name="actionManageRemotes"/>
+      <addaction name="actionPull"/>
+      <addaction name="actionPush"/>
       <addaction name="actionHelp"/>
      </widget>
     </item>
@@ -268,6 +270,22 @@
    </property>
    <property name="toolTip">
     <string>Manage remotes</string>
+   </property>
+  </action>
+  <action name="actionPull">
+   <property name="text">
+    <string>Pull</string>
+   </property>
+   <property name="toolTip">
+    <string>Pull from remote</string>
+   </property>
+  </action>
+  <action name="actionPush">
+   <property name="text">
+    <string>Push</string>
+   </property>
+   <property name="toolTip">
+    <string>Push to remote</string>
    </property>
   </action>
  </widget>

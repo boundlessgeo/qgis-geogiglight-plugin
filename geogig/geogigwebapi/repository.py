@@ -57,6 +57,9 @@ class GeoGigException(Exception):
 class MergeConflictsException(GeoGigException):
     pass
 
+class CannotPushException(GeoGigException):
+    pass
+
 def _resolveref(ref):
     '''
     Tries to resolve the pased object into a string representing a commit reference
@@ -592,10 +595,31 @@ class Repository(object):
     def push(self, remote, branch):
         payload = {"ref": branch, "remoteName": remote}
         r = self._apicall("push", payload)
+        success = r["dataPushed"]
+        if not success:
+            raise CannotPushException()
 
     def pull (self, remote, branch):
         payload = {"ref": branch, "remoteName": remote}
-        r = self._apicall("pull", payload)
+        response = self._apicall("pull", payload)
+        try:
+            nconflicts = response["Merge"]["conflicts"]
+        except KeyError:
+            nconflicts = 0
+        if nconflicts:
+            ancestor = response["Merge"]["ancestor"]
+            ours = response["Merge"]["ours"]
+            theirs = response["Merge"]["theirs"]
+
+            conflicts = []
+            conflictsResponse = _ensurelist(response["Merge"]["Feature"])
+            for c in conflictsResponse:
+                if c["change"] == "CONFLICT":
+                    conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
+                                    c["ourvalue"], c["theirvalue"], None))
+            return conflicts
+        else:
+            return []
 
 class TaskChecker(QObject):
     taskIsFinished = pyqtSignal()

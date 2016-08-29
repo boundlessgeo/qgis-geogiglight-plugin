@@ -12,6 +12,7 @@ from geogig.tests import _createTestRepo, _layer
 from geogig.tests import REPOS_SERVER_URL
 from geogig.geogigwebapi.repository import repositoriesFromUrl, GeoGigException
 import uuid
+from geogig.geogigwebapi.repository import CannotPushException
 
 
 class WebApiTests(unittest.TestCase):
@@ -368,6 +369,67 @@ class WebApiTests(unittest.TestCase):
         repo.removeremote("myremote")
         remotes = repo.remotes()
         self.assertEqual([], remotes)
+
+    def testPush(self):
+        repo = _createTestRepo("simple", True)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        with edit(layer):
+            layer.changeAttributeValue(features[0].id(), 1, 1000)
+            layer.changeAttributeValue(features[1].id(), 1, 2000)
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        repo2 = _createTestRepo("simple", True)
+        repo.addremote("myremote", repo2.url)
+        repo2.addremote("myremote", repo.url)
+        repo.push("myremote", "master")
+        self.assertRaises(CannotPushException, lambda: repo2.push("myremote", "master"))
+
+    def testPullWithoutConflicts(self):
+        repo = _createTestRepo("simple", True)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        with edit(layer):
+            layer.changeAttributeValue(features[0].id(), 1, 1000)
+            layer.changeAttributeValue(features[1].id(), 1, 2000)
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        repo2 = _createTestRepo("simple", True)
+        repo.addremote("myremote", repo2.url)
+        repo2.addremote("myremote", repo.url)
+        conflicts = repo2.pull("myremote", "master")
+        self.assertEqual([], conflicts)
+        log = repo.log()
+        log2 = repo2.log()
+        self.assertEqual(len(log), len(log2))
+        self.assertEqual("message", log2[0].message)
+
+    def testPullWithConflicts(self):
+        repo = _createTestRepo("simple", True)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        features = list(layer.getFeatures())
+        with edit(layer):
+            layer.changeAttributeValue(features[0].id(), 1, 1000)
+            layer.changeAttributeValue(features[1].id(), 1, 2000)
+        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        repo2 = _createTestRepo("simple", True)
+        filename2 = tempFilename("gpkg")
+        repo2.checkoutlayer(filename2, "points", ref = repo.HEAD)
+        layer2 = loadLayerNoCrsDialog(filename2, "points", "ogr")
+        features = list(layer2.getFeatures())
+        with edit(layer2):
+            layer2.changeAttributeValue(features[0].id(), 1, 1001)
+            layer2.changeAttributeValue(features[1].id(), 1, 2001)
+        _, _, conflicts, _ = repo2.importgeopkg(layer2, "master", "message2", "me", "me@mysite.com", True)
+
+        repo.addremote("myremote", repo2.url)
+        repo2.addremote("myremote", repo.url)
+        conflicts = repo2.pull("myremote", "master")
+        self.assertEqual(2, len(conflicts))
 
 
 def webapiSuite():
