@@ -27,6 +27,7 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 import inspect
+import webbrowser
 from geogig import config
 from qgis.core import *
 from qgis.gui import *
@@ -120,11 +121,16 @@ class GeoGigPlugin:
         self.toolAction = QtGui.QAction(icon, "GeoGig Feature Info Tool", self.iface.mainWindow())
         self.toolAction.setCheckable(True)
         self.toolAction.triggered.connect(self.setTool)
+        helpIcon = QgsApplication.getThemeIcon('/mActionHelpAPI.png')
+        self.helpAction = QtGui.QAction(helpIcon, "GeoGig Plugin Help", self.iface.mainWindow())
+        self.helpAction.setObjectName("GeoGigHelp")
+        self.helpAction.triggered.connect(lambda: webbrowser.open_new("file://" + os.path.join(os.path.dirname(__file__), "docs", "html", "index.html")))
         self.menu = QtGui.QMenu(self.iface.mainWindow())
         self.menu.setTitle("GeoGig")
         self.menu.addAction(self.explorerAction)
         self.menu.addAction(self.toolAction)
         self.menu.addAction(self.configAction)
+        self.menu.addAction(self.helpAction)        
         bar = self.iface.layerToolBar()
         self.toolButton = QtGui.QToolButton()
         self.toolButton.setMenu(self.menu)
