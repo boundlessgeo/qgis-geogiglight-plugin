@@ -19,18 +19,11 @@ options(
         package_dir = path('.'),
         tests = ['test'],
         excludes = [
-            'metadata.txt',
             'ext-src',
             '*.pyc'
-        ]
-    ),
-
-    # Default Server Params (can be overridden)
-    plugin_server = Bunch(
-        server = 'qgis.boundlessgeo.com',
-        port = 80,
-        protocol = 'http',
-        end_point = '/RPC2/'
+        ],
+        # skip certain files inadvertently found by exclude pattern globbing
+        skip_exclude=[],
     ),
 
     sphinx = Bunch(
@@ -112,45 +105,37 @@ def package(options):
     with zipfile.ZipFile(package_file, "w", zipfile.ZIP_DEFLATED) as zip:
         if not hasattr(options.package, 'tests'):
             options.plugin.excludes.extend(options.plugin.tests)
-        make_zip(zip, options)
+        _make_zip(zip, options)
     return package_file
 
 
-def make_zip(zip, options):
-    metadata_file = options.plugin.source_dir / "metadata.txt"
-    cfg = ConfigParser.SafeConfigParser()
-    cfg.optionxform = str
-    cfg.read(metadata_file)
-    base_version = cfg.get('general', 'version')
-    head_path = path('.git/HEAD')
-    head_ref = head_path.open('rU').readline().strip()[5:]
-    ref_file = path(".git/" + head_ref)
-    ref = ref_file.open('rU').readline().strip()
-    cfg.set("general", "version", "%s-%s-%s" % (base_version, datetime.now().strftime("%Y%m%d"), ref))
-
-    buf = StringIO()
-    cfg.write(buf)
-    zip.writestr("geogig/metadata.txt", buf.getvalue())
-
+def _make_zip(zipFile, options):
     excludes = set(options.plugin.excludes)
+    skips = options.plugin.skip_exclude
 
     src_dir = options.plugin.source_dir
-    exclude = lambda p: any([fnmatch.fnmatch(p, e) for e in excludes])
-    def filter_excludes(files):
-        if not files: return []
+    exclude = lambda p: any([path(p).fnmatch(e) for e in excludes])
+    def filter_excludes(root, items):
+        if not items:
+            return []
         # to prevent descending into dirs, modify the list in place
-        for i in xrange(len(files) - 1, -1, -1):
-            f = files[i]
-            if exclude(f):
-                debug('excluding %s' % f)
-                files.remove(f)
-        return files
+        for item in list(items):  # copy list or iteration values change
+            itempath = path(os.path.relpath(root)) / item
+            if exclude(item) and item not in skips:
+                debug('Excluding %s' % itempath)
+                items.remove(item)
+        return items
 
     for root, dirs, files in os.walk(src_dir):
-        for f in filter_excludes(files):
+        for f in filter_excludes(root, files):
             relpath = os.path.relpath(root)
-            zip.write(path(root) / f, path(relpath) / f)
-        filter_excludes(dirs)
+            zipFile.write(path(root) / f, path(relpath) / f)
+        filter_excludes(root, dirs)
+
+    for root, dirs, files in os.walk(options.sphinx.builddir):
+        for f in files:
+            relpath = os.path.join(options.plugin.name, "docs", os.path.relpath(root, options.sphinx.builddir))
+            zipFile.write(path(root) / f, path(relpath) / f)
 
 
 @task
