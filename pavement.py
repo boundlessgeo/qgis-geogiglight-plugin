@@ -27,9 +27,9 @@ options(
     ),
 
     sphinx = Bunch(
-        docroot = 'doc',
-        sourcedir = 'source',
-        builddir = 'build'
+        docroot = path('docs'),
+        sourcedir = path('docs/source'),
+        builddir = path('docs/build')
     )
 )
 
