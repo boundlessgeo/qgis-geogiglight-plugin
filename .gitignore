@@ -55,3 +55,4 @@ target/
 ext-libs
 ext-src
 geogig.zip
+travis_secrets.tar.gz
