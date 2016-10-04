@@ -1,7 +1,7 @@
 import ogr
 import unittest
 import os
-from tools.utils import tempFilename, loadLayerNoCrsDialog
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 import shutil
 from qgis.utils import iface
 from qgis.core import *
