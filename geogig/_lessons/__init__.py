@@ -6,7 +6,7 @@
 from geogig.tests.testplugin import backupConfiguration, restoreConfiguration
 import os
 import traceback
-from geogig.tests import REPOS_SERVER_URL, REPOS_FOLDER
+from geogig.tests import conf
 import requests
 
 try:
@@ -25,10 +25,10 @@ except:
     pass
 
 def checkGeoGig():
-    if not os.path.exists(REPOS_FOLDER):
+    if not os.path.exists(conf['REPOS_FOLDER']):
         return False
     try:
-        requests.get(REPOS_SERVER_URL + "repos")
+        requests.get(conf['REPOS_SERVER_URL'] + "repos")
         return True
     except:
         return False
