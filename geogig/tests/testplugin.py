@@ -31,7 +31,7 @@ import sqlite3
 from geogig import tests
 import unittest
 import shutil
-from geogig.tests import _createTestRepo, REPOS_SERVER_URL
+from geogig.tests import _createTestRepo, conf
 from geogig.tests.testwebapilib import webapiSuite
 from sqlite3 import OperationalError
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog, tempSubfolder
@@ -89,8 +89,8 @@ def _openNavigator(empty = False, group = "test repositories"):
         repository.availableRepoEndpoints = {}
     else:
         repository.repos = [tests._lastRepo]
-        repository.availableRepoEndpoints = {group:REPOS_SERVER_URL}
-        repository.repoEndpoints = {group:REPOS_SERVER_URL}
+        repository.availableRepoEndpoints = {group:conf['REPOS_SERVER_URL']}
+        repository.repoEndpoints = {group:conf['REPOS_SERVER_URL']}
     action = navigatorInstance.toggleViewAction()
     if not action.isChecked():
         iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, navigatorInstance)
@@ -267,6 +267,10 @@ def functionalTests():
                 Test.__init__(self, name)
                 self.addStep("Preparing test", backupConfiguration)
                 self.setCleanup(restoreConfiguration)
+                self.settings = dict(
+                            REPOS_SERVER_URL = "http://localhost:8182/",
+                            REPOS_FOLDER = os.path.expanduser("~/geogig/server")
+                            )
     except:
         return []
 
@@ -275,7 +279,7 @@ def functionalTests():
 
     test = GeoGigTest("Connect to endpoint")
     test.addStep("Open navigator", lambda:  _openNavigator(True))
-    test.addStep("Add a new geogig server at '%s'" % REPOS_SERVER_URL)
+    test.addStep("Add a new geogig server at '%s'" % test.settings["REPOS_SERVER_URL"])
     test.addStep("Verify the endpoint item has been correctly added (might contain child repos or not)")
     tests.append(test)
 

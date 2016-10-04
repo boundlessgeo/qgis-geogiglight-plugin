@@ -9,7 +9,7 @@ from qgis.core import *
 from geogig.tools.gpkgsync import getCommitId
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.tests import _createTestRepo, _layer
-from geogig.tests import REPOS_SERVER_URL
+from geogig.tests import conf
 from geogig.geogigwebapi.repository import repositoriesFromUrl, GeoGigException
 import uuid
 from geogig.geogigwebapi.repository import CannotPushException
@@ -21,17 +21,17 @@ class WebApiTests(unittest.TestCase):
         pass
 
     def testCreateRepo(self):
-        repos = repositoriesFromUrl(REPOS_SERVER_URL, "test")
+        repos = repositoriesFromUrl(conf['REPOS_SERVER_URL'], "test")
         n = len(repos)
         name = str(uuid.uuid4()).replace("-", "")
-        createRepoAtUrl(REPOS_SERVER_URL, "test", name)
-        repos = repositoriesFromUrl(REPOS_SERVER_URL, "test")
+        createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", name)
+        repos = repositoriesFromUrl(conf['REPOS_SERVER_URL'], "test")
         self.assertEqual(n + 1, len(repos))
         self.assertTrue(name in [r.title for r in repos])
 
     def testCreateRepoWithNameThatAlreadyExists(self):
         repo = _createTestRepo("simple")
-        self.assertRaises(GeoGigException, lambda: createRepoAtUrl(REPOS_SERVER_URL, "test", "original_simple"))
+        self.assertRaises(GeoGigException, lambda: createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_simple"))
 
     def testLog(self):
         repo = _createTestRepo("simple")
