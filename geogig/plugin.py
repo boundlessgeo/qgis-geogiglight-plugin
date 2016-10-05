@@ -77,7 +77,7 @@ class GeoGigPlugin:
         try:
             from lessons import addLessonsFolder
             folder = os.path.join(os.path.dirname(__file__), "_lessons")
-            addLessonsFolder(folder)
+            addLessonsFolder(folder, "geogig")
         except Exception as e:
             pass
 
@@ -102,6 +102,13 @@ class GeoGigPlugin:
             removeTestModule(testplugin, "GeoGig Light")
         except Exception as e:
             pass
+
+        try:
+            from lessons import removeLessonsFolder
+            removeLessonsFolder(folder, "geogig")
+        except:
+            return
+
 
 
     def initGui(self):
