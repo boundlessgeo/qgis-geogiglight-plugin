@@ -600,8 +600,16 @@ class Repository(object):
             raise CannotPushException()
 
     def pull (self, remote, branch):
-        payload = {"ref": branch, "remoteName": remote}
-        response = self._apicall("pull", payload)
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        self._checkoutbranch(branch, transactionId)
+        payload = {"ref": branch, "remoteName": remote, "transactionId": transactionId, "output_format":"json"}
+        r = requests.get(self.url + "pull", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+        response = r.json()["response"]
         try:
             nconflicts = response["Merge"]["conflicts"]
         except KeyError:
@@ -610,15 +618,16 @@ class Repository(object):
             ancestor = response["Merge"]["ancestor"]
             ours = response["Merge"]["ours"]
             theirs = response["Merge"]["theirs"]
-
             conflicts = []
             conflictsResponse = _ensurelist(response["Merge"]["Feature"])
             for c in conflictsResponse:
                 if c["change"] == "CONFLICT":
                     conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
-                                    c["ourvalue"], c["theirvalue"], None))
+                                    c["ourvalue"], c["theirvalue"], transactionId))
+            print conflicts
             return conflicts
         else:
+            self.closeTransaction(transactionId)
             return []
 
 class TaskChecker(QObject):
