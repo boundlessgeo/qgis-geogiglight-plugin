@@ -362,13 +362,13 @@ class WebApiTests(unittest.TestCase):
     def testRemotes(self):
         repo = _createTestRepo("simple", True)
         remotes = repo.remotes()
-        self.assertEqual([], remotes)
+        self.assertEqual({}, remotes)
         repo.addremote("myremote", "http://myurl.com")
         remotes = repo.remotes()
         self.assertEqual({"myremote": "http://myurl.com"}, remotes)
         repo.removeremote("myremote")
         remotes = repo.remotes()
-        self.assertEqual([], remotes)
+        self.assertEqual({}, remotes)
 
     def testPush(self):
         repo = _createTestRepo("simple", True)
