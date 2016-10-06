@@ -233,7 +233,7 @@ class WebApiTests(unittest.TestCase):
         repo.importgeopkg(layer, "master", msg, "Даниил Хармс", "daniil@kharms.com", False)
         log = repo.log()
         self.assertEqual(1, len(log))
-        self.assertEqual(msg, log[0].message)
+        self.assertEqual(msg.decode("utf-8"), log[0].message)
         self.assertEqual(["points"], repo.trees())
 
     def testImportInterchangeFormat(self):
