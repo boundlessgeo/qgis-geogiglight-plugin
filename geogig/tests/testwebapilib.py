@@ -343,6 +343,9 @@ class WebApiTests(unittest.TestCase):
         with edit(layer2):
             layer2.changeAttributeValue(features2[0].id(), 1, 1001)
             layer2.changeAttributeValue(features2[1].id(), 1, 2001)
+        layer3 = loadLayerNoCrsDialog(filename2, "points", "ogr")
+        feature = layer3.getFeatures(QgsFeatureRequest(features2[0].id())).next()
+        self.assertEquals(1001, feature["n"])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
         self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
