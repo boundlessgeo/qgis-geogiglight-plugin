@@ -99,5 +99,5 @@ def getUserInfo():
             setConfigValue(GENERAL, EMAIL, email)
             return user, email
         else:
-            return None
+            return None, None
     return user, email
