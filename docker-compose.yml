@@ -1,0 +1,25 @@
+version: '2'
+
+services:
+  geogig:
+    container_name: geogig
+    image: kartoza/geogig:1.0-RC3
+    ports:
+        - "38080:8182"
+    volumes:
+        - ./geogig_repo:/geogig_repo
+    environment:
+        USER: 'user'
+        EMAIL_ADDRESS: 'user@domain.tld'
+  qgis-testing-environment:
+    image: boundlessgeo/qgis-testing-environment:${QGIS_VERSION_TAG}
+    volumes:
+        - /tmp/.X11-unix:/tmp/.X11-unix
+        - ./:/tests_directory
+    volumes_from:
+        - geogig
+    environment:
+        DISPLAY: ':99'
+        REPOS_SERVER_URL: 'http://geogig:8182/'
+        REPOS_FOLDER: '/geogig_repo'
+
