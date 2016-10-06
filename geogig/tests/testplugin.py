@@ -222,6 +222,34 @@ def _createMergeConflictInSeveralLayers():
     _doConflictImport("points")
     _doConflictImport("lines")
 
+_localRepo = None
+_remoteRepo = None
+def _createConflictedPullScenario():
+    global _localRepo
+    _localRepo = _createTestRepo("simple", True)
+    global _remoteRepo
+    _remoteRepo = _createTestRepo("simple", True)
+    filename = tempFilename("gpkg")
+    _localRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), 1, 1000)
+    print "1"
+    filename2 = tempFilename("gpkg")
+    _remoteRepo.checkoutlayer(filename2, "points")
+    layer2 = loadLayerNoCrsDialog(filename2, "points2", "ogr")
+    features2 = list(layer2.getFeatures())
+    with edit(layer2):
+        layer2.changeAttributeValue(features2[0].id(), 1, 1001)
+    print "2"
+    _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+    _remoteRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
+    print "3"
+    _localRepo.addremote("myremote", _remoteRepo.url)
+    _remoteRepo.addremote("myremote", _localRepo.url)
+
+
 def _exportLayer():
     checkoutLayer(tests._lastRepo, "points", None)
 
@@ -490,6 +518,13 @@ def functionalTests():
     test.addStep("Export repo layer", _exportLayer)
     test.addStep("Delete layer from branch", _deleteLayerFromBranch)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Verify that only 'master'branch is available")
+    tests.append(test)
+
+    test = Test("Pull with conflicts")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createConflictedPullScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Pull from remote and solve conflicts. Verify it solves them correctly")
     tests.append(test)
 
     test = Test("Check diff viewer")

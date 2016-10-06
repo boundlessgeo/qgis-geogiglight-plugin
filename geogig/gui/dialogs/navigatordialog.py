@@ -30,7 +30,7 @@ import sys
 import sqlite3
 from collections import defaultdict
 
-from PyQt4 import uic
+from PyQt4 import uic, QtGui
 from PyQt4.QtCore import Qt, QUrl, QSize
 from PyQt4.QtGui import (QIcon,
                          QHeaderView,
@@ -53,6 +53,8 @@ from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
 from geogig.gui.dialogs.remotesdialog import RemotesDialog
 from geogig.gui.dialogs.remoterefdialog import RemoteRefDialog
+from geogig.gui.dialogs.conflictdialog import ConflictDialog
+
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
 from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import (getAllLayers,
@@ -466,9 +468,38 @@ class NavigatorDialog(BASE, WIDGET):
         dlg = RemoteRefDialog(self.currentRepo)
         dlg.exec_()
         if dlg.remote is not None:
-            conflicts = self.currentRepo.pull(dlg.remote, dlg.branch)
+            conflicts = execute(lambda: self.currentRepo.pull(dlg.remote, dlg.branch))
             if conflicts:
-                pass #TODO
+                ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+                                          "There are conflicts between local and remote changes.\n"
+                                          "Do you want to continue and fix them?",
+                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                if ret == QtGui.QMessageBox.No:
+                    self.currentRepo.closeTransaction(conflicts[0].transactionId)
+                    return
+
+                dlg = ConflictDialog(conflicts)
+                dlg.exec_()
+                solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
+                if not solved:
+                    self.repo.closeTransaction(conflicts[0].transactionId)
+                    return
+                for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
+                    if resolution == ConflictDialog.LOCAL:
+                        conflict.resolveWithLocalVersion()
+                    elif resolution == ConflictDialog.REMOTE:
+                        conflict.resolveWithRemoteVersion()
+                    elif resolution == ConflictDialog.DELETE:
+                        conflict.resolveDeletingFeature()
+                    else:
+                        conflict.resolveWithNewFeature(resolution)
+                user, email = config.getUserInfo()
+                if user is None:
+                    return
+                self.currentRepo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from remote",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.currentRepo)
             else:
                 config.iface.messageBar().pushMessage("Changes have been correctly pulled from remote",
                                                level = QgsMessageBar.INFO, duration = 5)
