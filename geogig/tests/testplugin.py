@@ -235,17 +235,14 @@ def _createConflictedPullScenario():
     features = list(layer.getFeatures())
     with edit(layer):
         layer.changeAttributeValue(features[0].id(), 1, 1000)
-    print "1"
     filename2 = tempFilename("gpkg")
     _remoteRepo.checkoutlayer(filename2, "points")
     layer2 = loadLayerNoCrsDialog(filename2, "points2", "ogr")
     features2 = list(layer2.getFeatures())
     with edit(layer2):
         layer2.changeAttributeValue(features2[0].id(), 1, 1001)
-    print "2"
     _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
     _remoteRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
-    print "3"
     _localRepo.addremote("myremote", _remoteRepo.url)
     _remoteRepo.addremote("myremote", _localRepo.url)
 
@@ -287,6 +284,10 @@ def _removeRepos():
 
 #TESTS
 
+def settings():
+    return {"REPOS_SERVER_URL": "http://localhost:8182/",
+            "REPOS_FOLDER": os.path.expanduser("~/geogig/server")}
+
 def functionalTests():
     try:
         from qgistester.test import Test
@@ -295,10 +296,7 @@ def functionalTests():
                 Test.__init__(self, name)
                 self.addStep("Preparing test", backupConfiguration)
                 self.setCleanup(restoreConfiguration)
-                self.settings = dict(
-                            REPOS_SERVER_URL = "http://localhost:8182/",
-                            REPOS_FOLDER = os.path.expanduser("~/geogig/server")
-                            )
+
     except:
         return []
 
@@ -307,7 +305,7 @@ def functionalTests():
 
     test = GeoGigTest("Connect to endpoint")
     test.addStep("Open navigator", lambda:  _openNavigator(True))
-    test.addStep("Add a new geogig server at '%s'" % test.settings["REPOS_SERVER_URL"])
+    test.addStep("Add a new geogig server at the repositories server url")
     test.addStep("Verify the endpoint item has been correctly added (might contain child repos or not)")
     tests.append(test)
 
@@ -672,7 +670,6 @@ class PluginTests(unittest.TestCase):
 def pluginSuite():
     suite = unittest.TestSuite()
     suite.addTests(unittest.makeSuite(PluginTests, 'test'))
-    suite.addTests(unittest.makeSuite(GeoPackageEditTests, 'test'))
     return suite
 
 
