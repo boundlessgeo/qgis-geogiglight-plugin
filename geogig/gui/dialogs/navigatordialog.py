@@ -124,6 +124,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.leFilter.textChanged.connect(self.filterRepos)
 
         self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
+        self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
         self.repoDescription.setOpenLinks(False)
         self.repoTree.setFocusPolicy(Qt.NoFocus)
 
@@ -154,6 +155,17 @@ class NavigatorDialog(BASE, WIDGET):
         self.updateNavigator()
 
         self.repoTree.itemExpanded.connect(self._itemExpanded)
+
+    def descriptionLinkClicked(self, url):
+        url = url.toString()
+        if url.startswith("checkout"):
+            layernames = url[url.find(":")+1:].split(",")
+            for layername in layernames:
+                if layername:
+                    self._checkoutLayer(layername, None)
+            #self.updateCurrentRepo(self.currentRepo)
+
+
 
     def updateNavigator(self):
         readRepos()
