@@ -559,7 +559,7 @@ class Repository(object):
                     filepath = "Not exported"
                     current = "Not available"
                 layer = ("<li><b>%s <a href='checkout:%s'>[Add to QGIS]</a></b>"
-                        "<p><i>Filepath</i>: <b>%s</b></p><p><i>Current version</i>: <b>%s</b></p></li>") % (tree, tree, tree, filepath, current)
+                        "<p><i>Filepath</i>: <b>%s</b></p><p><i>Current version</i>: <b>%s</b></p></li>") % (tree, tree, filepath, current)
                 layers.append(layer)
 
             layers = "<ul>%s</ul>" % "".join(layers)

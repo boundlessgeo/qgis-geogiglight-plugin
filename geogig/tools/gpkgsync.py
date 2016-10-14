@@ -96,7 +96,7 @@ def syncLayer(layer):
             if ret == QMessageBox.No:
                 repo.closeTransaction(conflicts[0].transactionId)
                 return
-            solved, resolvedConflicts = solveConflicts(conflicts, layername)
+            solved, resolvedConflicts = solveConflicts(conflicts)
             if not solved:
                 repo.closeTransaction(conflicts[0].transactionId)
                 return
@@ -224,8 +224,8 @@ def getCommitId(layer):
     con.close()
     return commitid
 
-def solveConflicts(conflicts, layername):
-    dlg = ConflictDialog(conflicts, layername)
+def solveConflicts(conflicts):
+    dlg = ConflictDialog(conflicts)
     dlg.exec_()
     return dlg.solved, dlg.resolvedConflicts
 
