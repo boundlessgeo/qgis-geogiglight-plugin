@@ -7,9 +7,10 @@ conf = dict(
         REPOS_SERVER_URL = "http://localhost:8182/",
         REPOS_FOLDER = os.path.expanduser("~/geogig/server")
     )
-conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
 def _createTestRepo(name, modifiesRepo = False, group = None , title = None):
+
+    conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     i = len(os.listdir(conf['REPOS_FOLDER']))
     if modifiesRepo:
