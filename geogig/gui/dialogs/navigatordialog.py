@@ -28,6 +28,7 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 import sqlite3
+import webbrowser
 from collections import defaultdict
 
 from PyQt4 import uic, QtGui
@@ -39,7 +40,7 @@ from PyQt4.QtGui import (QIcon,
                          QTreeWidgetItem,
                          QMessageBox,
                          QInputDialog,
-                         QDesktopServices, QLabel, QHBoxLayout, QSizePolicy,
+                         QLabel, QHBoxLayout, QSizePolicy,
                          QWidget, QPushButton, QApplication)
 
 from qgis.core import QgsApplication, QgsMessageLog
@@ -468,9 +469,7 @@ class NavigatorDialog(BASE, WIDGET):
             self.actionDelete.setEnabled(True)
 
     def openHelp(self):
-        if not QDesktopServices.openUrl(
-                QUrl('file://{}'.format(os.path.join(pluginPath, 'docs', 'html', 'index.html')))):
-            QMessageBox.warning(self, self.tr('Error'), self.tr('Can not open help URL in browser'))
+        webbrowser.open('file://{}'.format(os.path.join(pluginPath, 'docs', 'html', 'index.html')))
 
 
     def manageRemotes(self):
