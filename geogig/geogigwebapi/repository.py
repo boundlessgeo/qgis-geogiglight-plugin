@@ -423,7 +423,6 @@ class Repository(object):
 
                 conflicts = []
                 conflictsResponse = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
-                print conflictsResponse
                 for c in conflictsResponse:
                     if c["change"] == "CONFLICT":
                         remoteFeatureId = c["ourvalue"]
