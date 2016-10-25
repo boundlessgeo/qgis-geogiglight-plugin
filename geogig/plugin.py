@@ -81,6 +81,8 @@ class GeoGigPlugin:
         except Exception as e:
             pass
 
+
+
     def unload(self):
         navigatorInstance.setVisible(False)
         try:
@@ -109,7 +111,7 @@ class GeoGigPlugin:
         except:
             return
 
-
+        QtCore.QSettings().setValue("/qgis/walForSqlite3", False)
 
     def initGui(self):
         readTrackedLayers()
@@ -137,7 +139,7 @@ class GeoGigPlugin:
         self.menu.addAction(self.explorerAction)
         self.menu.addAction(self.toolAction)
         self.menu.addAction(self.configAction)
-        self.menu.addAction(self.helpAction)        
+        self.menu.addAction(self.helpAction)
         bar = self.iface.layerToolBar()
         self.toolButton = QtGui.QToolButton()
         self.toolButton.setMenu(self.menu)
