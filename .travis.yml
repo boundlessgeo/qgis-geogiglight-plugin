@@ -29,8 +29,8 @@ before_install:
 - sleep 10
 - docker-compose exec qgis-testing-environment sh -c "qgis_setup.sh ${PLUGIN_NAME}"
 - docker-compose exec qgis-testing-environment sh -c "pip install paver"
-- docker-compose exec qgis-testing-environment sh -c "cd /tests_directory && paver setup && paver package --tests"
 script:
+- docker-compose exec qgis-testing-environment sh -c "cd /tests_directory && paver setup && paver package --tests"
 - docker-compose exec qgis-testing-environment sh -c "qgis_testrunner.sh geogig.tests.testplugin.run_tests" || true
 after_success:
 - |
