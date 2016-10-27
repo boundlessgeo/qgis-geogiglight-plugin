@@ -43,3 +43,7 @@ Usage
 Usage is documented `here <./docs/source/usage.rst>`_
 
 
+Known issues
+********
+
+There is a known issue in QGIS about the extent of edited Geopackage layers (http://hub.qgis.org/issues/15273) that has been recently fixed (https://github.com/qgis/QGIS/commit/70ae301310c7a58134ac699fae70af7fd1176684) anyway the fix requires a GDAL/OGR minimum version (2.1.2) that is not yet widely used in QGIS installers.
