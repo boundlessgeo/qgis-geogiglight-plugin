@@ -215,12 +215,12 @@ def addDiffLayer(repo, layername, commit):
     for r in removed:
         geogigfid = r[0]
         beforeGpkgfid = gpkgfidFromGeogigfid(beforeCursor, layername, geogigfid)
-        beforeCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, afterGpkgfid))
+        beforeCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, beforeGpkgfid))
         featureRow = beforeCursor.fetchone()
         attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
         attrs["changetype"] = REMOVED
         request = QgsFeatureRequest()
-        request.setFilterFid(afterGpkgfid)
+        request.setFilterFid(beforeGpkgfid)
         feature = beforeLayer.getFeatures(request).next()
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
 

@@ -111,6 +111,11 @@ def _exportAndEditLayer():
         feat.setAttributes(["5", 5])
         feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(123, 456)))
         layer.addFeatures([feat])
+    return layer
+
+def _addNewCommit():
+    layer = _exportAndEditLayer()
+    tests._lastRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
 
 def _exportAndChangeToFirstVersion():
     layer = checkoutLayer(tests._lastRepo, "points", None)
@@ -537,6 +542,14 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createTestRepo("simple", True))
     test.addStep("Export and edit repo layer", _exportAndEditLayer)
     test.addStep("Right click on 'points' layer and select 'GeoGig/view local changes'. Check that diff viewer works correctly")
+    tests.append(test)
+
+    test = Test("Check export diff layer")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createTestRepo("simple", True))
+    test.addStep("Add commit", _addNewCommit)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Click on latest version in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
     tests.append(test)
 
     test = GeoGigTest("Add layer to repository from context menu")
