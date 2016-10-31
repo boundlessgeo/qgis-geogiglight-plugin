@@ -7,6 +7,7 @@ version=1.0
 qgisMinimumVersion=2.6
 author=Victor Olaya (Boundless)
 email=volaya@boundlessgeo.com
+roles=desktop-qgis-plugin-geogig-webapi
 repository=https://github.com/boundlessgeo/qgis-geogiglight-plugin
 tracker=https://github.com/boundlessgeo/qgis-geogiglight-plugin/issues
 homepage=https://github.com/boundlessgeo/qgis-geogiglight-plugin
