@@ -103,9 +103,10 @@ def _openNavigator(empty = False, group = "test repositories"):
 
 def _exportAndEditLayer():
     layer = checkoutLayer(tests._lastRepo, "points", None)
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        layer.changeAttributeValue(features[0].id(), idx, 1000)
         layer.deleteFeatures([features[1].id()])
         feat = QgsFeature(layer.pendingFields())
         feat.setAttributes(["5", 5])
@@ -132,9 +133,10 @@ def _exportChangetoFirstVersionAndEditLayer():
     assert len(log) == 3
     commitid = log[-1].commitid
     layer = checkoutLayer(tests._lastRepo, "points", None, commitid)
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        layer.changeAttributeValue(features[0].id(), idx, 1000)
         feat = QgsFeature(layer.pendingFields())
         feat.setAttributes(["5", 5])
         feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(123, 456)))
@@ -157,34 +159,37 @@ def _exportAndAddFeatureToLayer():
 
 def _exportAndCreateConflictWithNulls():
     layer = checkoutLayer(tests._lastRepo, "points", None)
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
         layer.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(123, 456)))
-        layer.changeAttributeValue(features[0].id(), 1, None)
+        layer.changeAttributeValue(features[0].id(), idx, None)
     filename = tempFilename("gpkg")
     tests._lastRepo.checkoutlayer(filename, "points")
     layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
     features2 = list(layer2.getFeatures())
     with edit(layer2):
         layer2.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(124, 457)))
-        layer2.changeAttributeValue(features2[0].id(), 1, None)
+        layer2.changeAttributeValue(features2[0].id(), idx, None)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
 def _exportAndCreateConflict():
     layer = checkoutLayer(tests._lastRepo, "points", None)
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        layer.changeAttributeValue(features[0].id(), idx, 1000)
     filename = tempFilename("gpkg")
     tests._lastRepo.checkoutlayer(filename, "points")
     layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
     features2 = list(layer2.getFeatures())
     with edit(layer2):
-        layer2.changeAttributeValue(features2[0].id(), 1, 1001)
+        layer2.changeAttributeValue(features2[0].id(), idx, 1001)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
 def _exportAndCreateConflictWithRemoveAndModify():
     layer = checkoutLayer(tests._lastRepo, "points", None)
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
         layer.deleteFeatures([features[0].id()])
@@ -193,7 +198,7 @@ def _exportAndCreateConflictWithRemoveAndModify():
     layer2 = loadLayerNoCrsDialog(filename, "points2", "ogr")
     features2 = list(layer2.getFeatures())
     with edit(layer2):
-        layer2.changeAttributeValue(features[0].id(), 1, 1000)
+        layer2.changeAttributeValue(features[0].id(), idx, 1000)
     _, _, conflicts, _ = tests._lastRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
 
 def _deleteLayerFromBranch():
@@ -203,18 +208,20 @@ def _createMergeScenario(layername = "points"):
     filename = tempFilename("gpkg")
     tests._lastRepo.checkoutlayer(filename, layername)
     layer = loadLayerNoCrsDialog(filename, layername, "ogr")
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        layer.changeAttributeValue(features[0].id(), idx, 1000)
     tests._lastRepo.importgeopkg(layer, "mybranch", "changed_%s_1" % layername, "me", "me@mysite.com", True)
 
 def _doConflictImport(layername = "points"):
     filename = tempFilename("gpkg")
     tests._lastRepo.checkoutlayer(filename, layername)
     layer = loadLayerNoCrsDialog(filename, layername, "ogr")
+    idx = layer.dataProvider().fieldNameIndex("n")
     features = list(layer.getFeatures())
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1001)
+        layer.changeAttributeValue(features[0].id(), idx, 1001)
     tests._lastRepo.importgeopkg(layer, "master", "changed_%s_2" % layername, "me", "me@mysite.com", True)
 
 def _createMergeConflict():
@@ -238,14 +245,15 @@ def _createConflictedPullScenario():
     _localRepo.checkoutlayer(filename, "points")
     layer = loadLayerNoCrsDialog(filename, "points", "ogr")
     features = list(layer.getFeatures())
+    idx = layer.dataProvider().fieldNameIndex("n")
     with edit(layer):
-        layer.changeAttributeValue(features[0].id(), 1, 1000)
+        layer.changeAttributeValue(features[0].id(), idx, 1000)
     filename2 = tempFilename("gpkg")
     _remoteRepo.checkoutlayer(filename2, "points")
     layer2 = loadLayerNoCrsDialog(filename2, "points2", "ogr")
     features2 = list(layer2.getFeatures())
     with edit(layer2):
-        layer2.changeAttributeValue(features2[0].id(), 1, 1001)
+        layer2.changeAttributeValue(features2[0].id(), idx, 1001)
     _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
     _remoteRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
     _localRepo.addremote("myremote", _remoteRepo.url)
