@@ -81,7 +81,7 @@ class GeoGigPlugin:
         except Exception as e:
             pass
 
-
+        QtCore.QSettings().setValue("/qgis/walForSqlite3", False)
 
     def unload(self):
         navigatorInstance.setVisible(False)
@@ -110,8 +110,6 @@ class GeoGigPlugin:
             removeLessonsFolder(folder, "geogig")
         except:
             return
-
-        QtCore.QSettings().setValue("/qgis/walForSqlite3", False)
 
     def initGui(self):
         readTrackedLayers()
