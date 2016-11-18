@@ -535,7 +535,7 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Prepare test", _createConflictedPullScenario)
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Pull from remote and solve conflicts. Verify it solves them correctly")
+    test.addStep("Select the repository in the repository explorer. Click on the 'Pull from remote' button and pull from 'myremote' into'master' branch. It will warn you of existing conflict. Solve conflicts and verify it finishes the pull operation correctly.")
     tests.append(test)
 
     test = Test("Check diff viewer")
