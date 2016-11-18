@@ -120,9 +120,15 @@ def syncLayer(layer):
 
         commitdialog.suggestedMessage = ""
     else:
+        branches = []
+        for branch in repo.branches():
+            trees = repo.trees(branch)
+            if layername in trees:
+                branches.append(branch)
+
         branch, ok = QInputDialog.getItem(iface.mainWindow(), "Sync",
                                           "Select branch to update from",
-                                          repo.branches(), 0, False)
+                                          branches, 0, False)
         if not ok:
             return
         commitId = getCommitId(layer)
