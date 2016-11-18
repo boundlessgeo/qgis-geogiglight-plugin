@@ -181,7 +181,7 @@ class Repository(object):
         payload["page"] = 0
         while True:
             resp = self._apicall("diff", payload)
-            if "diff" in resp:
+            if "diff" in resp and resp["diff"]:
                 for d in _ensurelist(resp["diff"]):
                     path = d["newPath"] or d["path"]
                     changes.append(Diffentry(self, oldRefSpec, newRefSpec,
@@ -241,7 +241,7 @@ class Repository(object):
             except HTTPError, e:
                 #TODO more accurate error treatment
                 return []
-            if "commit" in resp:
+            if "commit" in resp and resp["commit"]:
                 for c in _ensurelist(resp["commit"]):
                     commits.append(self._parseCommit(c))
                 payload["page"] += 1
@@ -374,8 +374,8 @@ class Repository(object):
         r = requests.post(self.url + "import.json", params = payload, files = files)
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
-        root = ET.fromstring(r.text)
-        taskId = root.find("id").text
+        resp = r.json()
+        taskId = resp["task"]["id"]
         checker = TaskChecker(self.rootUrl, taskId)
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
@@ -701,7 +701,6 @@ def repositoriesFromUrl(url, title):
 
     r = requests.get(url + "repos")
     r.raise_for_status()
-
 
     root = ET.fromstring(r.text)
 
