@@ -448,6 +448,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.actionRefresh.setEnabled(False)
         self.actionDelete.setEnabled(False)
         self.actionEdit.setEnabled(False)
+        self.actionPush.setEnabled(False)
+        self.actionPull.setEnabled(False)
         self.actionManageRemotes.setEnabled(False)
         if len(self.repoTree.selectedItems()) == 0:
             return
@@ -465,6 +467,8 @@ class NavigatorDialog(BASE, WIDGET):
         elif isinstance(item, RepoItem):
             self.actionDelete.setEnabled(True)
             self.actionManageRemotes.setEnabled(True)
+            self.actionPush.setEnabled(True)
+            self.actionPull.setEnabled(True)
         else:
             self.actionDelete.setEnabled(True)
 
