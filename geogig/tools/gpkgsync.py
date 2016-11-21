@@ -163,7 +163,6 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
     layer.reload()
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
-    print changesFilename
     beforeCommitId, afterCommitId = repo.revparse(beforeCommitId), repo.revparse(afterCommitId)
     repo.exportdiff(layername, beforeCommitId, afterCommitId, changesFilename)
 

@@ -31,7 +31,7 @@ from commit import Commit
 from diff import Diffentry, ConflictDiff
 from commitish import Commitish
 import os
-from geogig.tools.utils import userFolder, resourceFile
+from geogig.tools.utils import userFolder, resourceFile, tempFilenameInTempFolder
 import json
 from geogig.geogigwebapi.commit import NULL_ID
 from datetime import datetime
@@ -357,6 +357,29 @@ class Repository(object):
         self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
 
+    def saveaudittables(self, filename, layer):
+        newfilename = tempFilenameInTempFolder(os.path.basename(filename))
+
+        conn = sqlite3.connect(newfilename)
+        c = conn.cursor()
+        c.execute("ATTACH DATABASE ? AS db2", (filename,))
+        tables = ["%s_audit" % layer, "%s_fids" % layer]
+        for table in tables:
+            c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % table)
+            c.execute(c.fetchone()[0])
+            c.execute("INSERT INTO main.%s SELECT * FROM db2.%s" % (table, table))
+
+        c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % layer)
+        c.execute(c.fetchone()[0])
+        c.execute("SELECT * FROM db2.%s_audit WHERE audit_op<>3;" % layer)
+        changed = c.fetchall()
+        for feature in changed:
+            c.execute('INSERT INTO main.%s SELECT * FROM db2.%s WHERE fid=%s;' % (layer, layer, feature[0]))
+
+        conn.commit()
+        conn.close()
+
+        return filename
 
     def importgeopkg(self, layer, branch, message, authorName, authorEmail, interchange):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -368,8 +391,10 @@ class Repository(object):
         payload = {"authorEmail": authorEmail, "authorName": authorName,
                    "message": message, 'destPath':layername, "format": "gpkg",
                    "transactionId": transactionId}
+        print filename
         if interchange:
             payload["interchange"]= True
+            filename = self.saveaudittables(filename, layername)
         files = {'fileUpload': open(filename, 'rb')}
         r = requests.post(self.url + "import.json", params = payload, files = files)
         self.__log(r.url, r.text, payload, "POST")
