@@ -35,12 +35,12 @@ options(
 @task
 @cmdopts([
     ('clean', 'c', 'clean out dependencies first'),
-    ('qgis3', '3', 'get dependencies for QGIS 3'),
+    ('python3', '3', 'install dependencies for Python 3'),
 ])
 def setup(options):
     '''install dependencies'''
     clean = getattr(options, 'clean', False)
-    qgis3 = getattr(options, 'qgis3', False)
+    python3 = getattr(options, 'python3', False)
     ext_libs = options.plugin.ext_libs
     ext_src = options.plugin.ext_src
     if clean:
@@ -48,6 +48,11 @@ def setup(options):
     ext_libs.makedirs()
     runtime, test = read_requirements()
     os.environ['PYTHONPATH']=ext_libs.abspath()
+
+    qgisVersion = ''
+    if "QGIS_VERSION_TAG" in os.environ:
+        qgisVersion = os.environ['QGIS_VERSION_TAG']
+
     for req in runtime + test:
         if "#egg" in req:
             urlspec, req = req.split('#egg=')
@@ -60,17 +65,17 @@ def setup(options):
             else:
                 sh('git clone  %s %s' % (urlspec, localpath))
             req = localpath
-        if qgis3:
-            sh('easy_install3 -a -d %(ext_libs)s %(dep)s' % {
-                'ext_libs' : ext_libs.abspath(),
-                'dep' : req
-            })
-        else:
+
+        if not python3 or qgisVersion != 'master':
             sh('easy_install -a -d %(ext_libs)s %(dep)s' % {
                 'ext_libs' : ext_libs.abspath(),
                 'dep' : req
             })
-
+        else:
+            sh('easy_install3 -a -d %(ext_libs)s %(dep)s' % {
+                'ext_libs' : ext_libs.abspath(),
+                'dep' : req
+            })
 
 
 def read_requirements():
