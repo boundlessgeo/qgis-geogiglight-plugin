@@ -1,4 +1,4 @@
 requests
-python-dateutil==1.5
+python-dateutil
 
 # test requirements
