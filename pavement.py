@@ -39,7 +39,6 @@ options(
 def setup(options):
     '''install dependencies'''
     clean = getattr(options, 'clean', False)
-    python3 = getattr(options, 'python3', False)
     ext_libs = options.plugin.ext_libs
     ext_src = options.plugin.ext_src
     if clean:
