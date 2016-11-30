@@ -49,28 +49,23 @@ The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI e
 
 Open the GeoGig navigator by selecting the *GeoGig/GeoGig Navigator* menu.
 
-.. image:: navigator.png
-	:align: center
+.. figure:: img/navigator.png
 
 Click on the *Add GeoGig server* button and you will see the following dialog:
 
-.. image:: addrepos.png
-	:align: center
+.. figure:: img/addrepos.png
 
 Enter the URL to the WebAPI endpoint (example: http://192.168.1.87:8182/) and a name to identify the service. Click on OK
 
 A new entry in the navigator will be added, which will contain all repositories served by the selected endpoint.
 
-.. image:: reposinnavigator.png
-	:align: center
+.. figure:: img/reposinnavigator.png
 
 Clicking on a repository will update the elements in the lower part of the navigator. There you can find the repository information and its history.
 
 The history is shown as a tree, with elements representing branches and under each branch all the versions it contains.
 
-.. image:: versionsinbranch.png
-	:align: center
-
+.. figure:: img/versionsinbranch.png
 
 To remove a GeoGig server from the list of available connections, select it in the repositories tree and click on the delete button in the navigator toolbar. 
 
@@ -83,8 +78,7 @@ New repositories can be added to a GeoGig server. To do it, select the server in
 You will be prompted to enter the name of the repository. 
 
 
-.. image:: createrepo.png
-	:align: center
+.. figure:: img/createrepo.png
 
 A repository with that name will be created in the GeoGig server and added to the navigator tree.
 
@@ -106,13 +100,11 @@ You can also add layers from the navigator tree. Expand the item representing th
 
 If a layer has already been exported (even if it is not in the current QGIS project), but using a version different to the one in the branch, the name of the layer will be rendered in orange. 
 
-.. image:: exportfromtreeorangename.png
-	:align: center
+.. figure:: img/exportfromtreeorangename.png
 
 If you try to add that layer to your project, you will be asked whether you want to use that previously exported version, or the one from the selected branch.
 
-.. image:: confirmexportname.png
-	:align: center
+.. figure:: img/confirmexportname.png
 
 Recovering a given version of a layer
 **************************************
@@ -128,8 +120,7 @@ Adding a layer to a repository
 
 To add a layer to a repository, select the repository in the repositories list and then click on the *Add layer to repository* button. You will see the following dialog.
 
-.. image:: addlayer.png
-	:align: center
+.. figure:: img/addlayer.png
 
 The dropdown list shows all the layers that you have loaded in your current QGIS project and can be added to the repository. 
 
@@ -139,13 +130,11 @@ Select the layer that you want to add to the repository and add a message to des
 
 Layers can be also added from the QGIS interface. Select the layer that you want to import in the QGIS legend and right-click on it. In the context menu, there will be a *GeoGig* section with a menu entry named *Add layer to repository...*.
 
-.. image::  addlayercontext.png
-	:align: center
+.. figure:: img/ addlayercontext.png
 
 Select it and the add layer dialog will be shown.
 
-.. image::  addlayerfromlegend.png
-	:align: center
+.. figure:: img/ addlayerfromlegend.png
 
 In this case, the selector is not used to select the layer to import, but the repository to import to.
 
@@ -153,8 +142,7 @@ When you add the layer to the repository, a new version is created in the reposi
 
 Once a layer is imported into a GeoGig repository, it becomes linked to it. The layer context menu will contain new entries that allow operations with the layer as part of a GeoGig repository. 
 
-.. image::  repolayercontext.png
-	:align: center
+.. figure:: img/ repolayercontext.png
 
 These entries will be explained in further sections of this document.
 
@@ -170,8 +158,7 @@ Editing a GeoGig layer and creating a new version in the repository
 
 To edit a GeoGig layer, just edit it normally, using the QGIS edit functionality. Once you are done editing, you can transfer your changes to the repository by selecting the *Syncronize with repository branch...* in the layer context menu. You will see the following dialog.
 
-.. image:: syncdialog.png
-	:align: center
+.. figure:: img/syncdialog.png
 
 You must enter a message to describe the new version to create (a message describing the changes that are going to be applied to the layer).
 
@@ -194,18 +181,15 @@ When you synchronize your local layer (uploading your local changes and fetching
 
 When a sync operation results in conflicts, you will see a message like this one:
 
-.. image:: conflictsmessage.png
-	:align: center
+.. figure:: img/conflictsmessage.png
 
 Click on *Yes* to open the conflict solving interface, which looks like this.
 
-.. image:: conflictsdialog.png
-   :align: center
+.. figure:: img/conflictsdialog.png
 
 On the left side you will find a list of all conflicted features, grouped by layer. Clicking a feature item will display the conflicting values in the table and canvas on the right side:
 
-.. image:: singleconflict.png
-	:align: center
+.. figure:: img/singleconflict.png
 
 The table shows all attributes and the corresponding values for the two versions in conflict:
 
@@ -218,11 +202,9 @@ Conflicting values will be shown in *yellow*, and the corresponding *Merged* cel
 
 Solving a conflict is done by selecting the value to use from any of the three columns (*Remote*,  *Local*, *Origin*). Click the version to use, and its value will be put in the *Merged* column. The row will not be shown as conflicted anymore.
 
-.. image:: conflictunsolved.png
-	:align: center
+.. figure:: img/conflictunsolved.png
 
-.. image:: conflictsolved.png
-	:align: center
+.. figure:: img/conflictsolved.png
 
 Once the conflict for a given attribute has been solved, you can still click a cell to use its value in the merged feature. You can even do it for  attributes that have no conflicts.
 
@@ -252,32 +234,25 @@ Visualizing changes using the comparison viewer
 
 To visualize the changes introduced by a given version (that is, the difference between that version and previous one in the history) in the comparison viewer, right-click on it and select the *Show changes introduced by this version* menu. This will open the comparison viewer.
 
-.. image:: comparisonviewer.png
-	:align: center
+.. figure:: img/comparisonviewer.png
 
 The compared versions are listed in the *Versions to Compare* section at the top of the dialog. When the dialog is opened, it compares the selected version with its parent. You can change any of the versions to be compared by clicking the button next to each text box, which will open the version selector dialog:
 
-.. image:: referenceselector.png
-	:align: center
+.. figure:: img/referenceselector.png
 
 Click *OK* and the selected version will be set in the Comparison Viewer.
 
 Changes are listed in the left-hand side tree, grouped into layers. Expanding the elements in the tree, you can see which features have been edited. Clicking on any of these features, the right-hand side table will be populated with the details of the change.
 
-.. image::  comparisontable.png
-	:align: center
+.. figure:: img/ comparisontable.png
 
 For geometries, a more detailed view is available by right clicking on the geometry attribute and selecting the *Show geometry changes* menu.
 
-.. image::  geometrychangescontext.png
-	:align: center
+.. figure:: img/ geometrychangescontext.png
 
 The geometry comparison viewer will be opened, showing the geometries for both versions of the feature.
 
-.. image::  geometrychangesdialog.png
-	:align: center
-
-
+.. figure:: img/ geometrychangesdialog.png
 
 Removing a layer from a repository
 ***********************************
@@ -293,8 +268,6 @@ You can add tags to any version in the repository history. To add a tag, select 
 
 When a version has a tag, it will be shown in the history tree
 
-.. image:: tagintree.png
-	:align: center
+.. figure:: img/tagintree.png
 
 To remove a tag from a version, right-click on the version item and select *Delete tags from this version*.
-
