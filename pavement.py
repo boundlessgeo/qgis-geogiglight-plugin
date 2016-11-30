@@ -35,7 +35,6 @@ options(
 @task
 @cmdopts([
     ('clean', 'c', 'clean out dependencies first'),
-    ('python3', '3', 'install dependencies for Python 3'),
 ])
 def setup(options):
     '''install dependencies'''
@@ -49,9 +48,11 @@ def setup(options):
     runtime, test = read_requirements()
     os.environ['PYTHONPATH']=ext_libs.abspath()
 
-    qgisVersion = ''
-    if "QGIS_VERSION_TAG" in os.environ:
-        qgisVersion = os.environ['QGIS_VERSION_TAG']
+    try:
+        import pip
+    except:
+        error('FATAL: Unable to import pip, please install it first!')
+        sys.exit(1)
 
     for req in runtime + test:
         if "#egg" in req:
@@ -66,16 +67,9 @@ def setup(options):
                 sh('git clone  %s %s' % (urlspec, localpath))
             req = localpath
 
-        if not python3 or qgisVersion != 'master':
-            sh('easy_install -a -d %(ext_libs)s %(dep)s' % {
-                'ext_libs' : ext_libs.abspath(),
-                'dep' : req
-            })
-        else:
-            sh('easy_install3 -a -d %(ext_libs)s %(dep)s' % {
-                'ext_libs' : ext_libs.abspath(),
-                'dep' : req
-            })
+        pip.main(['install',
+                  '--install-option="--prefix={}"'.format(ext_libs.abspath()),
+                  req])
 
 
 def read_requirements():
