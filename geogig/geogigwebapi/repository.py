@@ -39,9 +39,9 @@ import xml.etree.ElementTree as ET
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QTimer, QObject, QPyNullVariant
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QTimer, QObject
+from qgis.PyQt.QtGui import QCursor
 from qgis.PyQt.QtWidgets import QApplication
-from PyQt4.Qt import QCursor
 
 from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
 

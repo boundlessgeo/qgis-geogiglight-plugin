@@ -35,7 +35,7 @@ import webbrowser
 from collections import defaultdict
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QUrl, QSize
+from qgis.PyQt.QtCore import Qt, QUrl, QSize, QT_VERSION_STR
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QVBoxLayout,
@@ -57,7 +57,6 @@ from qgis.utils import iface
 
 from geogig import config
 from geogig.repowatcher import repoWatcher
-
 
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer
@@ -86,6 +85,7 @@ from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException, CannotPushException, readRepos
 
 
+qtVersion = int(QT_VERSION_STR.split(".")[0])
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 
 def icon(f):
@@ -146,8 +146,9 @@ class NavigatorDialog(BASE, WIDGET):
         with open(resourceFile("repodescription.css")) as f:
             sheet = "".join(f.readlines())
         self.repoDescription.document().setDefaultStyleSheet(sheet)
-        self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
-        self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
+        if qtVersion < 5:
+            self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
+            self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
 
         self.versionsTree = HistoryViewer()
         layout = QVBoxLayout()
