@@ -68,7 +68,8 @@ def setup(options):
             req = localpath
 
         pip.main(['install',
-                  '--install-option="--prefix={}"'.format(ext_libs.abspath()),
+                  '-t',
+                  ext_libs.abspath(),
                   req])
 
 
