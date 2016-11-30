@@ -24,12 +24,14 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-from commitish import Commitish
 import datetime
 import time
+
+from commitish import Commitish
 from geogig.tools.utils import relativeDate
 
 NULL_ID = "0" * 40
+
 
 class Commit(Commitish):
 

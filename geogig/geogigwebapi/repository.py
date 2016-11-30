@@ -24,41 +24,49 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
-import re
-import requests
-from commit import Commit
-from diff import Diffentry, ConflictDiff
-from commitish import Commitish
 import os
-from geogig.tools.utils import userFolder, resourceFile, tempFilenameInTempFolder
+import re
 import json
-from geogig.geogigwebapi.commit import NULL_ID
-from datetime import datetime
 import time
 import sqlite3
-from geogig.gui.executor import execute
+from datetime import datetime
 import shutil
-from qgis.core import *
+import xml.etree.ElementTree as ET
+
+import requests
+from requests.exceptions import HTTPError, ConnectionError
+
 from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject, QPyNullVariant
 from PyQt4.QtGui import QApplication
 from PyQt4.Qt import QCursor
+
+from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
+
 from geogig import config
-from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
-import xml.etree.ElementTree as ET
-from geogig.tools.layers import formatSource, namesFromLayer
-from requests.exceptions import HTTPError, ConnectionError
 from geogig.config import GENERAL, LOG_SERVER_CALLS, getConfigValue
+
+from geogig.geogigwebapi.commit import NULL_ID, Commit
+from geogig.geogigwebapi.commitish import Commitish
+from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
+
+from geogig.gui.executor import execute
+
+from geogig.tools.layers import formatSource, namesFromLayer
+from geogig.tools.utils import userFolder, resourceFile, tempFilenameInTempFolder
+from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
 
 
 class GeoGigException(Exception):
     pass
 
+
 class MergeConflictsException(GeoGigException):
     pass
 
+
 class CannotPushException(GeoGigException):
     pass
+
 
 def _resolveref(ref):
     '''
@@ -83,6 +91,7 @@ def _ensurelist(o):
         return o
     else:
         return [o]
+
 
 class Repository(object):
 
@@ -321,7 +330,6 @@ class Repository(object):
             self._checkoutbranch("refs/heads/master", transactionId)
         self.closeTransaction(transactionId)
 
-
     def revparse(self, rev):
         '''Returns the SHA-1 of a given element, represented as a string'''
         if SHA_MATCHER.match(rev) is not None:
@@ -344,7 +352,6 @@ class Repository(object):
         r = requests.get(url, params=params)
         r.raise_for_status()
         return r.json()["task"]["id"]
-
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -435,7 +442,7 @@ class Repository(object):
                     except:
                         return None
                     def _ensureNone(v):
-                        if isinstance(v, QPyNullVariant):
+                        if isinstance(v, NULL):
                             return None
                         else:
                             return v
@@ -654,6 +661,7 @@ class Repository(object):
             self.closeTransaction(transactionId)
             return []
 
+
 class TaskChecker(QObject):
     taskIsFinished = pyqtSignal()
     def __init__(self, url, taskid):
@@ -675,13 +683,16 @@ class TaskChecker(QObject):
         else:
             QTimer.singleShot(500, self.checkTask)
 
+
 repos = []
 repoEndpoints = {}
 availableRepoEndpoints = {}
 
+
 def addRepo(repo):
     global repos
     repos.append(repo)
+
 
 def removeRepo(repo):
     global repos
@@ -689,6 +700,7 @@ def removeRepo(repo):
         if repo.url == r.url:
             repos.remove(r)
             break
+
 
 def addRepoEndpoint(url, title):
     global repoEndpoints
@@ -699,6 +711,7 @@ def addRepoEndpoint(url, title):
     repos.extend(_repos)
     availableRepoEndpoints[title] = url
     return _repos
+
 
 def removeRepoEndpoint(title):
     global repoEndpoints
@@ -712,6 +725,7 @@ def removeRepoEndpoint(title):
     if title in availableRepoEndpoints:
         del availableRepoEndpoints[title]
     saveRepoEndpoints()
+
 
 def saveRepoEndpoints():
     filename = os.path.join(userFolder(), "repositories")
@@ -735,6 +749,7 @@ def repositoriesFromUrl(url, title):
         repos.append(Repository(url + "repos/%s/" % name, title, name))
 
     return repos
+
 
 def createRepoAtUrl(url, group, name):
     if not url.endswith("/"):
@@ -764,6 +779,5 @@ def readRepos():
                 availableRepoEndpoints[r["title"]] = r["url"]
             except:
                 pass
-
 
 readRepos()

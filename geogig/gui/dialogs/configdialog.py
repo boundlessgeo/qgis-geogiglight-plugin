@@ -26,16 +26,31 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt4.QtCore import Qt, QSettings
+from PyQt4.QtGui import (QDialog,
+                         QIcon,
+                         QVBoxLayout,
+                         QTreeWidget,
+                         QDialogButtonBox,
+                         QTreeWidgetItem,
+                         QTreeWidgetItemIterator,
+                         QHBoxLayout,
+                         QLineEdit,
+                         QLabel,
+                         QSizePolicy,
+                         QFileDialog,
+                         QWidget
+                        )
 from qgis.gui import QgsFilterLineEdit
 from geogig import config
 
-class ConfigDialog(QtGui.QDialog):
 
-    versioIcon = QtGui.QIcon(os.path.dirname(__file__) + "/../../ui/resources/geogig-16.png")
+class ConfigDialog(QDialog):
+
+    versioIcon = QIcon(os.path.dirname(__file__) + "/../../ui/resources/geogig-16.png")
 
     def __init__(self):
-        QtGui.QDialog.__init__(self)
+        QDialog.__init__(self)
         self.setupUi()
         if hasattr(self.searchBox, 'setPlaceholderText'):
             self.searchBox.setPlaceholderText(self.tr("Search..."))
@@ -45,17 +60,17 @@ class ConfigDialog(QtGui.QDialog):
     def setupUi(self):
         self.resize(640, 450)
 
-        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setMargin(0)
         self.searchBox = QgsFilterLineEdit(self)
         self.verticalLayout.addWidget(self.searchBox)
-        self.tree = QtGui.QTreeWidget(self)
+        self.tree = QTreeWidget(self)
         self.tree.setAlternatingRowColors(True)
         self.verticalLayout.addWidget(self.tree)
-        self.buttonBox = QtGui.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
+        self.buttonBox = QDialogButtonBox(self)
+        self.buttonBox.setOrientation(Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.setWindowTitle("Configuration options")
@@ -96,7 +111,7 @@ class ConfigDialog(QtGui.QDialog):
 
 
     def _getItem(self, name, icon, params):
-        item = QtGui.QTreeWidgetItem()
+        item = QTreeWidgetItem()
         item.setText(0, name)
         item.setIcon(0, icon)
         for param in params:
@@ -106,32 +121,32 @@ class ConfigDialog(QtGui.QDialog):
         return item
 
     def accept(self):
-        iterator = QtGui.QTreeWidgetItemIterator(self.tree)
+        iterator = QTreeWidgetItemIterator(self.tree)
         value = iterator.value()
         while value:
             if hasattr(value, 'checkValue'):
                 if value.checkValue():
-                    value.setBackgroundColor(1, QtCore.Qt.white)
+                    value.setBackgroundColor(1, Qt.white)
                 else:
-                    value.setBackgroundColor(1, QtCore.Qt.yellow)
+                    value.setBackgroundColor(1, Qt.yellow)
                     return
 
             iterator += 1
             value = iterator.value()
-        iterator = QtGui.QTreeWidgetItemIterator(self.tree)
+        iterator = QTreeWidgetItemIterator(self.tree)
         value = iterator.value()
         while value:
             if hasattr(value, 'saveValue'):
                 value.saveValue()
             iterator += 1
             value = iterator.value()
-        QtGui.QDialog.accept(self)
+        QDialog.accept(self)
 
 
-class TreeSettingItem(QtGui.QTreeWidgetItem):
+class TreeSettingItem(QTreeWidgetItem):
 
     def __init__(self, tree, parent, name, description, defaultValue, paramType, check):
-        QtGui.QTreeWidgetItem.__init__(self, parent)
+        QTreeWidgetItem.__init__(self, parent)
         self.parent = parent
         self.name = name
         self.check = check
@@ -139,46 +154,46 @@ class TreeSettingItem(QtGui.QTreeWidgetItem):
         self.setText(0, description)
         self.tree = tree
         if paramType == config.TYPE_FOLDER:
-            self.value = QtCore.QSettings().value(name, defaultValue = defaultValue)
-            layout = QtGui.QHBoxLayout()
+            self.value = QSettings().value(name, defaultValue = defaultValue)
+            layout = QHBoxLayout()
             layout.setContentsMargins(0, 0, 0, 0)
-            self.lineEdit = QtGui.QLineEdit()
+            self.lineEdit = QLineEdit()
             self.lineEdit.setText(self.value)
-            self.label = QtGui.QLabel()
+            self.label = QLabel()
             self.label.setText("<a href='#'> Browse</a>")
-            self.lineEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             layout.addWidget(self.lineEdit)
             layout.addWidget(self.label)
             def edit():
-                folder =  QtGui.QFileDialog.getExistingDirectory(tree, description, self.value)
+                folder = QFileDialog.getExistingDirectory(tree, description, self.value)
                 if folder:
                     self.lineEdit.setText(folder)
             self.label.linkActivated.connect(edit)
-            w = QtGui.QWidget()
+            w = QWidget()
             w.setLayout(layout)
             self.tree.setItemWidget(self, 1, w)
         elif isinstance(defaultValue, bool):
-            self.value = QtCore.QSettings().value(name, defaultValue = defaultValue, type = bool)
+            self.value = QSettings().value(name, defaultValue = defaultValue, type = bool)
             if self.value:
-                self.setCheckState(1, QtCore.Qt.Checked)
+                self.setCheckState(1, Qt.Checked)
             else:
-                self.setCheckState(1, QtCore.Qt.Unchecked)
+                self.setCheckState(1, Qt.Unchecked)
         else:
-            self.value = QtCore.QSettings().value(name, defaultValue = defaultValue)
-            self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
+            self.value = QSettings().value(name, defaultValue = defaultValue)
+            self.setFlags(self.flags() | Qt.ItemIsEditable)
             self.setText(1, unicode(self.value))
 
     def getValue(self):
         if self.paramType == config.TYPE_FOLDER:
             return self.lineEdit.text()
         elif isinstance(self.value, bool):
-            return self.checkState(1) == QtCore.Qt.Checked
+            return self.checkState(1) == Qt.Checked
         else:
             return self.text(1)
 
     def saveValue(self):
         self.value = self.getValue()
-        QtCore.QSettings().setValue(self.name, self.value)
+        QSettings().setValue(self.name, self.value)
 
     def checkValue(self):
         try:

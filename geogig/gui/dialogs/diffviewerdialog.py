@@ -26,24 +26,37 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4 import QtGui, QtCore, uic
-from qgis.core import *
-from qgis.gui import *
-from geogig.gui.dialogs.geogigref import RefPanel
+import sys
+
+from PyQt4 import uic
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QIcon,
+                         QHBoxLayout,
+                         QColor,
+                         QTableWidgetItem,
+                         QWidget,
+                         QPushButton,
+                         QLabel,
+                         QHeaderView,
+                         QTreeWidgetItem,
+                         QDialog
+                        )
+from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem
+
 from geogig import config
+from geogig.gui.dialogs.geogigref import RefPanel
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
-import sys
-from geogig.geogigwebapi.diff import *
+from geogig.geogigwebapi.diff import FEATURE_MODIFIED, FEATURE_ADDED, FEATURE_REMOVED
 from geogig.geogigwebapi.commit import Commit
 
 MODIFIED, ADDED, REMOVED = "M", "A", "R"
 
-layerIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
-featureIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
-addedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "added.png"))
-removedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "removed.png"))
-modifiedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "modified.gif"))
+layerIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
+featureIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
+addedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "added.png"))
+removedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "removed.png"))
+modifiedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "modified.gif"))
 
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
@@ -53,25 +66,25 @@ WIDGET, BASE = uic.loadUiType(
 class DiffViewerDialog(WIDGET, BASE):
 
     def __init__(self, parent, repo, refa, refb):
-        QtGui.QDialog.__init__(self, parent,
-                               QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        super(DiffViewerDialog).__init__(self, parent,
+                               Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.repo = repo
 
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                            QtCore.Qt.WindowSystemMenuHint)
+                            Qt.WindowSystemMenuHint)
 
         self.commit1 = refa
         self.commit1Panel = RefPanel(self.repo, refa, onlyCommits = False)
-        layout = QtGui.QHBoxLayout()
+        layout = QHBoxLayout()
         layout.setSpacing(0)
         layout.setMargin(0)
         layout.addWidget(self.commit1Panel)
         self.commit1Widget.setLayout(layout)
         self.commit2 = refb
         self.commit2Panel = RefPanel(self.repo, refb, onlyCommits = False)
-        layout = QtGui.QHBoxLayout()
+        layout = QHBoxLayout()
         layout.setSpacing(0)
         layout.setMargin(0)
         layout.addWidget(self.commit2Panel)
@@ -99,8 +112,8 @@ class DiffViewerDialog(WIDGET, BASE):
             self.attributesTable.clear()
             self.attributesTable.setRowCount(0)
             return
-        color = {"MODIFIED": QtGui.QColor(255, 170, 0), "ADDED":QtCore.Qt.green,
-                 "REMOVED":QtCore.Qt.red , "NO_CHANGE":QtCore.Qt.white}
+        color = {"MODIFIED": QColor(255, 170, 0), "ADDED":Qt.green,
+                 "REMOVED":Qt.red , "NO_CHANGE":Qt.white}
         path = current.layername + "/" + current.featureid
         featurediff = self.changes[path].featurediff()
         self.attributesTable.clear()
@@ -127,35 +140,35 @@ class DiffViewerDialog(WIDGET, BASE):
             self.attributesTable.setItem(i, 0, DiffItem(oldvalue))
             self.attributesTable.setItem(i, 1, DiffItem(newvalue))
             try:
-                self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(""))
+                self.attributesTable.setItem(i, 2, QTableWidgetItem(""))
                 if qgsgeom1 is None or qgsgeom2 is None:
                     if "crs" in attrib:
                         crs = attrib["crs"]
                     qgsgeom1 = QgsGeometry.fromWkt(oldvalue)
                     qgsgeom2 = QgsGeometry.fromWkt(newvalue)
                     if qgsgeom1 is not None and qgsgeom2 is not None:
-                        widget = QtGui.QWidget()
-                        btn = QtGui.QPushButton()
+                        widget = QWidget()
+                        btn = QPushButton()
                         btn.setText("View detail")
                         btn.clicked.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2, crs))
-                        label = QtGui.QLabel()
+                        label = QLabel()
                         label.setText(attrib["changetype"])
-                        layout = QtGui.QHBoxLayout(widget)
+                        layout = QHBoxLayout(widget)
                         layout.addWidget(label);
                         layout.addWidget(btn);
                         layout.setContentsMargins(0, 0, 0, 0)
                         widget.setLayout(layout)
                         self.attributesTable.setCellWidget(i, 2, widget)
                     else:
-                        self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
+                        self.attributesTable.setItem(i, 2, QTableWidgetItem(attrib["changetype"]))
                 else:
-                    self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
+                    self.attributesTable.setItem(i, 2, QTableWidgetItem(attrib["changetype"]))
             except:
-                self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attrib["changetype"]))
+                self.attributesTable.setItem(i, 2, QTableWidgetItem(attrib["changetype"]))
             for col in range(3):
                 self.attributesTable.item(i, col).setBackgroundColor(color[attrib["changetype"]]);
         self.attributesTable.resizeColumnsToContents()
-        self.attributesTable.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.attributesTable.horizontalHeader().setResizeMode(QHeaderView.Stretch)
 
     def viewGeometryChanges(self, g1, g2, crs):
         dlg = GeometryDiffViewerDialog([g1, g2], QgsCoordinateReferenceSystem(crs))
@@ -176,17 +189,17 @@ class DiffViewerDialog(WIDGET, BASE):
             layername = c.path.split("/")[0]
             featureid = c.path.split("/")[-1]
             if layername not in layerItems:
-                item = QtGui.QTreeWidgetItem()
+                item = QTreeWidgetItem()
                 item.setText(0, layername)
                 item.setIcon(0, layerIcon)
                 layerItems[layername] = item
-                addedItem = QtGui.QTreeWidgetItem()
+                addedItem = QTreeWidgetItem()
                 addedItem.setText(0, "Added")
                 addedItem.setIcon(0, addedIcon)
-                removedItem = QtGui.QTreeWidgetItem()
+                removedItem = QTreeWidgetItem()
                 removedItem.setText(0, "Removed")
                 removedItem.setIcon(0, removedIcon)
-                modifiedItem = QtGui.QTreeWidgetItem()
+                modifiedItem = QTreeWidgetItem()
                 modifiedItem.setText(0, "Modified")
                 modifiedItem.setIcon(0, modifiedIcon)
                 layerSubItems[layername] = {FEATURE_ADDED: addedItem,
@@ -208,17 +221,17 @@ class DiffViewerDialog(WIDGET, BASE):
 
 
     def reject(self):
-        QtGui.QDialog.reject(self)
+        QDialog.reject(self)
 
-class FeatureItem(QtGui.QTreeWidgetItem):
+class FeatureItem(QTreeWidgetItem):
     def __init__(self, layername, featureid):
-        QtGui.QTreeWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.setIcon(0, featureIcon)
         self.layername = layername
         self.featureid = featureid
         self.setText(0, featureid)
 
-class DiffItem(QtGui.QTableWidgetItem):
+class DiffItem(QTableWidgetItem):
 
     def __init__(self, value):
         self.value = value
@@ -234,4 +247,4 @@ class DiffItem(QtGui.QTableWidgetItem):
                 s = value.split("(")[0]
         except:
             pass
-        QtGui.QTableWidgetItem.__init__(self, s)
+        QTableWidgetItem.__init__(self, s)

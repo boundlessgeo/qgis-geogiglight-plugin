@@ -28,18 +28,23 @@ import os
 import sys
 import inspect
 import webbrowser
+
+from PyQt4.QtCore import Qt, QSettings
+from PyQt4.QtGui import QIcon, QAction, QMenu, QToolButton, QMessageBox
+
+from qgis.core import QgsMapLayerRegistry, QgsApplication
+
 from geogig import config
-from qgis.core import *
-from qgis.gui import *
-from geogig.tools.utils import *
-from gui.dialogs.configdialog import ConfigDialog
-from geogig.tools.infotool import MapToolGeoGigInfo
-from geogig.tools.layertracking import *
+from geogig.gui.dialogs.configdialog import ConfigDialog
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
-from layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
-from PyQt4 import QtGui, QtCore
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
+
+from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
+
+from geogig.tools.utils import deleteTempFolder
+from geogig.tools.infotool import MapToolGeoGigInfo
+from geogig.tools.layertracking import removeNonexistentTrackedLayers, readTrackedLayers, isRepoLayer
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
@@ -81,7 +86,7 @@ class GeoGigPlugin:
         except Exception as e:
             pass
 
-        QtCore.QSettings().setValue("/qgis/walForSqlite3", False)
+        QSettings().setValue("/qgis/walForSqlite3", False)
 
     def unload(self):
         navigatorInstance.setVisible(False)
@@ -117,31 +122,31 @@ class GeoGigPlugin:
         QgsMapLayerRegistry.instance().layerWasAdded.connect(trackLayer)
         QgsMapLayerRegistry.instance().layerRemoved.connect(layerRemoved)
 
-        icon = QtGui.QIcon(os.path.dirname(__file__) + "/ui/resources/geogig.png")
+        icon = QIcon(os.path.dirname(__file__) + "/ui/resources/geogig.png")
         self.explorerAction = navigatorInstance.toggleViewAction()
         self.explorerAction.setIcon(icon)
         self.explorerAction.setText("GeoGig Navigator")
-        icon = QtGui.QIcon(os.path.dirname(__file__) + "/ui/resources/config.png")
-        self.configAction = QtGui.QAction(icon, "GeoGig Settings", self.iface.mainWindow())
+        icon = QIcon(os.path.dirname(__file__) + "/ui/resources/config.png")
+        self.configAction = QAction(icon, "GeoGig Settings", self.iface.mainWindow())
         self.configAction.triggered.connect(self.openSettings)
-        icon = QtGui.QIcon(os.path.dirname(__file__) + "/ui/resources/identify.png")
-        self.toolAction = QtGui.QAction(icon, "GeoGig Feature Info Tool", self.iface.mainWindow())
+        icon = QIcon(os.path.dirname(__file__) + "/ui/resources/identify.png")
+        self.toolAction = QAction(icon, "GeoGig Feature Info Tool", self.iface.mainWindow())
         self.toolAction.setCheckable(True)
         self.toolAction.triggered.connect(self.setTool)
         helpIcon = QgsApplication.getThemeIcon('/mActionHelpAPI.png')
-        self.helpAction = QtGui.QAction(helpIcon, "GeoGig Plugin Help", self.iface.mainWindow())
+        self.helpAction = QAction(helpIcon, "GeoGig Plugin Help", self.iface.mainWindow())
         self.helpAction.setObjectName("GeoGigHelp")
         self.helpAction.triggered.connect(lambda: webbrowser.open_new("file://" + os.path.join(os.path.dirname(__file__), "docs", "html", "index.html")))
-        self.menu = QtGui.QMenu(self.iface.mainWindow())
+        self.menu = QMenu(self.iface.mainWindow())
         self.menu.setTitle("GeoGig")
         self.menu.addAction(self.explorerAction)
         self.menu.addAction(self.toolAction)
         self.menu.addAction(self.configAction)
         self.menu.addAction(self.helpAction)
         bar = self.iface.layerToolBar()
-        self.toolButton = QtGui.QToolButton()
+        self.toolButton = QToolButton()
         self.toolButton.setMenu(self.menu)
-        self.toolButton.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+        self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
         self.toolButton.setDefaultAction(self.explorerAction)
         useMainMenu = config.getConfigValue(config.GENERAL, config.USE_MAIN_MENUBAR)
         bar.addWidget(self.toolButton)
@@ -157,12 +162,12 @@ class GeoGigPlugin:
         #This crashes QGIS, so we comment it out until finding a solution
         #self.mapTool.setAction(self.toolAction)
 
-        self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, navigatorInstance)
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
 
     def setWarning(self, msg):
-        QtGui.QMessageBox.warning(None, 'Could not complete GeoGig command',
+        QMessageBox.warning(None, 'Could not complete GeoGig command',
                                   msg,
-                                  QtGui.QMessageBox.Ok)
+                                  QMessageBox.Ok)
 
     def setTool(self):
         self.toolAction.setChecked(True)

@@ -25,20 +25,18 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui
+from PyQt4.QtGui import QDialog, QVBoxLayout, QTextBrowser
 
-class HtmlDialog(QtGui.QDialog):
+class HtmlDialog(QDialog):
 
     def __init__(self, title, content, parent = None):
         super(HtmlDialog, self).__init__(parent)
         self.setWindowTitle(title)
-        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(10)
         self.verticalLayout.setMargin(10)
-        self.text = QtGui.QTextBrowser()
+        self.text = QTextBrowser()
         self.text.setHtml(content)
         self.verticalLayout.addWidget(self.text)
         self.setLayout(self.verticalLayout)
         self.resize(400, 400)
-
-

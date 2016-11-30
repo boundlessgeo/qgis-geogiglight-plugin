@@ -3,13 +3,15 @@
 # (c) 2016 Boundless, http://boundlessgeo.com
 # This code is licensed under the GPL 2.0 license.
 #
-from geogig._lessons import GeoGigLesson
-from lessons.lesson import Step
-from lessons.utils import *
+from qgis.core import QgsMapLayerRegistry
 from qgis.utils import iface
+
+from lessons.lesson import Step
+
+from geogig._lessons import GeoGigLesson
+from geogig import tests
 from geogig.tests import _createTestRepo
 from geogig.tests.testplugin import openTestProject, _openNavigator
-from geogig import tests
 from geogig.tools.layers import hasLocalChanges
 
 def checkVersions(n):
@@ -23,10 +25,13 @@ def checkEdited():
     else:
         return False
 
-try:
-    from qgistester.utils import layerFromName
-except:
-    pass
+
+def layerFromName(name):
+    layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
+    for layer in layers:
+        if layer.name() == name:
+            return layer
+
 
 def checkLayerInProject():
     layer = layerFromName("points")
@@ -40,7 +45,3 @@ lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNa
 lesson.addStep("Export layer", "export.html", endcheck=checkLayerInProject, steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "sync.html", endcheck=lambda: checkVersions(2), steptype=Step.MANUALSTEP)
-
-
-
-

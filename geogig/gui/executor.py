@@ -25,18 +25,18 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
+from PyQt4.QtCore import pyqtSignal, QThread, QCoreApplication, Qt, QEventLoop
+from PyQt4.QtGui import QApplication, QCursor
 
-from qgis.core import *
 from geogig import config
-from PyQt4 import QtGui, QtCore
 
 
-class GeoGigThread(QtCore.QThread):
+class GeoGigThread(QThread):
 
-    finished = QtCore.pyqtSignal()
+    finished = pyqtSignal()
 
     def __init__(self, func):
-        QtCore.QThread.__init__(self, config.iface.mainWindow())
+        QThread.__init__(self, config.iface.mainWindow())
         self.func = func
         self.returnValue = []
         self.exception = None
@@ -51,22 +51,23 @@ class GeoGigThread(QtCore.QThread):
 
 _dialog = None
 
+
 def execute(func, useThread = False):
     try:
-        QtCore.QCoreApplication.processEvents()
-        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        QCoreApplication.processEvents()
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         if useThread:
             t = GeoGigThread(func)
-            loop = QtCore.QEventLoop()
-            t.finished.connect(loop.exit, QtCore.Qt.QueuedConnection)
-            QtGui.QApplication.processEvents()
+            loop = QEventLoop()
+            t.finished.connect(loop.exit, Qt.QueuedConnection)
+            QApplication.processEvents()
             t.start()
-            loop.exec_(flags = QtCore.QEventLoop.ExcludeUserInputEvents)
+            loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
             if t.exception is not None:
                 raise t.exception
             return t.returnValue
         else:
             return func()
     finally:
-        QtGui.QApplication.restoreOverrideCursor()
-        QtCore.QCoreApplication.processEvents()
+        QApplication.restoreOverrideCursor()
+        QCoreApplication.processEvents()

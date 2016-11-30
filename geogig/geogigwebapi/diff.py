@@ -33,6 +33,7 @@ ATTRIBUTE_DIFF_MODIFIED, ATTRIBUTE_DIFF_ADDED, ATTRIBUTE_DIFF_REMOVED, ATTRIBUTE
 FEATURE_MODIFIED, FEATURE_ADDED, FEATURE_REMOVED = ["MODIFIED", "ADDED", "REMOVED"]
 LOCAL_FEATURE_ADDED, LOCAL_FEATURE_MODIFIED, LOCAL_FEATURE_REMOVED = 1, 2, 3
 
+
 class Diffentry(object):
 
     '''A difference between two references for a given path'''
@@ -93,9 +94,3 @@ class ConflictDiff(object):
 
     def resolveDeletingFeature(self):
         self.repo.deleteFeature(self.path, self.transactionId)
-
-
-
-
-
-

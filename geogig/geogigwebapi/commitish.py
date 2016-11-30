@@ -64,6 +64,5 @@ class Commitish(object):
             return "Current branch"
         return self.ref
 
-
     def __str__(self):
         return str(self.ref)

@@ -16,7 +16,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
 __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
@@ -27,12 +26,24 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4 import QtGui, QtCore, uic
-from qgis.core import *
-from qgis.gui import *
+import sys
+
+from PyQt4 import uic
+from PyQt4.QtCore import Qt, QSettings, QSize
+from PyQt4.QtGui import (QIcon,
+                         QHBoxLayout,
+                         QTreeWidgetItem,
+                         QMessageBox,
+                         QFont,
+                         QTableWidgetItem,
+                         QPushButton,
+                        )
+
+from qgis.core import QgsMapLayerRegistry, QgsGeometry, QgsFeature
+from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+
 from geogig.tools.utils import loadLayerNoCrsDialog
 from geogig.gui.executor import execute
-import sys
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")
 ptOursStyle = os.path.join(resourcesPath, "pt_ours.qml")
@@ -42,8 +53,8 @@ lineTheirsStyle = os.path.join(resourcesPath, "line_theirs.qml")
 polygonOursStyle = os.path.join(resourcesPath, "polygon_ours.qml")
 polygonTheirsStyle = os.path.join(resourcesPath, "polygon_theirs.qml")
 
-layerIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
-featureIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
+layerIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
+featureIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
 
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
@@ -56,15 +67,15 @@ class ConflictDialog(WIDGET, BASE):
     LOCAL, REMOTE, DELETE = 1,2, 3
 
     def __init__(self, conflicts):
-        QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        super(ConflictDialog).__init__(self, None, Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.solved = False
         self.resolvedConflicts = {}
         self.conflicts = conflicts
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                              QtCore.Qt.WindowSystemMenuHint |
-                              QtCore.Qt.WindowMinMaxButtonsHint)
+                              Qt.WindowSystemMenuHint |
+                              Qt.WindowMinMaxButtonsHint)
 
         self.zoomButton.clicked.connect(self.zoomToFullExtent)
         self.solveButton.clicked.connect(self.solve)
@@ -84,12 +95,12 @@ class ConflictDialog(WIDGET, BASE):
         self.theirsLayer = None
         self.oursLayer = None
 
-        settings = QtCore.QSettings()
-        horizontalLayout = QtGui.QHBoxLayout()
+        settings = QSettings()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(0)
         horizontalLayout.setMargin(0)
         self.mapCanvas = QgsMapCanvas()
-        self.mapCanvas.setCanvasColor(QtCore.Qt.white)
+        self.mapCanvas.setCanvasColor(Qt.white)
         self.mapCanvas.enableAntiAliasing(settings.value("/qgis/enable_anti_aliasing", False, type = bool))
         self.mapCanvas.useImageToRender(settings.value("/qgis/use_qimage_to_render", False, type = bool))
         self.mapCanvas.mapRenderer().setProjectionsEnabled(True)
@@ -114,7 +125,7 @@ class ConflictDialog(WIDGET, BASE):
             if path in topTreeItems:
                 topItem = topTreeItems[path]
             else:
-                topItem = QtGui.QTreeWidgetItem()
+                topItem = QTreeWidgetItem()
                 topItem.setText(0, path)
                 topItem.setIcon(0, layerIcon)
                 topTreeItems[path] = topItem
@@ -129,9 +140,9 @@ class ConflictDialog(WIDGET, BASE):
         value = self.attributesTable.item(row, col).value
         geoms = (self.oursgeom, self.theirsgeom)
         self.attributesTable.setItem(row, 4, ValueItem(value, False, geoms));
-        self.attributesTable.item(row, 0).setBackgroundColor(QtCore.Qt.white);
-        self.attributesTable.item(row, 1).setBackgroundColor(QtCore.Qt.white);
-        self.attributesTable.item(row, 2).setBackgroundColor(QtCore.Qt.white);
+        self.attributesTable.item(row, 0).setBackgroundColor(Qt.white);
+        self.attributesTable.item(row, 1).setBackgroundColor(Qt.white);
+        self.attributesTable.item(row, 2).setBackgroundColor(Qt.white);
         attrib = self.attributesTable.item(row, 3).text()
         if attrib in self.conflicted:
             self.conflicted.remove(attrib)
@@ -180,21 +191,21 @@ class ConflictDialog(WIDGET, BASE):
         self.theirsLayer = None
 
     def solveAllRemote(self):
-        ret = QtGui.QMessageBox.warning(self, "Solve conflict",
+        ret = QMessageBox.warning(self, "Solve conflict",
                                 "Are you sure you want to solve all conflicts using the 'To merge' version?",
-                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                QtGui.QMessageBox.Yes);
-        if ret == QtGui.QMessageBox.Yes:
+                                QMessageBox.Yes | QMessageBox.No,
+                                QMessageBox.Yes);
+        if ret == QMessageBox.Yes:
             self.solved = True
             self.resolvedConflicts = {c.path:self.REMOTE for c in self.conflicts}
             self.close()
 
     def solveAllLocal(self):
-        ret = QtGui.QMessageBox.warning(self, "Solve conflict",
+        ret = QMessageBox.warning(self, "Solve conflict",
             "Are you sure you want to solve all conflict using the 'Local' version?",
-            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-            QtGui.QMessageBox.Yes);
-        if ret == QtGui.QMessageBox.Yes:
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes);
+        if ret == QMessageBox.Yes:
             self.solved = True
             self.resolvedConflicts = {c.path:self.LOCAL for c in self.conflicts}
             self.close()
@@ -249,10 +260,10 @@ class ConflictDialog(WIDGET, BASE):
 
         self.conflicted = []
         for idx, name in enumerate(attribs):
-            font = QtGui.QFont()
+            font = QFont()
             font.setBold(True)
             font.setWeight(75)
-            item = QtGui.QTableWidgetItem(name)
+            item = QTableWidgetItem(name)
             item.setFont(font)
             self.attributesTable.setItem(idx, 3, item);
 
@@ -297,12 +308,12 @@ class ConflictDialog(WIDGET, BASE):
 
 
     def solveModifyAndDelete(self, path, modified):
-        msgBox = QtGui.QMessageBox()
+        msgBox = QMessageBox()
         msgBox.setText("The feature has been modified in one version and deleted in the other one.\n"
                        "How do you want to solve the conflict?")
-        msgBox.addButton(QtGui.QPushButton('Modify'), QtGui.QMessageBox.YesRole)
-        msgBox.addButton(QtGui.QPushButton('Delete'), QtGui.QMessageBox.NoRole)
-        msgBox.addButton(QtGui.QPushButton('Cancel'), QtGui.QMessageBox.RejectRole)
+        msgBox.addButton(QPushButton('Modify'), QMessageBox.YesRole)
+        msgBox.addButton(QPushButton('Delete'), QMessageBox.NoRole)
+        msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
         ret = msgBox.exec_()
         if ret == 0:
             self.resolvedConflicts[path] = modified
@@ -358,20 +369,20 @@ class ConflictDialog(WIDGET, BASE):
 
     def closeEvent(self, evnt):
         if not self.solved:
-            ret = QtGui.QMessageBox.warning(self, "Conflict resolution",
+            ret = QMessageBox.warning(self, "Conflict resolution",
                                   "There are unsolved conflicts.\n"
                                   "Do you really want to exit and abort the sync operation?",
-                                  QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            if ret == QtGui.QMessageBox.No:
+                                  QMessageBox.Yes | QMessageBox.No)
+            if ret == QMessageBox.No:
                 evnt.ignore()
                 return
 
         self.cleanCanvas()
 
-class ValueItem(QtGui.QTableWidgetItem):
+class ValueItem(QTableWidgetItem):
 
     def __init__(self, value, conflicted, geoms = None):
-        QtGui.QTableWidgetItem.__init__(self)
+        QTableWidgetItem.__init__(self)
         self.value = value
         if value is None:
             s = ""
@@ -380,18 +391,18 @@ class ValueItem(QtGui.QTableWidgetItem):
         else:
             s = str(value)
         if conflicted:
-            self.setBackgroundColor(QtCore.Qt.yellow);
+            self.setBackgroundColor(Qt.yellow);
         self.setText(s)
-        self.setFlags(QtCore.Qt.ItemIsEnabled)
+        self.setFlags(Qt.ItemIsEnabled)
 
 
-class ConflictItem(QtGui.QTreeWidgetItem):
+class ConflictItem(QTreeWidgetItem):
 
     def __init__(self, conflict):
-        QtGui.QTreeWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.setText(0, conflict.path)
         self.setIcon(0, featureIcon)
-        self.setSizeHint(0, QtCore.QSize(self.sizeHint(0).width(), 25))
+        self.setSizeHint(0, QSize(self.sizeHint(0).width(), 25))
         self.conflict = conflict
         self._local = None
         self._remote = None

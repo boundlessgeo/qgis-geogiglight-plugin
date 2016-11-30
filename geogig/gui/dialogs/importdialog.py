@@ -24,22 +24,28 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import *
-from PyQt4 import QtGui
-from geogig.tools.layers import *
 import os
+
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QLabel,
+                         QComboBox,
+                         QPlainTextEdit,
+                         QDialogButtonBox,
+                         QPushButton
+                        )
+from qgis.gui import QgsMessageBar
+from qgis.utils import iface
+
 from geogig import config
-from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
-from geogig.tools.utils import *
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException
+from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.gpkgsync import getCommitId
+from geogig.tools.layers import resolveLayer, getVectorLayers, namesFromLayer
 
 
-class ImportDialog(QtGui.QDialog):
+class ImportDialog(QDialog):
 
     def __init__(self, parent, repo = None, layer = None):
         super(ImportDialog, self).__init__(parent)
@@ -50,46 +56,46 @@ class ImportDialog(QtGui.QDialog):
 
     def initGui(self):
         self.setWindowTitle('Add layer to GeoGig repository')
-        verticalLayout = QtGui.QVBoxLayout()
+        verticalLayout = QVBoxLayout()
 
         if self.repo is None:
             repos = repository.repos
-            layerLabel = QtGui.QLabel('Repository')
+            layerLabel = QLabel('Repository')
             verticalLayout.addWidget(layerLabel)
-            self.repoCombo = QtGui.QComboBox()
+            self.repoCombo = QComboBox()
             self.repoCombo.addItems(["%s - %s" % (r.group, r.title) for r in repos])
             self.repoCombo.currentIndexChanged.connect(self.updateBranches)
             verticalLayout.addWidget(self.repoCombo)
         if self.layer is None:
-            layerLabel = QtGui.QLabel('Layer')
+            layerLabel = QLabel('Layer')
             verticalLayout.addWidget(layerLabel)
-            self.layerCombo = QtGui.QComboBox()
+            self.layerCombo = QComboBox()
             layerNames = [layer.name() for layer in getVectorLayers()
                           if layer.source().lower().split("|")[0].split(".")[-1] in["gpkg", "geopkg"]
                           and not isRepoLayer(layer)]
             self.layerCombo.addItems(layerNames)
             verticalLayout.addWidget(self.layerCombo)
 
-        self.branchLabel = QtGui.QLabel("Branch")
+        self.branchLabel = QLabel("Branch")
         verticalLayout.addWidget(self.branchLabel)
 
-        self.branchCombo = QtGui.QComboBox()
+        self.branchCombo = QComboBox()
         self.branches = self.repo.branches() if self.repo is not None else repos[0].branches()
         self.branchCombo.addItems(self.branches)
         verticalLayout.addWidget(self.branchCombo)
 
-        messageLabel = QtGui.QLabel('Message to describe this update')
+        messageLabel = QLabel('Message to describe this update')
         verticalLayout.addWidget(messageLabel)
 
-        self.messageBox = QtGui.QPlainTextEdit()
+        self.messageBox = QPlainTextEdit()
         self.messageBox.textChanged.connect(self.messageHasChanged)
         verticalLayout.addWidget(self.messageBox)
 
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Cancel)
-        self.importButton = QtGui.QPushButton("Add layer")
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
+        self.importButton = QPushButton("Add layer")
         self.importButton.clicked.connect(self.importClicked)
         self.importButton.setEnabled(False)
-        self.buttonBox.addButton(self.importButton, QtGui.QDialogButtonBox.ApplyRole)
+        self.buttonBox.addButton(self.importButton, QDialogButtonBox.ApplyRole)
         self.buttonBox.rejected.connect(self.cancelPressed)
         verticalLayout.addWidget(self.buttonBox)
 

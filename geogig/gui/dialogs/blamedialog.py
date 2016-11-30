@@ -24,12 +24,21 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-from geogig.geogigwebapi.repository import GeoGigException
-from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt, QMetaObject
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QSplitter,
+                         QTableWidget,
+                         QAbstractItemView,
+                         QTableWidgetItem,
+                         QTextBrowser
+                        )
 
-class BlameDialog(QtGui.QDialog):
+from geogig.geogigwebapi.repository import GeoGigException
+
+class BlameDialog(QDialog):
     def __init__(self, repo, path):
-        QtGui.QDialog.__init__(self, None, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        QDialog.__init__(self, None, Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         versions = repo.log(path = path, limit = 1)
         if not versions:
             raise GeoGigException("The selected feature is not versioned yet")
@@ -41,34 +50,32 @@ class BlameDialog(QtGui.QDialog):
     def setupUi(self):
         self.resize(800, 600)
         self.setWindowTitle("Authorship")
-        layout = QtGui.QVBoxLayout()
-        splitter = QtGui.QSplitter(self)
-        splitter.setOrientation(QtCore.Qt.Vertical)
-        self.table = QtGui.QTableWidget(splitter)
+        layout = QVBoxLayout()
+        splitter = QSplitter(self)
+        splitter.setOrientation(Qt.Vertical)
+        self.table = QTableWidget(splitter)
         self.table.setColumnCount(3)
         self.table.setShowGrid(False)
         self.table.verticalHeader().hide()
         self.table.setHorizontalHeaderLabels(["Attribute", "Author", "Value"])
         self.table.setRowCount(len(self.blamedata))
-        self.table.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QtGui.QAbstractItemView.SingleSelection);
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection);
         self.table.selectionModel().selectionChanged.connect(self.selectionChanged)
         for i, name in enumerate(self.blamedata.keys()):
             values = self.blamedata[name]
-            self.table.setItem(i, 0, QtGui.QTableWidgetItem(name));
-            self.table.setItem(i, 1, QtGui.QTableWidgetItem(values[1].authorname));
-            self.table.setItem(i, 2, QtGui.QTableWidgetItem(values[0]));
+            self.table.setItem(i, 0, QTableWidgetItem(name));
+            self.table.setItem(i, 1, QTableWidgetItem(values[1].authorname));
+            self.table.setItem(i, 2, QTableWidgetItem(values[0]));
         self.table.resizeRowsToContents()
         self.table.horizontalHeader().setMinimumSectionSize(250)
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.text = QtGui.QTextBrowser(splitter)
+        self.text = QTextBrowser(splitter)
         layout.addWidget(splitter)
         self.setLayout(layout)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        QMetaObject.connectSlotsByName(self)
 
     def selectionChanged(self):
         idx = self.table.currentRow()
         commit = self.blamedata[self.table.item(idx, 0).text()][1]
         self.text.setText(str(commit))
-
-

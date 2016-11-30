@@ -24,16 +24,33 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
-
-from PyQt4 import QtGui, QtCore
 import datetime
 import os
 import time
-from geogig.geogigwebapi.commitish import Commitish
+
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import (QWidget,
+                         QVBoxLayout,
+                         QHBoxLayout,
+                         QRadioButton,
+                         QComboBox,
+                         QGroupBox,
+                         QDialog,
+                         QDialogButtonBox,
+                         QMessageBox,
+                         QListWidgetItem,
+                         QIcon,
+                         QLineEdit,
+                         QListWidget,
+                         QAbstractItemView,
+                         QSizePolicy,
+                         QToolButton
+                        )
 from qgis.utils import iface
 
-class RefWidget(QtGui.QWidget):
+from geogig.geogigwebapi.commitish import Commitish
+
+class RefWidget(QWidget):
 
     def __init__(self, repo, path = None):
         super(RefWidget, self).__init__()
@@ -42,58 +59,58 @@ class RefWidget(QtGui.QWidget):
         self.initGui()
 
     def initGui(self):
-        verticalLayout = QtGui.QVBoxLayout()
+        verticalLayout = QVBoxLayout()
         verticalLayout.setSpacing(2)
         verticalLayout.setMargin(0)
 
-        verticalLayout2 = QtGui.QVBoxLayout()
+        verticalLayout2 = QVBoxLayout()
         verticalLayout2.setSpacing(2)
         verticalLayout2.setMargin(15)
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(10)
         horizontalLayout.setMargin(0)
-        self.branchRadio = QtGui.QRadioButton('Branch', self)
+        self.branchRadio = QRadioButton('Branch', self)
         self.branchRadio.toggled.connect(self.branchRadioClicked)
         self.branchRadio.setMaximumWidth(200)
         self.branchRadio.setMinimumWidth(200)
         horizontalLayout.addWidget(self.branchRadio)
-        self.comboBranch = QtGui.QComboBox()
+        self.comboBranch = QComboBox()
         for branch in self.repo.branches():
             self.comboBranch.addItem(branch)
         self.comboBranch.setMinimumWidth(200)
         horizontalLayout.addWidget(self.comboBranch)
         verticalLayout2.addLayout(horizontalLayout)
 
-        horizontalLayout2 = QtGui.QHBoxLayout()
+        horizontalLayout2 = QHBoxLayout()
         horizontalLayout2.setSpacing(10)
         horizontalLayout2.setMargin(0)
-        self.tagRadio = QtGui.QRadioButton('Tag', self)
+        self.tagRadio = QRadioButton('Tag', self)
         self.tagRadio.toggled.connect(self.tagRadioClicked)
         self.tagRadio.setMaximumWidth(200)
         self.tagRadio.setMinimumWidth(200)
         horizontalLayout2.addWidget(self.tagRadio)
-        self.comboTag = QtGui.QComboBox()
+        self.comboTag = QComboBox()
         for tag, commitid in self.repo.tags().iteritems():
             self.comboTag.addItem(unicode(tag), commitid)
         horizontalLayout2.addWidget(self.comboTag)
         verticalLayout2.addLayout(horizontalLayout2)
 
-        horizontalLayout3 = QtGui.QHBoxLayout()
+        horizontalLayout3 = QHBoxLayout()
         horizontalLayout3.setSpacing(10)
         horizontalLayout3.setMargin(0)
-        self.commitRadio = QtGui.QRadioButton('Version', self)
+        self.commitRadio = QRadioButton('Version', self)
         self.commitRadio.toggled.connect(self.commitRadioClicked)
         self.commitRadio.setMaximumWidth(200)
         self.commitRadio.setMinimumWidth(200)
         horizontalLayout3.addWidget(self.commitRadio)
-        self.comboCommit = QtGui.QComboBox()
+        self.comboCommit = QComboBox()
         log = self.repo.log(limit = 100)
         for commit in log:
             self.comboCommit.addItem(commit.message.split("\n")[0], commit)
         horizontalLayout3.addWidget(self.comboCommit)
         verticalLayout2.addLayout(horizontalLayout3)
 
-        groupBox = QtGui.QGroupBox("Reference")
+        groupBox = QGroupBox("Reference")
         groupBox.setLayout(verticalLayout2)
 
         verticalLayout.addWidget(groupBox)
@@ -137,7 +154,7 @@ class RefWidget(QtGui.QWidget):
                 self.commitRadio.setChecked(True)
                 self.comboCommit.setCurrentIndex(idx)
 
-class RefDialog(QtGui.QDialog):
+class RefDialog(QDialog):
 
     def __init__(self, repo, path, parent = None):
         super(RefDialog, self).__init__(parent)
@@ -148,8 +165,8 @@ class RefDialog(QtGui.QDialog):
 
 
     def initGui(self):
-        layout = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
+        layout = QVBoxLayout()
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
         self.refwidget = RefWidget(self.repo, self.path)
         layout.addWidget(self.refwidget)
         layout.addWidget(buttonBox)
@@ -166,9 +183,9 @@ class RefDialog(QtGui.QDialog):
         try:
             self.ref = self.refwidget.getref()
         except Exception, e:
-            QtGui.QMessageBox.warning(self, 'Wrong reference',
+            QMessageBox.warning(self, 'Wrong reference',
                         str(e),
-                        QtGui.QMessageBox.Ok)
+                        QMessageBox.Ok)
             return
         self.close()
 
@@ -177,12 +194,12 @@ class RefDialog(QtGui.QDialog):
         self.close()
 
 
-class CommitListItem(QtGui.QListWidgetItem):
+class CommitListItem(QListWidgetItem):
 
-    icon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "person.png"))
+    icon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "person.png"))
 
     def __init__(self, commit):
-        QtGui.QListWidgetItem.__init__(self)
+        QListWidgetItem.__init__(self)
         self.commit = commit
         epoch = time.mktime(commit.committerdate.timetuple())
         offset = datetime.datetime.fromtimestamp (epoch) - datetime.datetime.utcfromtimestamp (epoch)
@@ -191,7 +208,7 @@ class CommitListItem(QtGui.QListWidgetItem):
         self.setIcon(self.icon)
 
 
-class CommitSelectDialog(QtGui.QDialog):
+class CommitSelectDialog(QDialog):
 
     def __init__(self, repo, until = None, path = None, parent = None):
         super(CommitSelectDialog, self).__init__(parent or iface.mainWindow())
@@ -202,15 +219,15 @@ class CommitSelectDialog(QtGui.QDialog):
         self.initGui()
 
     def initGui(self):
-        layout = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
-        self.filterBox = QtGui.QLineEdit()
+        layout = QVBoxLayout()
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
+        self.filterBox = QLineEdit()
         self.filterBox.setPlaceholderText("[enter text or date in dd/mm/yyyy format to filter history]")
         self.filterBox.textChanged.connect(self.filterCommits)
-        self.list = QtGui.QListWidget()
+        self.list = QListWidget()
         self.list.setAlternatingRowColors(True)
-        self.list.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        self.list.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.list.setSelectionBehavior(QAbstractItemView.SelectRows)
         log = self.repo.log(until = self.until, path = self.path, limit = 100)
         for commit in log:
             item = CommitListItem(commit)
@@ -251,9 +268,9 @@ class CommitSelectDialog(QtGui.QDialog):
     def okPressed(self):
         selected = self.list.selectedItems()
         if len(selected) == 0:
-            QtGui.QMessageBox.warning(self, 'No commit selected',
+            QMessageBox.warning(self, 'No commit selected',
                     "Select 1 commits from the commit list.",
-                    QtGui.QMessageBox.Ok)
+                    QMessageBox.Ok)
         else:
             self.ref = selected[0].commit
             self.close()
@@ -263,25 +280,25 @@ class CommitSelectDialog(QtGui.QDialog):
         self.close()
 
 
-class RefPanel(QtGui.QWidget):
+class RefPanel(QWidget):
 
-    refChanged = QtCore.pyqtSignal()
+    refChanged = pyqtSignal()
 
     def __init__(self, repo, ref = None, onlyCommits = True):
         super(RefPanel, self).__init__(None)
         self.repo = repo
         self.ref = ref
         self.onlyCommits = onlyCommits
-        self.horizontalLayout = QtGui.QHBoxLayout(self)
+        self.horizontalLayout = QHBoxLayout(self)
         self.horizontalLayout.setSpacing(2)
         self.horizontalLayout.setMargin(0)
-        self.text = QtGui.QLineEdit()
+        self.text = QLineEdit()
         self.text.setEnabled(False)
         if ref is not None:
             self.text.setText(ref.humantext())
-        self.text.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.horizontalLayout.addWidget(self.text)
-        self.pushButton = QtGui.QToolButton()
+        self.pushButton = QToolButton()
         self.pushButton.setText("...")
         self.pushButton.clicked.connect(self.showSelectionDialog)
         self.pushButton.setEnabled(self.repo is not None)

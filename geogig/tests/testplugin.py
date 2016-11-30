@@ -25,25 +25,29 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
-import ogr
 import sys
 import sqlite3
-from geogig import tests
+from sqlite3 import OperationalError
 import unittest
 import shutil
+
+from PyQt4.QtCore import Qt
+from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint
+from qgis.utils import iface
+
+from geogig import tests
+from geogig.layeractions import updateInfoActions
+from geogig.geogigwebapi import repository
+
+from geogig.gui.dialogs.navigatordialog import navigatorInstance
+
 from geogig.tests import _createTestRepo, conf
 from geogig.tests.testwebapilib import webapiSuite
-from sqlite3 import OperationalError
+from geogig.tests.testgpkg import GeoPackageEditTests
+
+from geogig.tools import layertracking
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog, tempSubfolder
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
-from geogig.geogigwebapi import repository
-from qgis.utils import iface
-from geogig.gui.dialogs.navigatordialog import navigatorInstance
-from qgis.core import *
-from PyQt4 import QtCore
-from geogig.tools import layertracking
-from geogig.layeractions import updateInfoActions
-from geogig.tests.testgpkg import GeoPackageEditTests
 
 try:
     from qgistester.utils import layerFromName
@@ -93,7 +97,7 @@ def _openNavigator(empty = False, group = "test repositories"):
         repository.repoEndpoints = {group:conf['REPOS_SERVER_URL']}
     action = navigatorInstance.toggleViewAction()
     if not action.isChecked():
-        iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, navigatorInstance)
+        iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
     action.trigger()
     action.trigger()
     navigatorInstance.fillTree()

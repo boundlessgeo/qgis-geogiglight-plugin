@@ -1,10 +1,14 @@
-import ogr
-import unittest
 import os
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+import unittest
 import shutil
+
+from osgeo import ogr
+
 from qgis.utils import iface
-from qgis.core import *
+from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsPoint
+
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+
 
 class GeoPackageEditTests(unittest.TestCase):
 

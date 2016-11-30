@@ -27,29 +27,39 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4 import QtGui, QtCore, uic
-from qgis.core import *
-from qgis.gui import *
-from geogig.gui.dialogs.geogigref import RefPanel
+import sys
+import sqlite3
+
+from PyQt4 import uic
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QIcon,
+                         QColor,
+                         QTableWidgetItem,
+                         QHeaderView,
+                         QMenu,
+                         QAction,
+                         QTreeWidgetItem,
+                         QDialog
+                        )
+from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem, QgsFeatureRequest
+
 from geogig import config
 from geogig.gui.executor import execute
+from geogig.gui.dialogs.geogigref import RefPanel
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
-import sys
-from geogig.geogigwebapi.diff import *
 from geogig.geogigwebapi.commit import Commit
-from geogig.tools.layers import namesFromLayer, geogigFidFromGpkgFid
-import sqlite3
-from geogig.tools.layertracking import getTrackingInfo
 from geogig.geogigwebapi.repository import Repository
-from geogig.geogigwebapi.diff import LocalDiff
+from geogig.geogigwebapi.diff import LocalDiff, LOCAL_FEATURE_ADDED, LOCAL_FEATURE_MODIFIED, LOCAL_FEATURE_REMOVED
+from geogig.tools.layers import namesFromLayer, geogigFidFromGpkgFid
+from geogig.tools.layertracking import getTrackingInfo
 
 MODIFIED, ADDED, REMOVED = "M", "A", "R"
 
-layerIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
-featureIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
-addedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "added.png"))
-removedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "removed.png"))
-modifiedIcon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "modified.gif"))
+layerIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
+featureIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
+addedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "added.png"))
+removedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "removed.png"))
+modifiedIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "modified.gif"))
 
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
@@ -59,13 +69,13 @@ WIDGET, BASE = uic.loadUiType(
 class LocalDiffViewerDialog(WIDGET, BASE):
 
     def __init__(self, parent, layer):
-        QtGui.QDialog.__init__(self, parent,
-                               QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        super(LocalDiffViewerDialog).__init__(self, parent,
+                               Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.layer = layer
         self.setupUi(self)
 
         self.setWindowFlags(self.windowFlags() |
-                            QtCore.Qt.WindowSystemMenuHint)
+                            Qt.WindowSystemMenuHint)
 
         self.attributesTable.customContextMenuRequested.connect(self.showContextMenu)
         self.featuresTree.itemClicked.connect(self.treeItemClicked)
@@ -77,8 +87,8 @@ class LocalDiffViewerDialog(WIDGET, BASE):
     def treeItemClicked(self, item):
         if item.childCount():
             return
-        color = {"MODIFIED": QtGui.QColor(255, 170, 0), "ADDED":QtCore.Qt.green,
-                 "REMOVED":QtCore.Qt.red , "NO_CHANGE":QtCore.Qt.white}
+        color = {"MODIFIED": QColor(255, 170, 0), "ADDED":Qt.green,
+                 "REMOVED":Qt.red , "NO_CHANGE":Qt.white}
         changeTypeName = ["", "ADDED", "MODIFIED", "REMOVED"]
         path = item.text(0)
         if path not in self.changes:
@@ -106,11 +116,11 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                     pass
                 if oldvalue == newvalue:
                     attribChangeType = "NO_CHANGE"
-            self.attributesTable.setItem(i, 2, QtGui.QTableWidgetItem(attribChangeType))
+            self.attributesTable.setItem(i, 2, QTableWidgetItem(attribChangeType))
             for col in range(3):
                 self.attributesTable.item(i, col).setBackgroundColor(color[attribChangeType]);
         self.attributesTable.resizeColumnsToContents()
-        self.attributesTable.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.attributesTable.horizontalHeader().setResizeMode(QHeaderView.Stretch)
 
     def showContextMenu(self, point):
         row = self.attributesTable.selectionModel().currentIndex().row()
@@ -122,8 +132,8 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         except:
             return
         if qgsgeom1 is not None and qgsgeom2 is not None:
-            menu = QtGui.QMenu()
-            viewAction = QtGui.QAction("View geometry changes...", None)
+            menu = QMenu()
+            viewAction = QAction("View geometry changes...", None)
             viewAction.triggered.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
             menu.addAction(viewAction)
             globalPoint = self.attributesTable.mapToGlobal(point)
@@ -137,17 +147,17 @@ class LocalDiffViewerDialog(WIDGET, BASE):
     def computeDiffs(self):
         self.featuresTree.clear()
         self.changes = self.localChanges(self.layer)
-        layerItem = QtGui.QTreeWidgetItem()
+        layerItem = QTreeWidgetItem()
         layerItem.setText(0, self.layer.name())
         layerItem.setIcon(0, layerIcon)
         self.featuresTree.addTopLevelItem(layerItem)
-        addedItem = QtGui.QTreeWidgetItem()
+        addedItem = QTreeWidgetItem()
         addedItem.setText(0, "Added")
         addedItem.setIcon(0, addedIcon)
-        removedItem = QtGui.QTreeWidgetItem()
+        removedItem = QTreeWidgetItem()
         removedItem.setText(0, "Removed")
         removedItem.setIcon(0, removedIcon)
-        modifiedItem = QtGui.QTreeWidgetItem()
+        modifiedItem = QTreeWidgetItem()
         modifiedItem.setText(0, "Modified")
         modifiedItem.setIcon(0, modifiedIcon)
         layerSubItems = {LOCAL_FEATURE_ADDED: addedItem,
@@ -155,7 +165,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                          LOCAL_FEATURE_MODIFIED: modifiedItem}
 
         for c in self.changes.values():
-            item = QtGui.QTreeWidgetItem()
+            item = QTreeWidgetItem()
             item.setText(0, c.fid)
             item.setIcon(0, featureIcon)
             layerSubItems[c.changetype].addChild(item)
@@ -170,7 +180,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
 
 
     def reject(self):
-        QtGui.QDialog.reject(self)
+        QDialog.reject(self)
 
     def localChanges(self, layer):
         filename, layername = namesFromLayer(layer)
@@ -206,7 +216,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         return changesdict
 
 
-class DiffItem(QtGui.QTableWidgetItem):
+class DiffItem(QTableWidgetItem):
 
     def __init__(self, value):
         self.value = value
@@ -222,4 +232,4 @@ class DiffItem(QtGui.QTableWidgetItem):
                 s = value.split("(")[0]
         except:
             pass
-        QtGui.QTableWidgetItem.__init__(self, s)
+        QTableWidgetItem.__init__(self, s)

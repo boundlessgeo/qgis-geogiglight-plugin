@@ -25,53 +25,55 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 from functools import partial
+
+from PyQt4.QtGui import QAction, QMessageBox
+
+from qgis.core import QgsMapLayer
+from qgis.gui import QgsMessageBar
+
 from geogig import config
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import iface
-from geogig.tools.utils import *
-from geogig.tools.layers import namesFromLayer, hasLocalChanges
-from geogig.tools.layertracking import *
-from geogig.gui.dialogs.importdialog import ImportDialog
-from geogig.gui.dialogs.userconfigdialog import *
-from PyQt4 import QtGui
-from geogig.tools.gpkgsync import syncLayer
+from geogig.repowatcher import repoWatcher
+
 from geogigwebapi import repository
 from geogigwebapi.repository import Repository
 from geogigwebapi.commit import Commit
+
+from geogig.gui.dialogs.importdialog import ImportDialog
+from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
-from geogig.tools.gpkgsync import getCommitId
-from geogig.repowatcher import repoWatcher
-from gui.dialogs.geogigref import CommitSelectDialog
-from tools.layertracking import getTrackingInfo
-from tools.gpkgsync import applyLayerChanges
+from geogig.gui.dialogs.geogigref import CommitSelectDialog
 from geogig.gui.dialogs import commitdialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
+
+from geogig.tools.gpkgsync import syncLayer, getCommitId, applyLayerChanges
+from geogig.tools.layers import namesFromLayer, hasLocalChanges
+from geogig.tools.layertracking import getTrackingInfo
+
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
     canConnect = addInfoActions(layer)
-    separatorAction = QtGui.QAction("", config.iface.legendInterface())
+    separatorAction = QAction("", config.iface.legendInterface())
     separatorAction.setSeparator(True)
     config.iface.legendInterface().addLegendLayerAction(separatorAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(separatorAction, layer)
-    syncAction = QtGui.QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
+    syncAction = QAction(u"Sync layer with repository branch...", config.iface.legendInterface())
     syncAction.triggered.connect(partial(syncLayer, layer))
     config.iface.legendInterface().addLegendLayerAction(syncAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
-    changeVersionAction = QtGui.QAction(u"Change to a different version...", config.iface.legendInterface())
+    changeVersionAction = QAction(u"Change to a different version...", config.iface.legendInterface())
     changeVersionAction.triggered.connect(partial(changeVersion, layer))
     config.iface.legendInterface().addLegendLayerAction(changeVersionAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
-    revertChangeAction = QtGui.QAction(u"Revert changes introduced by a version...", config.iface.legendInterface())
+    revertChangeAction = QAction(u"Revert changes introduced by a version...", config.iface.legendInterface())
     revertChangeAction.triggered.connect(partial(revertChange, layer))
     config.iface.legendInterface().addLegendLayerAction(revertChangeAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertChangeAction, layer)
-    changesAction = QtGui.QAction(u"Show local changes...", config.iface.legendInterface())
+    changesAction = QAction(u"Show local changes...", config.iface.legendInterface())
     changesAction.triggered.connect(partial(showLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(changesAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(changesAction, layer)
-    revertAction = QtGui.QAction(u"Revert local changes", config.iface.legendInterface())
+    revertAction = QAction(u"Revert local changes", config.iface.legendInterface())
     revertAction.triggered.connect(partial(revertLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
@@ -79,7 +81,7 @@ def setAsRepoLayer(layer):
     for action in layer.geogigActions:
         action.setEnabled(canConnect)
     if not canConnect:
-        refreshAction = QtGui.QAction(u"Retry connecting...", config.iface.legendInterface())
+        refreshAction = QAction(u"Retry connecting...", config.iface.legendInterface())
         refreshAction.triggered.connect(lambda: setAsRepoLayer(layer))
         config.iface.legendInterface().addLegendLayerAction(refreshAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
         config.iface.legendInterface().addLegendLayerActionForLayer(refreshAction, layer)
@@ -94,7 +96,7 @@ def addInfoActions(layer):
     layer.infoActions = []
     try:
         commit = Commit.fromref(repo, commitId)
-        messageAction = QtGui.QAction("Message: '%s'" % commit.message.splitlines()[0], config.iface.legendInterface())
+        messageAction = QAction("Message: '%s'" % commit.message.splitlines()[0], config.iface.legendInterface())
         f = messageAction.font();
         f.setBold(True);
         messageAction.setFont(f);
@@ -102,7 +104,7 @@ def addInfoActions(layer):
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
         layer.infoActions.append(messageAction)
     except:
-        messageAction = QtGui.QAction("Error: Cannot connect with repository", config.iface.legendInterface())
+        messageAction = QAction("Error: Cannot connect with repository", config.iface.legendInterface())
         f = messageAction.font();
         f.setBold(True);
         messageAction.setFont(f);
@@ -110,7 +112,7 @@ def addInfoActions(layer):
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
         layer.infoActions.append(messageAction)
         return False
-    shaAction = QtGui.QAction("Version ID: %s" % commitId, config.iface.legendInterface())
+    shaAction = QAction("Version ID: %s" % commitId, config.iface.legendInterface())
     f = shaAction.font();
     f.setBold(True);
     shaAction.setFont(f);
@@ -124,7 +126,7 @@ def updateInfoActions(layer):
 
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
-    action = QtGui.QAction(u"Add layer to Repository...", config.iface.legendInterface())
+    action = QAction(u"Add layer to Repository...", config.iface.legendInterface())
     action.triggered.connect(partial(addLayer, layer))
     if layer.type() == QgsMapLayer.RasterLayer or layer.storageType() != 'GPKG':
         action.setEnabled(False)
@@ -164,10 +166,10 @@ def revertChange(layer):
 
 def changeVersion(layer):
     if hasLocalChanges(layer):
-        QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
                 "There are local changes that would be overwritten.\n"
                 "Revert them before changing version.",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
     else:
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
@@ -176,9 +178,9 @@ def changeVersion(layer):
         if dlg.ref is not None:
             layers = repo.trees(dlg.ref)
             if tracking.layername not in layers:
-                QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
                 "The selected version does not contain the specified layer.",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
             else:
                 repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
                 config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref,
@@ -191,9 +193,9 @@ def changeVersion(layer):
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
-        QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
                 "Only geopackage layers are supported at the moment",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
         return
     repos = repository.repos
     if repos:
@@ -204,9 +206,9 @@ def addLayer(layer):
             repoWatcher.repoChanged.emit(dlg.repo)
 
     else:
-        QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
                 "No repositories were found",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
 
 
 
@@ -232,11 +234,11 @@ def showLocalChanges(layer):
 
 
 def removeLayer(layer):
-    ret = QtGui.QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
+    ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
                         "Are you sure you want to delete this layer?",
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                        QtGui.QMessageBox.Yes);
-    if ret == QtGui.QMessageBox.No:
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.Yes);
+    if ret == QMessageBox.No:
         return
 
     user, email = config.getUserInfo()

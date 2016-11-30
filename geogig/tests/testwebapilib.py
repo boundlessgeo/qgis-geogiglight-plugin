@@ -1,18 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
 import os
-from geogig.geogigwebapi.repository import Repository, createRepoAtUrl
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
-from qgis.core import *
-from geogig.tools.gpkgsync import getCommitId
+import uuid
+import unittest
+
+from qgis.core import QgsFeatureRequest
+
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
+
+from geogig.geogigwebapi.repository import (Repository,
+                                            createRepoAtUrl,
+                                            repositoriesFromUrl,
+                                            GeoGigException,
+                                            CannotPushException
+                                           )
+
+from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+from geogig.tools.gpkgsync import getCommitId
+
 from geogig.tests import _createTestRepo, _layer
 from geogig.tests import conf
-from geogig.geogigwebapi.repository import repositoriesFromUrl, GeoGigException
-import uuid
-from geogig.geogigwebapi.repository import CannotPushException
 
 
 class WebApiTests(unittest.TestCase):

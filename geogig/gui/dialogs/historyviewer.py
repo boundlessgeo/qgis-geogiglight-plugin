@@ -24,28 +24,45 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
 import os
+from functools import partial
 from collections import defaultdict
-from qgis.core import *
-from qgis.gui import *
-from PyQt4 import QtGui, QtCore
+
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QIcon,
+                         QTreeWidget,
+                         QAbstractItemView,
+                         QMessageBox,
+                         QAction,
+                         QMenu,
+                         QInputDialog,
+                         QTreeWidgetItem,
+                         QLabel,
+                         QTextEdit,
+                         QListWidgetItem,
+                         QDialog,
+                         QVBoxLayout,
+                         QDialogButtonBox
+                        )
+from qgis.gui import QgsMessageBar
+from qgis.utils import iface
+
+from geogig import config
+from geogig.repowatcher import repoWatcher
+
+from geogig.gui.executor import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
-from geogig.gui.executor import execute
 from geogig.gui.dialogs.htmldialog import HtmlDialog
-from geogig import config
+from geogig.gui.dialogs.conflictdialog import ConflictDialog
+
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
-from functools import partial
-from geogig.repowatcher import repoWatcher
 from geogig.tools.layers import hasLocalChanges, addDiffLayer
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
-from qgis.utils import iface
-from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 
 def icon(f):
-    return QtGui.QIcon(os.path.join(os.path.dirname(__file__),
+    return QIcon(os.path.join(os.path.dirname(__file__),
                             os.pardir, os.pardir, "ui", "resources", f))
 
 resetIcon = icon("reset.png")
@@ -58,7 +75,7 @@ tagIcon = icon("tag.gif")
 resetIcon = icon("reset.png")
 mergeIcon = icon("merge-24.png")
 
-class HistoryViewer(QtGui.QTreeWidget):
+class HistoryViewer(QTreeWidget):
 
     def __init__(self, showContextMenu = True):
         super(HistoryViewer, self).__init__()
@@ -67,11 +84,11 @@ class HistoryViewer(QtGui.QTreeWidget):
         self.initGui(showContextMenu)
 
     def initGui(self, showContextMenu):
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.header().setStretchLastSection(True)
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.header().setVisible(False)
         if showContextMenu:
             self.customContextMenuRequested.connect(self.showPopupMenu)
@@ -84,10 +101,10 @@ class HistoryViewer(QtGui.QTreeWidget):
 
     def changeVersion(self, repo, layer, commit):
         if hasLocalChanges(layer):
-            QtGui.QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+            QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
                 "There are local changes that would be overwritten.\n"
                 "Revert them before changing version.",
-                QtGui.QMessageBox.Ok)
+                QMessageBox.Ok)
         else:
             tracking = getTrackingInfo(layer)
             repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commit)
@@ -109,25 +126,25 @@ class HistoryViewer(QtGui.QTreeWidget):
                 for tree in trees:
                     layer = getProjectLayerForGeoGigLayer(self.repo.url, tree)
                     if layer is not None:
-                        changeVersionActions.append(QtGui.QAction(resetIcon, "Change '%s' layer to this version" % tree, None))
+                        changeVersionActions.append(QAction(resetIcon, "Change '%s' layer to this version" % tree, None))
                         changeVersionActions[-1].triggered.connect(partial(self.changeVersion, self.repo, layer, item.commit.commitid))
-                menu = QtGui.QMenu()
-                describeAction = QtGui.QAction(infoIcon, "Show detailed description of this version", None)
+                menu = QMenu()
+                describeAction = QAction(infoIcon, "Show detailed description of this version", None)
                 describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
                 menu.addAction(describeAction)
-                diffAction = QtGui.QAction(diffIcon, "Show changes introduced by this version...", None)
+                diffAction = QAction(diffIcon, "Show changes introduced by this version...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
                 menu.addAction(diffAction)
-                exportDiffAction = QtGui.QAction(diffIcon, "Export changes introduced by this version as new layer", None)
+                exportDiffAction = QAction(diffIcon, "Export changes introduced by this version as new layer", None)
                 exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
                 menu.addAction(exportDiffAction)
-                createBranchAction = QtGui.QAction(newBranchIcon, "Create new branch at this version...", None)
+                createBranchAction = QAction(newBranchIcon, "Create new branch at this version...", None)
                 createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
                 menu.addAction(createBranchAction)
-                createTagAction = QtGui.QAction(tagIcon, "Create new tag at this version...", None)
+                createTagAction = QAction(tagIcon, "Create new tag at this version...", None)
                 createTagAction.triggered.connect(lambda: self.createTag(item))
                 menu.addAction(createTagAction)
-                deleteTagsAction = QtGui.QAction(tagIcon, "Delete tags at this version", None)
+                deleteTagsAction = QAction(tagIcon, "Delete tags at this version", None)
                 deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
                 menu.addAction(deleteTagsAction)
                 if changeVersionActions:
@@ -137,22 +154,22 @@ class HistoryViewer(QtGui.QTreeWidget):
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
-                menu = QtGui.QMenu()
+                menu = QMenu()
                 mergeActions = []
-                menu = QtGui.QMenu()
+                menu = QMenu()
                 for branch in self.repo.branches():
                     if branch != item.branch:
-                        mergeAction = QtGui.QAction(mergeIcon, branch, None)
+                        mergeAction = QAction(mergeIcon, branch, None)
                         mergeAction.triggered.connect(partial(self.mergeInto, branch, item.branch))
                         mergeActions.append(mergeAction)
                 if mergeActions:
-                    mergeMenu = QtGui.QMenu("Merge this branch into")
+                    mergeMenu = QMenu("Merge this branch into")
                     mergeMenu.setIcon(mergeIcon)
                     menu.addMenu(mergeMenu)
                     for action in mergeActions:
                         mergeMenu.addAction(action)
                 if self.topLevelItemCount() > 1 and item.branch != "master":
-                    deleteAction = QtGui.QAction("Delete this branch", None)
+                    deleteAction = QAction("Delete this branch", None)
                     deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
                     menu.addAction(deleteAction)
                 if not menu.isEmpty():
@@ -160,8 +177,8 @@ class HistoryViewer(QtGui.QTreeWidget):
                     menu.exec_(point)
         elif len(selected) == 2:
             if isinstance(selected[0], CommitTreeItem) and isinstance(selected[1], CommitTreeItem):
-                menu = QtGui.QMenu()
-                diffAction = QtGui.QAction(diffIcon, "Show changes between selected versions...", None)
+                menu = QMenu()
+                diffAction = QAction(diffIcon, "Show changes between selected versions...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
                 menu.addAction(diffAction)
                 point = self.mapToGlobal(point)
@@ -174,11 +191,11 @@ class HistoryViewer(QtGui.QTreeWidget):
     def mergeInto(self, mergeInto, branch):
         conflicts = self.repo.merge(branch, mergeInto)
         if conflicts:
-            ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+            ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
                                       "There are conflicts between local and remote changes.\n"
                                       "Do you want to continue and fix them?",
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            if ret == QtGui.QMessageBox.No:
+                                      QMessageBox.Yes | QMessageBox.No)
+            if ret == QMessageBox.No:
                 self.repo.closeTransaction(conflicts[0].transactionId)
                 return
 
@@ -222,19 +239,16 @@ class HistoryViewer(QtGui.QTreeWidget):
         dlg = HtmlDialog("Version description", html, self)
         dlg.exec_()
 
-
     def exportDiffs(self, commit):
         for tree in self.repo.trees(commit.commitid):
             addDiffLayer(self.repo, tree, commit)
-
 
     def showDiffs(self, commit):
         dlg = DiffViewerDialog(self, self.repo, commit.parent, commit)
         dlg.exec_()
 
-
     def createTag(self, item):
-        tagname, ok = QtGui.QInputDialog.getText(self, 'Tag name',
+        tagname, ok = QInputDialog.getText(self, 'Tag name',
                                               'Enter the tag name:')
         if ok:
             self.repo.createtag(item.commit.commitid, tagname)
@@ -250,18 +264,18 @@ class HistoryViewer(QtGui.QTreeWidget):
         w.updateText()
 
     def createBranch(self, ref):
-        text, ok = QtGui.QInputDialog.getText(self, 'Title',
+        text, ok = QInputDialog.getText(self, 'Title',
                                               'Enter the name for the new branch:')
         if ok:
             self.repo.createbranch(ref, text)
             repoWatcher.repoChanged.emit(self.repo)
 
     def deleteBranch(self, branch):
-        ret = QtGui.QMessageBox.question(self, 'Delete Branch',
+        ret = QMessageBox.question(self, 'Delete Branch',
                     'Are you sure you want to delete this branch?',
-                    QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                    QtGui.QMessageBox.No)
-        if ret == QtGui.QMessageBox.No:
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No)
+        if ret == QMessageBox.No:
             return
 
         self.repo.deletebranch(branch)
@@ -278,16 +292,15 @@ class HistoryViewer(QtGui.QTreeWidget):
         self.resizeColumnToContents(0)
 
 
-
-class BranchTreeItem(QtGui.QTreeWidgetItem):
+class BranchTreeItem(QTreeWidgetItem):
 
     def __init__(self, branch, repo, path):
-        QtGui.QTreeWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.branch = branch
         self.ref = branch
         self.repo = repo
         self.path = path
-        self.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
+        self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         self.setText(0, branch)
         self.setIcon(0, branchIcon)
 
@@ -305,9 +318,9 @@ class BranchTreeItem(QtGui.QTreeWidgetItem):
             self.treeWidget().resizeColumnToContents(0)
 
 
-class CommitTreeItemWidget(QtGui.QLabel):
+class CommitTreeItemWidget(QLabel):
     def __init__(self, commit, tags):
-        QtGui.QTextEdit.__init__(self)
+        QTextEdit.__init__(self)
         self.setWordWrap(False)
         self.tags = tags
         self.commit = commit
@@ -328,29 +341,30 @@ class CommitTreeItemWidget(QtGui.QLabel):
         self.setText(text)
 
 
-class CommitTreeItem(QtGui.QTreeWidgetItem):
+class CommitTreeItem(QTreeWidgetItem):
 
     def __init__(self, commit):
-        QtGui.QListWidgetItem.__init__(self)
+        QListWidgetItem.__init__(self)
         self.commit = commit
         self.ref = commit.commitid
 
-class HistoryViewerDialog(QtGui.QDialog):
+
+class HistoryViewerDialog(QDialog):
 
     def __init__(self, repo, layer):
         self.repo = repo
         self.layer = layer
         self.ref = None
-        QtGui.QDialog.__init__(self, config.iface.mainWindow(),
-                               QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        QDialog.__init__(self, config.iface.mainWindow(),
+                               Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         execute(self.initGui)
 
     def initGui(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         self.history = HistoryViewer(False)
         self.history.updateContent(self.repo, self.layer)
         layout.addWidget(self.history)
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
         buttonBox.accepted.connect(self.okPressed)
         buttonBox.rejected.connect(self.cancelPressed)
         layout.addWidget(buttonBox)
@@ -362,9 +376,9 @@ class HistoryViewerDialog(QtGui.QDialog):
     def okPressed(self):
         selected = self.history.getRef()
         if selected is None:
-            QtGui.QMessageBox.warning(self, 'No reference selected',
+            QMessageBox.warning(self, 'No reference selected',
                     "Select a version or branch from the from the history tree.",
-                    QtGui.QMessageBox.Ok)
+                    QMessageBox.Ok)
         else:
             self.ref = selected
             self.close()

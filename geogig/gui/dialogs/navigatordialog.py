@@ -31,7 +31,7 @@ import sqlite3
 import webbrowser
 from collections import defaultdict
 
-from PyQt4 import uic, QtGui
+from PyQt4 import uic
 from PyQt4.QtCore import Qt, QUrl, QSize
 from PyQt4.QtGui import (QIcon,
                          QHeaderView,
@@ -40,14 +40,21 @@ from PyQt4.QtGui import (QIcon,
                          QTreeWidgetItem,
                          QMessageBox,
                          QInputDialog,
-                         QLabel, QHBoxLayout, QSizePolicy,
-                         QWidget, QPushButton, QApplication)
+                         QLabel,
+                         QHBoxLayout,
+                         QSizePolicy,
+                         QWidget,
+                         QPushButton,
+                         QApplication)
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
 from geogig import config
+from geogig.repowatcher import repoWatcher
+
+
 from geogig.gui.executor import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
@@ -56,20 +63,23 @@ from geogig.gui.dialogs.remotesdialog import RemotesDialog
 from geogig.gui.dialogs.remoterefdialog import RemoteRefDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
-from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer
-from geogig.repowatcher import repoWatcher
+from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, updateInfoActions
 from geogig.tools.layers import (getAllLayers,
                                  getVectorLayers,
                                  resolveLayerFromSource,
                                  WrongLayerSourceException,
                                  formatSource)
-from geogig.tools.layertracking import *
-from geogig.tools.utils import *
+from geogig.tools.utils import resourceFile
 from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
-from geogig.tools.layertracking import removeTrackedLayer, getProjectLayerForGeoGigLayer
+from geogig.tools.layertracking import (removeTrackedLayer,
+                                        getProjectLayerForGeoGigLayer,
+                                        removeTrackedForRepo,
+                                        isRepoLayer,
+                                        getTrackingInfoForGeogigLayer,
+                                        getTrackedPathsForRepo
+                                       )
 from geogig.geogigwebapi import repository
-from geogig.geogigwebapi.repository import *
-from geogig.layeractions import updateInfoActions
+from geogig.geogigwebapi.repository import GeoGigException, CannotPushException, readRepos
 
 
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]

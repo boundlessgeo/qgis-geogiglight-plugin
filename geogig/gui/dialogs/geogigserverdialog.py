@@ -2,7 +2,7 @@
 
 """
 ***************************************************************************
-    createrepodialog.py
+    geogigserverdialog.py
     ---------------------
     Date                 : March 2016
     Copyright            : (C) 2016 Boundless, http://boundlessgeo.com
@@ -25,9 +25,10 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui, uic
 import os
 import sys
+
+from PyQt4 import uic
 
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
@@ -37,7 +38,7 @@ WIDGET, BASE = uic.loadUiType(
 class GeoGigServerDialog(WIDGET, BASE):
 
     def __init__(self, url = None, title = None):
-        QtGui.QDialog.__init__(self)
+        super(GeoGigServerDialog).__init__(self)
         self.setupUi(self)
 
         self.buttonBox.accepted.connect(self.okPressed)
@@ -68,4 +69,3 @@ class GeoGigServerDialog(WIDGET, BASE):
     def cancelPressed(self):
         self.title = None
         self.close()
-

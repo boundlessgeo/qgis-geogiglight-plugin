@@ -25,8 +25,10 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
+
+from PyQt4.QtCore import QSettings
 from qgis.core import NULL
-from PyQt4 import QtCore
+
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 
 iface = None
@@ -73,16 +75,16 @@ def getConfigValue(group, name):
             default = param[2]
 
     if isinstance(default, bool):
-        return QtCore.QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, bool)
+        return QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, bool)
     else:
-        v = QtCore.QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, str)
+        v = QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, str)
         if v == NULL:
             v = None
         return v
 
 
 def setConfigValue(group, name, value):
-    return QtCore.QSettings().setValue("/GeoGig/Settings/%s/%s" % (group, name), value)
+    return QSettings().setValue("/GeoGig/Settings/%s/%s" % (group, name), value)
 
 
 def getUserInfo():

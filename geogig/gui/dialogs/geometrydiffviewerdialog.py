@@ -25,12 +25,21 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui, QtCore
-from qgis.core import *
-from qgis.gui import *
-import difflib
-from geogig.tools.utils import loadLayerNoCrsDialog
 import os
+import difflib
+
+from PyQt4.QtCore import Qt, QSettings, QAbstractTableModel
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QTabWidget,
+                         QTableView,
+                         QDialog,
+                         QBrush
+                        )
+from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint
+from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+
+from geogig.tools.utils import loadLayerNoCrsDialog
 from geogig.gui.executor import execute
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")
@@ -40,7 +49,7 @@ polygonBeforeStyle = os.path.join(resourcesPath, "polygon_geomdiff_before.qml")
 polygonAfterStyle = os.path.join(resourcesPath, "polygon_geomdiff_after.qml")
 pointsStyle = os.path.join(resourcesPath, "geomdiff_points.qml")
 
-class GeometryDiffViewerDialog(QtGui.QDialog):
+class GeometryDiffViewerDialog(QDialog):
 
     def __init__(self, geoms, crs, parent = None):
         super(GeometryDiffViewerDialog, self).__init__(parent)
@@ -49,14 +58,14 @@ class GeometryDiffViewerDialog(QtGui.QDialog):
         self.initGui()
 
     def initGui(self):
-        layout = QtGui.QVBoxLayout()
-        self.tab = QtGui.QTabWidget()
-        self.table = QtGui.QTableView()
+        layout = QVBoxLayout()
+        self.tab = QTabWidget()
+        self.table = QTableView()
 
         self.setLayout(layout)
         self.canvas = QgsMapCanvas()
-        self.canvas.setCanvasColor(QtCore.Qt.white)
-        settings = QtCore.QSettings()
+        self.canvas.setCanvasColor(Qt.white)
+        settings = QSettings()
         self.canvas.enableAntiAliasing(settings.value("/qgis/enable_anti_aliasing", False, type = bool))
         self.canvas.useImageToRender(settings.value("/qgis/use_qimage_to_render", False, type = bool))
         self.canvas.mapSettings().setDestinationCrs(self.crs)
@@ -144,12 +153,12 @@ class GeometryDiffViewerDialog(QtGui.QDialog):
         self.canvas.refresh()
 
     def reject(self):
-        QtGui.QDialog.reject(self)
+        QDialog.reject(self)
 
 
-class GeomDiffTableModel(QtCore.QAbstractTableModel):
+class GeomDiffTableModel(QAbstractTableModel):
     def __init__(self, data, parent = None, *args):
-        QtCore.QAbstractTableModel.__init__(self, parent, *args)
+        QAbstractTableModel.__init__(self, parent, *args)
         self.data = data
 
     def rowCount(self, parent = None):
@@ -158,28 +167,28 @@ class GeomDiffTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent = None):
         return 2
 
-    def data(self, index, role = QtCore.Qt.DisplayRole):
+    def data(self, index, role = Qt.DisplayRole):
         if index.isValid():
             values = self.data[index.row()]
-            if role == QtCore.Qt.DisplayRole:
+            if role == Qt.DisplayRole:
                 value = values[index.column()]
                 if value is not None:
                     return "\n".join(value.split(" "))
-            elif role == QtCore.Qt.BackgroundRole:
+            elif role == Qt.BackgroundRole:
                 if index.column() == 0:
                     if values[1] is None:
-                        return QtGui.QBrush(QtCore.Qt.red)
+                        return QBrush(Qt.red)
                     else:
-                        return QtGui.QBrush(QtCore.Qt.white)
+                        return QBrush(Qt.white)
                 else:
                     if values[0] is None:
-                        return QtGui.QBrush(QtCore.Qt.green)
+                        return QBrush(Qt.green)
                     else:
-                        return QtGui.QBrush(QtCore.Qt.white)
+                        return QBrush(Qt.white)
 
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
                 return ["Old geometry", "New geometry"][section]
             else:
                 return str(section + 1)

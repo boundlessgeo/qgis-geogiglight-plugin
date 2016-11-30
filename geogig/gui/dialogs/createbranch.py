@@ -25,40 +25,46 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QDialogButtonBox,
+                         QHBoxLayout,
+                         QLabel,
+                         QLineEdit,
+                         QCheckBox
+                        )
 
 
-class CreateBranchDialog(QtGui.QDialog):
+class CreateBranchDialog(QDialog):
 
     def __init__(self, parent = None):
         super(CreateBranchDialog, self).__init__(parent)
         self.ok = False
         self.initGui()
 
-
     def initGui(self):
         self.setWindowTitle("Create branch")
-        layout = QtGui.QVBoxLayout()
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
+        layout = QVBoxLayout()
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
 
-        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setMargin(0)
 
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        nameLabel = QtGui.QLabel('Branch name')
-        self.nameBox = QtGui.QLineEdit()
+        nameLabel = QLabel('Branch name')
+        self.nameBox = QLineEdit()
         horizontalLayout.addWidget(nameLabel)
         horizontalLayout.addWidget(self.nameBox)
 
-        horizontalLayout2 = QtGui.QHBoxLayout()
+        horizontalLayout2 = QHBoxLayout()
         horizontalLayout2.setSpacing(30)
         horizontalLayout2.setMargin(20)
-        self.forceCheck = QtGui.QCheckBox('Force')
+        self.forceCheck = QCheckBox('Force')
         horizontalLayout2.addWidget(self.forceCheck)
-        self.checkoutCheck = QtGui.QCheckBox('Switch to branch after creating it')
+        self.checkoutCheck = QCheckBox('Switch to branch after creating it')
         horizontalLayout2.addWidget(self.checkoutCheck)
 
         layout.addLayout(horizontalLayout)

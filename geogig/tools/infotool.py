@@ -25,22 +25,24 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtCore, QtGui
-from qgis.core import *
-from qgis.gui import *
-from geogig.tools import layertracking
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QMenu, QAction, QMessageBox
+from qgis.core import QgsVectorLayer, QgsRectangle, QgsFeatureRequest
+from qgis.gui import QgsMapTool, QgsMessageBar
+
+from geogig import config
 from geogig.gui.dialogs.blamedialog import BlameDialog
 from geogig.gui.dialogs.versionsviewer import VersionViewerDialog
-from geogig import config
 from geogig.geogigwebapi.repository import Repository, GeoGigException
 from geogig.tools.layers import geogigFidFromGpkgFid
+from geogig.tools import layertracking
 
 
 class MapToolGeoGigInfo(QgsMapTool):
 
     def __init__(self, canvas):
         QgsMapTool.__init__(self, canvas)
-        self.setCursor(QtCore.Qt.CrossCursor)
+        self.setCursor(Qt.CrossCursor)
 
     def canvasPressEvent(self, e):
         layer = config.iface.activeLayer()
@@ -76,11 +78,11 @@ class MapToolGeoGigInfo(QgsMapTool):
             return
         repo = Repository(trackedlayer.repoUrl)
 
-        menu = QtGui.QMenu()
-        versionsAction = QtGui.QAction("Show all versions of this feature...", None)
+        menu = QMenu()
+        versionsAction = QAction("Show all versions of this feature...", None)
         versionsAction.triggered.connect(lambda: self.versions(repo, trackedlayer.layername, fid))
         menu.addAction(versionsAction)
-        blameAction = QtGui.QAction("Show authorship...", None)
+        blameAction = QAction("Show authorship...", None)
         blameAction.triggered.connect(lambda: self.blame(repo, trackedlayer.layername, fid))
         menu.addAction(blameAction)
         point = config.iface.mapCanvas().mapToGlobal(e.pos())
@@ -92,8 +94,7 @@ class MapToolGeoGigInfo(QgsMapTool):
             dlg = VersionViewerDialog(repo, path)
             dlg.exec_()
         except GeoGigException, e:
-            QtGui.QMessageBox.critical(self.parent(), "Error", "%s" % e)
-
+            QMessageBox.critical(self.parent(), "Error", "%s" % e)
 
     def blame(self, repo, tree, fid):
         try:
@@ -101,4 +102,4 @@ class MapToolGeoGigInfo(QgsMapTool):
             dlg = BlameDialog(repo, path)
             dlg.exec_()
         except GeoGigException, e:
-            QtGui.QMessageBox.critical(self.parent(), "Error", "%s" % e)
+            QMessageBox.critical(self.parent(), "Error", "%s" % e)

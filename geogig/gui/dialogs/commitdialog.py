@@ -25,11 +25,19 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QLabel,
+                         QComboBox,
+                         QPlainTextEdit,
+                         QDialogButtonBox,
+
+                        )
 
 suggestedMessage = ""
 
-class CommitDialog(QtGui.QDialog):
+
+class CommitDialog(QDialog):
 
     def __init__(self, repo, layername,  _message = "", parent = None):
         super(CommitDialog, self).__init__(parent)
@@ -44,14 +52,14 @@ class CommitDialog(QtGui.QDialog):
         self.resize(600, 250)
         self.setWindowTitle('GeoGig')
 
-        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setMargin(5)
 
-        self.branchLabel = QtGui.QLabel("Branch")
+        self.branchLabel = QLabel("Branch")
         self.verticalLayout.addWidget(self.branchLabel)
 
-        self.branchCombo = QtGui.QComboBox()
+        self.branchCombo = QComboBox()
         self.branches = []
         branches = self.repo.branches()
         for branch in branches:
@@ -66,18 +74,18 @@ class CommitDialog(QtGui.QDialog):
         self.branchCombo.setCurrentIndex(idx)
         self.verticalLayout.addWidget(self.branchCombo)
 
-        self.msgLabel = QtGui.QLabel("Message to describe this update")
+        self.msgLabel = QLabel("Message to describe this update")
         self.verticalLayout.addWidget(self.msgLabel)
 
-        self.text = QtGui.QPlainTextEdit()
+        self.text = QPlainTextEdit()
         self.text.setPlainText(self._message)
         self.text.textChanged.connect(self.textHasChanged)
         self.verticalLayout.addWidget(self.text)
 
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(bool(self._message) and bool(self.branches))
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(bool(self._message) and bool(self.branches))
 
         self.setLayout(self.verticalLayout)
         self.buttonBox.accepted.connect(self.okPressed)
@@ -85,12 +93,9 @@ class CommitDialog(QtGui.QDialog):
         self.text.setFocus()
 
     def textHasChanged(self):
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "" and bool(self.branches))
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "" and bool(self.branches))
 
     def okPressed(self):
         self.branch = self.branchCombo.currentText()
         self.message = self.text.toPlainText()
         self.close()
-
-
-

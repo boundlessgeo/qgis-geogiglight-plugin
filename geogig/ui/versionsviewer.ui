@@ -151,7 +151,7 @@
             </font>
            </property>
            <property name="textAlignment">
-            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+            <set>AlignCenter</set>
            </property>
           </column>
           <column>
@@ -165,7 +165,7 @@
             </font>
            </property>
            <property name="textAlignment">
-            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+            <set>AlignCenter</set>
            </property>
           </column>
          </widget>
@@ -185,8 +185,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="resources/geogigclient_resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -3,11 +3,12 @@
 # (c) 2016 Boundless, http://boundlessgeo.com
 # This code is licensed under the GPL 2.0 license.
 #
-from geogig.tests.testplugin import backupConfiguration, restoreConfiguration
 import os
 import traceback
-from geogig.tests import conf
 import requests
+
+from geogig.tests import conf
+from geogig.tests.testplugin import backupConfiguration, restoreConfiguration
 
 try:
     from lessons.lesson import Lesson, Step

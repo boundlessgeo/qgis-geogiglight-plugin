@@ -25,10 +25,19 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QHBoxLayout,
+                         QLabel,
+                         QComboBox,
+                         QGroupBox,
+                         QDialogButtonBox,
+                         QMessageBox
+                        )
 from geogig.geogigwebapi.repository import Repository
 
-class RemoteRefDialog(QtGui.QDialog):
+
+class RemoteRefDialog(QDialog):
 
     def __init__(self, repo, parent = None):
         super(RemoteRefDialog, self).__init__(parent)
@@ -39,13 +48,13 @@ class RemoteRefDialog(QtGui.QDialog):
 
     def initGui(self):
         self.setWindowTitle('Remote reference')
-        verticalLayout = QtGui.QVBoxLayout()
+        verticalLayout = QVBoxLayout()
 
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        remoteLabel = QtGui.QLabel('Remote')
-        self.remoteCombo = QtGui.QComboBox()
+        remoteLabel = QLabel('Remote')
+        self.remoteCombo = QComboBox()
         self.remotes = self.repo.remotes()
         self.remoteCombo.addItems(self.remotes.keys())
         self.remoteCombo.currentIndexChanged.connect(self.currentRemoteChanged)
@@ -53,24 +62,24 @@ class RemoteRefDialog(QtGui.QDialog):
         horizontalLayout.addWidget(self.remoteCombo)
         verticalLayout.addLayout(horizontalLayout)
 
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        branchLabel = QtGui.QLabel('Branch')
-        self.branchCombo = QtGui.QComboBox()
+        branchLabel = QLabel('Branch')
+        self.branchCombo = QComboBox()
         self.branchCombo.addItems(self.repo.branches())
         horizontalLayout.addWidget(branchLabel)
         horizontalLayout.addWidget(self.branchCombo)
         verticalLayout.addLayout(horizontalLayout)
 
-        self.groupBox = QtGui.QGroupBox()
+        self.groupBox = QGroupBox()
         self.groupBox.setTitle("Remote info")
         self.groupBox.setLayout(verticalLayout)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(self.groupBox)
 
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)
@@ -93,13 +102,13 @@ class RemoteRefDialog(QtGui.QDialog):
         if remote:
             self.remote = remote
         else:
-            QtGui.QMessageBox.warning(self, "Missing value", "Please select a remote")
+            QMessageBox.warning(self, "Missing value", "Please select a remote")
             return
         branch = self.branchCombo.currentText().strip()
         if branch:
             self.branch = branch
         else:
-            QtGui.QMessageBox.warning(self, "Missing value", "Please select a branch")
+            QMessageBox.warning(self, "Missing value", "Please select a branch")
             return
         self.close()
 

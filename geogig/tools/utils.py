@@ -28,13 +28,15 @@ __revision__ = '$Format:%H$'
 import os
 import uuid
 import time
-from qgis.core import *
 import tempfile
 import shutil
 import dateutil.parser
 from datetime import tzinfo, timedelta, datetime
+
+from PyQt4.QtCore import QSettings
+from qgis.core import QgsVectorLayer
 from geogig import config
-from PyQt4 import QtCore
+
 
 def userFolder():
     folder = os.path.join(os.path.expanduser('~'), 'geogig')
@@ -146,10 +148,9 @@ def ownerFromRepoPath(path):
     return os.path.basename(os.path.dirname(path))
 
 def loadLayerNoCrsDialog(filename, layername, provider):
-    settings = QtCore.QSettings()
+    settings = QSettings()
     prjSetting = settings.value('/Projections/defaultBehaviour')
     settings.setValue('/Projections/defaultBehaviour', '')
     layer = QgsVectorLayer(filename, layername, provider)
     settings.setValue('/Projections/defaultBehaviour', prjSetting)
     return layer
-

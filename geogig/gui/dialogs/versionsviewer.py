@@ -25,18 +25,45 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
-from PyQt4 import QtGui, QtCore
-from qgis.core import *
-from qgis.gui import *
-from geogig.ui.versionsviewer import Ui_VersionViewer
-from geogig import config
-from geogig.tools.utils import loadLayerNoCrsDialog
-from geogig.geogigwebapi.repository import GeoGigException
 
-class VersionViewerDialog(QtGui.QDialog):
+from PyQt4 import uic
+from PyQt4.QtCore import Qt, QSettings
+from PyQt4.QtGui import (QDialog,
+                         QHBoxLayout,
+                         QFont,
+                         QTableWidgetItem,
+                         QLabel,
+                         QTextEdit,
+                         QListWidgetItem,
+                         QIcon
+                        )
+try:
+    from qgis.core import  Qgis
+except ImportError:
+    from qgis.core import  QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.core import QgsSymbolV2, QgsSingleSymbolRendererV2
+else:
+    from qgis.core import QgsSymbol as QgsSymbolV2
+    from qgis.core import QgsSingleSymbolRenderer
+
+from qgis.core import QgsGeometry, QgsFeature, QgsMapLayerRegistry
+from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+
+from geogig import config
+from geogig.geogigwebapi.repository import GeoGigException
+from geogig.tools.utils import loadLayerNoCrsDialog
+
+pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
+WIDGET, BASE = uic.loadUiType(
+    os.path.join(pluginPath, 'ui', 'versionsviewer.ui'))
+
+
+class VersionViewerDialog(BASE, WIDGET):
 
     def __init__(self, repo, path):
-        QtGui.QDialog.__init__(self, config.iface.mainWindow(), QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        super(VersionViewerDialog).__init__(self, config.iface.mainWindow(), Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.repo = repo
         self.path = path
         self.ui = Ui_VersionViewer()
@@ -44,12 +71,12 @@ class VersionViewerDialog(QtGui.QDialog):
 
         self.ui.listWidget.itemClicked.connect(self.commitClicked)
 
-        settings = QtCore.QSettings()
-        horizontalLayout = QtGui.QHBoxLayout()
+        settings = QSettings()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(0)
         horizontalLayout.setMargin(0)
         self.mapCanvas = QgsMapCanvas()
-        self.mapCanvas.setCanvasColor(QtCore.Qt.white)
+        self.mapCanvas.setCanvasColor(Qt.white)
         self.mapCanvas.enableAntiAliasing(settings.value("/qgis/enable_anti_aliasing", False, type = bool))
         self.mapCanvas.useImageToRender(settings.value("/qgis/use_qimage_to_render", False, type = bool))
         action = settings.value("/qgis/wheel_action", 0, type = float)
@@ -77,13 +104,13 @@ class VersionViewerDialog(QtGui.QDialog):
         self.ui.attributesTable.setRowCount(len(feature))
         for idx, attrname in enumerate(feature):
             value = feature[attrname]
-            font = QtGui.QFont()
+            font = QFont()
             font.setBold(True)
             font.setWeight(75)
-            item = QtGui.QTableWidgetItem(attrname)
+            item = QTableWidgetItem(attrname)
             item.setFont(font)
             self.ui.attributesTable.setItem(idx, 0, item);
-            self.ui.attributesTable.setItem(idx, 1, QtGui.QTableWidgetItem(unicode(value)));
+            self.ui.attributesTable.setItem(idx, 1, QTableWidgetItem(unicode(value)));
             if geom is None:
                 try:
                     geom = QgsGeometry.fromWkt(value)
@@ -94,7 +121,7 @@ class VersionViewerDialog(QtGui.QDialog):
         self.ui.attributesTable.horizontalHeader().setMinimumSectionSize(150)
         self.ui.attributesTable.horizontalHeader().setStretchLastSection(True)
 
-        settings = QtCore.QSettings()
+        settings = QSettings()
         prjSetting = settings.value('/Projections/defaultBehaviour')
         settings.setValue('/Projections/defaultBehaviour', '')
         types = ["Point", "LineString", "Polygon"]
@@ -111,9 +138,12 @@ class VersionViewerDialog(QtGui.QDialog):
             layer.setExtent(layer.boundingBoxOfSelected())
             layer.invertSelection()
             symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
-            symbol.setColor(QtCore.Qt.green)
+            symbol.setColor(Qt.green)
             symbol.setAlpha(0.5)
-            layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
+            if Qgis.QGIS_VERSION_INT < 29900:
+                layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
+            else:
+                layer.setRenderer(QgsSingleSymbolRenderer(symbol))
             self.mapCanvas.setRenderFlag(False)
             self.mapCanvas.setLayerSet([QgsMapCanvasLayer(layer)])
             QgsMapLayerRegistry.instance().addMapLayer(layer, False)
@@ -124,9 +154,10 @@ class VersionViewerDialog(QtGui.QDialog):
             self.mapCanvas.setLayerSet([])
         settings.setValue('/Projections/defaultBehaviour', prjSetting)
 
-class CommitListItemWidget(QtGui.QLabel):
+
+class CommitListItemWidget(QLabel):
     def __init__(self, commit):
-        QtGui.QTextEdit.__init__(self)
+        QTextEdit.__init__(self)
         self.setWordWrap(False)
         self.commit = commit
         size = self.font().pointSize()
@@ -137,12 +168,12 @@ class CommitListItemWidget(QtGui.QLabel):
              self.commit.authorprettydate(), self.commit.authorname, str(size - 1), self.commit.id[:10]))
         self.setText(text)
 
-class CommitListItem(QtGui.QListWidgetItem):
+class CommitListItem(QListWidgetItem):
 
-    icon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "person.png"))
+    icon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "person.png"))
 
     def __init__(self, commit, repo, path):
-        QtGui.QListWidgetItem.__init__(self)
+        QListWidgetItem.__init__(self)
         self.commit = commit
         self._feature = None
         self.repo = repo

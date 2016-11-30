@@ -25,13 +25,21 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-import sqlite3
-from qgis.core import *
 import os
+import sqlite3
+
+from qgis.core import (QgsMapLayerRegistry,
+                       QgsRasterLayer,
+                       QgsVectorLayer,
+                       QgsFeatureRequest,
+                       QgsGeometry
+                      )
 from qgis.utils import iface
+
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 
 ALL_TYPES = -1
+
 
 class WrongLayerNameException(BaseException) :
     pass

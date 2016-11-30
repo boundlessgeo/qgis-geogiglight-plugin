@@ -25,9 +25,17 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4 import QtGui
+from PyQt4.QtGui import (QDialog,
+                         QVBoxLayout,
+                         QHBoxLayout,
+                         QLabel,
+                         QLineEdit,
+                         QGroupBox,
+                         QDialogButtonBox
+                        )
 
-class UserConfigDialog(QtGui.QDialog):
+
+class UserConfigDialog(QDialog):
 
     def __init__(self, parent = None):
         super(UserConfigDialog, self).__init__(parent)
@@ -37,35 +45,34 @@ class UserConfigDialog(QtGui.QDialog):
 
     def initGui(self):
         self.setWindowTitle('GeoGig user configuration')
-        verticalLayout = QtGui.QVBoxLayout()
+        verticalLayout = QVBoxLayout()
 
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        usernameLabel = QtGui.QLabel('Username')
-        self.usernameBox = QtGui.QLineEdit()
+        usernameLabel = QLabel('Username')
+        self.usernameBox = QLineEdit()
         horizontalLayout.addWidget(usernameLabel)
         horizontalLayout.addWidget(self.usernameBox)
         verticalLayout.addLayout(horizontalLayout)
 
-        horizontalLayout = QtGui.QHBoxLayout()
+        horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        emailLabel = QtGui.QLabel('User email')
-        self.emailBox = QtGui.QLineEdit()
+        emailLabel = QLabel('User email')
+        self.emailBox = QLineEdit()
         horizontalLayout.addWidget(emailLabel)
         horizontalLayout.addWidget(self.emailBox)
         verticalLayout.addLayout(horizontalLayout)
 
-        self.groupBox = QtGui.QGroupBox()
+        self.groupBox = QGroupBox()
         self.groupBox.setTitle("User data")
         self.groupBox.setLayout(verticalLayout)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(self.groupBox)
 
-
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         layout.addWidget(self.buttonBox)
 
         self.setLayout(layout)

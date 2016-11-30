@@ -27,27 +27,41 @@ __revision__ = '$Format:%H$'
 
 import os
 import sqlite3
-from geogig.geogigwebapi.repository import Repository
+
+from PyQt4.QtGui import QInputDialog, QMessageBox
+
+from qgis.core import QgsMessageLog, QgsMapLayerRegistry
+from qgis.gui import QgsMessageBar
+from qgis.utils import iface
+
+
+from geogig import config
+from geogig.repowatcher import repoWatcher
+
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.gui.dialogs.commitdialog import CommitDialog
 from geogig.gui.dialogs import commitdialog
-from qgis.core import *
-from qgis.gui import *
-from qgis.utils import iface
-from geogig.geogigwebapi.diff import LocalDiff
-from geogig.geogigwebapi.repository import GeoGigException
-from geogig import config
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
-from geogig.repowatcher import repoWatcher
-from geogig.tools.layertracking import getTrackingInfoForGeogigLayer,\
-    removeTrackedLayer, addTrackedLayer, getTrackingInfo
-from geogig.tools.utils import layerGeopackageFilename, loadLayerNoCrsDialog, \
-    tempFilename
-from PyQt4.QtGui import QInputDialog, QMessageBox
-from geogig.tools.layers import WrongLayerSourceException, resolveLayerFromSource, \
-    namesFromLayer, hasLocalChanges
+
+from geogig.geogigwebapi.diff import LocalDiff
+from geogig.geogigwebapi.repository import GeoGigException, Repository
+
+from geogig.tools.layertracking import (getTrackingInfoForGeogigLayer,
+                                        removeTrackedLayer,
+                                        addTrackedLayer,
+                                        getTrackingInfo)
+from geogig.tools.utils import (layerGeopackageFilename,
+                                loadLayerNoCrsDialog,
+                                tempFilename
+                               )
+from geogig.tools.layers import (WrongLayerSourceException,
+                                 resolveLayerFromSource,
+                                 namesFromLayer,
+                                 hasLocalChanges
+                                )
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
+
 
 def syncLayer(layer):
     tracking = getTrackingInfo(layer)

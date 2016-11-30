@@ -1,13 +1,10 @@
-from cStringIO import StringIO
-import ConfigParser
-from datetime import date, datetime
-import fnmatch
 import os
+import fnmatch
+import zipfile
+
 from paver.easy import *
 # this pulls in the sphinx target
 from paver.doctools import html
-import xmlrpclib
-import zipfile
 
 
 options(
@@ -152,7 +149,7 @@ def _make_zip(zipFile, options):
 @task
 def builddocs(options):
     sh("git submodule init")
-    sh("git submodule update")    
+    sh("git submodule update")
     cwd = os.getcwd()
     os.chdir(options.sphinx.docroot)
     sh("make html")
