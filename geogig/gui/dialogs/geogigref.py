@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,24 +30,24 @@ import datetime
 import os
 import time
 
-from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QWidget,
-                         QVBoxLayout,
-                         QHBoxLayout,
-                         QRadioButton,
-                         QComboBox,
-                         QGroupBox,
-                         QDialog,
-                         QDialogButtonBox,
-                         QMessageBox,
-                         QListWidgetItem,
-                         QIcon,
-                         QLineEdit,
-                         QListWidget,
-                         QAbstractItemView,
-                         QSizePolicy,
-                         QToolButton
-                        )
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtWidgets import (QWidget,
+                                 QVBoxLayout,
+                                 QHBoxLayout,
+                                 QRadioButton,
+                                 QComboBox,
+                                 QGroupBox,
+                                 QDialog,
+                                 QDialogButtonBox,
+                                 QMessageBox,
+                                 QListWidgetItem,
+                                 QLineEdit,
+                                 QListWidget,
+                                 QAbstractItemView,
+                                 QSizePolicy,
+                                 QToolButton
+                                )
+from qgis.PyQt.QtGui import QIcon
 from qgis.utils import iface
 
 from geogig.geogigwebapi.commitish import Commitish
@@ -90,8 +92,8 @@ class RefWidget(QWidget):
         self.tagRadio.setMinimumWidth(200)
         horizontalLayout2.addWidget(self.tagRadio)
         self.comboTag = QComboBox()
-        for tag, commitid in self.repo.tags().iteritems():
-            self.comboTag.addItem(unicode(tag), commitid)
+        for tag, commitid in self.repo.tags().items():
+            self.comboTag.addItem(str(tag), commitid)
         horizontalLayout2.addWidget(self.comboTag)
         verticalLayout2.addLayout(horizontalLayout2)
 
@@ -182,7 +184,7 @@ class RefDialog(QDialog):
     def okPressed(self):
         try:
             self.ref = self.refwidget.getref()
-        except Exception, e:
+        except Exception as e:
             QMessageBox.warning(self, 'Wrong reference',
                         str(e),
                         QMessageBox.Ok)
@@ -249,7 +251,7 @@ class CommitSelectDialog(QDialog):
         try:
             t = datetime.datetime.strptime(text, "%d/%m/%Y")
             found = False
-            for i in xrange(self.list.count()):
+            for i in range(self.list.count()):
                 item = self.list.item(i)
                 if found:
                     item.setHidden(True)
@@ -258,8 +260,8 @@ class CommitSelectDialog(QDialog):
                     found = delta.days < 0
                     item.setHidden(not found)
 
-        except ValueError, e:
-            for i in xrange(self.list.count()):
+        except ValueError as e:
+            for i in range(self.list.count()):
                 item = self.list.item(i)
                 msg = item.commit.message
                 item.setHidden(text != "" and text not in msg)

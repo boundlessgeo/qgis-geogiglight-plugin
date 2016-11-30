@@ -15,6 +15,9 @@
 *                                                                         *
 ***************************************************************************
 """
+from __future__ import print_function
+from builtins import str
+from builtins import object
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -36,8 +39,8 @@ import xml.etree.ElementTree as ET
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 
-from PyQt4.QtCore import pyqtSignal, QEventLoop, Qt, QTimer, QObject, QPyNullVariant
-from PyQt4.QtGui import QApplication
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QTimer, QObject, QPyNullVariant
+from qgis.PyQt.QtWidgets import QApplication
 from PyQt4.Qt import QCursor
 
 from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
@@ -79,7 +82,7 @@ def _resolveref(ref):
         return None
     if isinstance(ref, Commitish):
         return ref.ref
-    elif isinstance(ref, basestring):
+    elif isinstance(ref, str):
         return ref
     else:
         return str(ref)
@@ -149,7 +152,7 @@ class Repository(object):
                 j = json.loads(r.text.replace(r"\/", "/"))
                 self.__log(url, r.json(), payload)
                 return j["response"]
-        except ConnectionError, e:
+        except ConnectionError as e:
             msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
             QgsMessageLog.logMessage(msg, "GeoGig", level=QgsMessageLog.CRITICAL)
             raise GeoGigException(msg)
@@ -247,7 +250,7 @@ class Repository(object):
         while True:
             try:
                 resp = self._apicall("log", payload)
-            except HTTPError, e:
+            except HTTPError as e:
                 #TODO more accurate error treatment
                 return []
             if "commit" in resp and resp["commit"]:
@@ -293,7 +296,7 @@ class Repository(object):
         commit = commit or self.HEAD
         #TODO use commit
         resp = self._apicall("ls-tree", {"onlyTrees":True, "path": commit})
-        if "node" not in resp.keys():
+        if "node" not in list(resp.keys()):
             return []
         if isinstance(resp["node"], dict):
             trees = [resp["node"]]
@@ -398,7 +401,8 @@ class Repository(object):
         payload = {"authorEmail": authorEmail, "authorName": authorName,
                    "message": message, 'destPath':layername, "format": "gpkg",
                    "transactionId": transactionId}
-        print filename
+        # fix_print_with_import
+        print(filename)
         if interchange:
             payload["interchange"]= True
             filename = self.saveaudittables(filename, layername)
@@ -438,7 +442,7 @@ class Repository(object):
                     request = QgsFeatureRequest()
                     request.setFilterFid(gpkgfid)
                     try:
-                        feature = layer.getFeatures(request).next()
+                        feature = next(layer.getFeatures(request))
                     except:
                         return None
                     def _ensureNone(v):
@@ -477,7 +481,7 @@ class Repository(object):
             self.closeTransaction(transactionId)
 
     def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
-        merges = {k:{"value": v} for k,v in feature.iteritems()}
+        merges = {k:{"value": v} for k,v in feature.items()}
         payload = {"path": path, "ours": ours, "theirs": theirs,
                    "merges": merges}
         r = requests.post(self.url + "repo/mergefeature", json = payload)
@@ -655,7 +659,8 @@ class Repository(object):
                 if c["change"] == "CONFLICT":
                     conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
                                     c["ourvalue"], c["theirvalue"], transactionId))
-            print conflicts
+            # fix_print_with_import
+            print(conflicts)
             return conflicts
         else:
             self.closeTransaction(transactionId)
@@ -729,7 +734,7 @@ def removeRepoEndpoint(title):
 
 def saveRepoEndpoints():
     filename = os.path.join(userFolder(), "repositories")
-    towrite=[{"url": url, "title": title} for title,url in repoEndpoints.iteritems()]
+    towrite=[{"url": url, "title": title} for title,url in repoEndpoints.items()]
     with open(filename, "w") as f:
         f.write(json.dumps(towrite))
 

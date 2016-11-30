@@ -1,4 +1,4 @@
-from PyQt4.QtCore import pyqtSignal, QObject
+from qgis.PyQt.QtCore import pyqtSignal, QObject
 
 class RepoWatcher(QObject):
 

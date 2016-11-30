@@ -25,15 +25,15 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QHBoxLayout,
-                         QLabel,
-                         QComboBox,
-                         QGroupBox,
-                         QDialogButtonBox,
-                         QMessageBox
-                        )
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QHBoxLayout,
+                                 QLabel,
+                                 QComboBox,
+                                 QGroupBox,
+                                 QDialogButtonBox,
+                                 QMessageBox
+                                )
 from geogig.geogigwebapi.repository import Repository
 
 
@@ -56,7 +56,7 @@ class RemoteRefDialog(QDialog):
         remoteLabel = QLabel('Remote')
         self.remoteCombo = QComboBox()
         self.remotes = self.repo.remotes()
-        self.remoteCombo.addItems(self.remotes.keys())
+        self.remoteCombo.addItems(list(self.remotes.keys()))
         self.remoteCombo.currentIndexChanged.connect(self.currentRemoteChanged)
         horizontalLayout.addWidget(remoteLabel)
         horizontalLayout.addWidget(self.remoteCombo)

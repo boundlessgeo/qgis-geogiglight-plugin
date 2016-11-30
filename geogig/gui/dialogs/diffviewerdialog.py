@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,19 +30,18 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QIcon,
-                         QHBoxLayout,
-                         QColor,
-                         QTableWidgetItem,
-                         QWidget,
-                         QPushButton,
-                         QLabel,
-                         QHeaderView,
-                         QTreeWidgetItem,
-                         QDialog
-                        )
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon, QColor
+from qgis.PyQt.QtWidgets import (QHBoxLayout,
+                                 QTableWidgetItem,
+                                 QWidget,
+                                 QPushButton,
+                                 QLabel,
+                                 QHeaderView,
+                                 QTreeWidgetItem,
+                                 QDialog
+                                )
 from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem
 
 from geogig import config
@@ -207,7 +208,7 @@ class DiffViewerDialog(WIDGET, BASE):
                                             FEATURE_MODIFIED:modifiedItem}
             item = FeatureItem(layername, featureid)
             layerSubItems[layername][c.changetype].addChild(item)
-        for item in layerItems.values():
+        for item in list(layerItems.values()):
             for i in [FEATURE_ADDED, FEATURE_REMOVED, FEATURE_MODIFIED]:
                 item.addChild(layerSubItems[layername][i])
                 layerSubItems[layername][i].setText(0, "%s [%i features]" %
@@ -237,7 +238,7 @@ class DiffItem(QTableWidgetItem):
         self.value = value
         if value is None:
             s = ""
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             s = value
         else:
             s = str(value)

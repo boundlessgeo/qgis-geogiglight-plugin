@@ -25,14 +25,13 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QLabel,
-                         QComboBox,
-                         QPlainTextEdit,
-                         QDialogButtonBox,
-
-                        )
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QLabel,
+                                 QComboBox,
+                                 QPlainTextEdit,
+                                 QDialogButtonBox
+                                )
 
 suggestedMessage = ""
 

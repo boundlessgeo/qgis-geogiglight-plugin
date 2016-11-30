@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import range
+from builtins import object
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -81,7 +83,7 @@ def removeTrackedLayer(layer):
 def removeTrackedForRepo(repo):
     global tracked
 
-    for i in xrange(len(tracked) - 1, -1, -1):
+    for i in range(len(tracked) - 1, -1, -1):
         layer = tracked[i]
         if layer.repoUrl == repo.url:
             del tracked[i]
@@ -89,7 +91,7 @@ def removeTrackedForRepo(repo):
 
 def removeNonexistentTrackedLayers():
     global tracked
-    for i in xrange(len(tracked) - 1, -1, -1):
+    for i in range(len(tracked) - 1, -1, -1):
         layer = tracked[i]
         if not os.path.exists(layer.geopkg):
             del tracked[i]

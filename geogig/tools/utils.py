@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -33,7 +34,7 @@ import shutil
 import dateutil.parser
 from datetime import tzinfo, timedelta, datetime
 
-from PyQt4.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsVectorLayer
 from geogig import config
 

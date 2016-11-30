@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,14 +27,14 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QLabel,
-                         QComboBox,
-                         QPlainTextEdit,
-                         QDialogButtonBox,
-                         QPushButton
-                        )
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QLabel,
+                                 QComboBox,
+                                 QPlainTextEdit,
+                                 QDialogButtonBox,
+                                 QPushButton
+                                )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -135,7 +136,7 @@ class ImportDialog(QDialog):
             self.repo.checkoutlayer(filename, layername, ref = branch)
             self.layer.reload()
             self.layer.triggerRepaint()
-        except GeoGigException, e:
+        except GeoGigException as e:
             iface.messageBar().pushMessage("Error", str(e),
                                            level=QgsMessageBar.CRITICAL,
                                            duration=5)

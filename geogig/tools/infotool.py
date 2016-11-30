@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -25,8 +26,8 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QMenu, QAction, QMessageBox
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QMenu, QAction, QMessageBox
 from qgis.core import QgsVectorLayer, QgsRectangle, QgsFeatureRequest
 from qgis.gui import QgsMapTool, QgsMessageBar
 
@@ -69,12 +70,12 @@ class MapToolGeoGigInfo(QgsMapTool):
         fit = layer.getFeatures(QgsFeatureRequest().setFilterRect(r).setFlags(QgsFeatureRequest.ExactIntersect));
         fid = None
         try:
-            feature = fit.next()
+            feature = next(fit)
             fid = feature.id()
             fid = geogigFidFromGpkgFid(trackedlayer, fid)
             if fid is None:
                 return
-        except StopIteration, e:
+        except StopIteration as e:
             return
         repo = Repository(trackedlayer.repoUrl)
 
@@ -90,10 +91,10 @@ class MapToolGeoGigInfo(QgsMapTool):
 
     def versions(self, repo, tree, fid):
         try:
-            path = unicode(tree) + "/" + unicode(fid)
+            path = str(tree) + "/" + str(fid)
             dlg = VersionViewerDialog(repo, path)
             dlg.exec_()
-        except GeoGigException, e:
+        except GeoGigException as e:
             QMessageBox.critical(self.parent(), "Error", "%s" % e)
 
     def blame(self, repo, tree, fid):
@@ -101,5 +102,5 @@ class MapToolGeoGigInfo(QgsMapTool):
             path = "%s/%s" % (tree, fid)
             dlg = BlameDialog(repo, path)
             dlg.exec_()
-        except GeoGigException, e:
+        except GeoGigException as e:
             QMessageBox.critical(self.parent(), "Error", "%s" % e)

@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,14 +29,9 @@ __revision__ = '$Format:%H$'
 import os
 import difflib
 
-from PyQt4.QtCore import Qt, QSettings, QAbstractTableModel
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QTabWidget,
-                         QTableView,
-                         QDialog,
-                         QBrush
-                        )
+from qgis.PyQt.QtCore import Qt, QSettings, QAbstractTableModel
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QTableView, QDialog
+from qgis.PyQt.QtGui import QBrush
 from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 

@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,7 +27,7 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from PyQt4.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 from qgis.core import NULL
 
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
@@ -42,7 +43,7 @@ USERNAME = "Username"
 EMAIL = "Email"
 LOG_SERVER_CALLS = "LogServerCalls"
 
-TYPE_NUMBER, TYPE_STRING, TYPE_FOLDER, TYPE_BOOL = range(4)
+TYPE_NUMBER, TYPE_STRING, TYPE_FOLDER, TYPE_BOOL = list(range(4))
 
 def checkFolder(f):
     if os.path.isdir(f):

@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -25,14 +26,14 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QHBoxLayout,
-                         QLabel,
-                         QLineEdit,
-                         QGroupBox,
-                         QDialogButtonBox
-                        )
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QHBoxLayout,
+                                 QLabel,
+                                 QLineEdit,
+                                 QGroupBox,
+                                 QDialogButtonBox
+                                )
 
 
 class UserConfigDialog(QDialog):
@@ -83,8 +84,8 @@ class UserConfigDialog(QDialog):
         self.resize(400, 200)
 
     def okPressed(self):
-        self.user = unicode(self.usernameBox.text())
-        self.email = unicode(self.emailBox.text())
+        self.user = str(self.usernameBox.text())
+        self.email = str(self.emailBox.text())
         self.close()
 
     def cancelPressed(self):

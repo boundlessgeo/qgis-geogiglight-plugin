@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import range
 
 
 __author__ = 'Victor Olaya'
@@ -30,17 +32,16 @@ import os
 import sys
 import sqlite3
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QIcon,
-                         QColor,
-                         QTableWidgetItem,
-                         QHeaderView,
-                         QMenu,
-                         QAction,
-                         QTreeWidgetItem,
-                         QDialog
-                        )
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon, QColor
+from qgis.PyQt.QtWidgets import (QTableWidgetItem,
+                                 QHeaderView,
+                                 QMenu,
+                                 QAction,
+                                 QTreeWidgetItem,
+                                 QDialog
+                                )
 from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem, QgsFeatureRequest
 
 from geogig import config
@@ -164,7 +165,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                          LOCAL_FEATURE_REMOVED: removedItem,
                          LOCAL_FEATURE_MODIFIED: modifiedItem}
 
-        for c in self.changes.values():
+        for c in list(self.changes.values()):
             item = QTreeWidgetItem()
             item.setText(0, c.fid)
             item.setIcon(0, featureIcon)
@@ -222,7 +223,7 @@ class DiffItem(QTableWidgetItem):
         self.value = value
         if value is None:
             s = ""
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             s = value
         else:
             s = str(value)

@@ -25,7 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtGui import QDialog, QVBoxLayout, QTextBrowser
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
 
 class HtmlDialog(QDialog):
 

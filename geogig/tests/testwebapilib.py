@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -72,7 +74,8 @@ class WebApiTests(unittest.TestCase):
     def testBlame(self):
         repo = _createTestRepo("simple")
         blame = repo.blame("points/fid--678854f5_155b574742f_-8000")
-        print blame
+        # fix_print_with_import
+        print(blame)
 
     def testDownload(self):
         repo = _createTestRepo("simple")
@@ -156,7 +159,7 @@ class WebApiTests(unittest.TestCase):
         repo = _createTestRepo("simple", True)
         tags = repo.tags()
         self.assertEquals(1, len(tags))
-        repo.deletetag(tags.keys()[0])
+        repo.deletetag(list(tags.keys())[0])
         tags = repo.tags()
         self.assertEquals(0, len(tags))
 
@@ -354,7 +357,7 @@ class WebApiTests(unittest.TestCase):
             layer2.changeAttributeValue(features2[0].id(), idx, 1001)
             layer2.changeAttributeValue(features2[1].id(), idx, 2001)
         layer3 = loadLayerNoCrsDialog(filename2, "points", "ogr")
-        feature = layer3.getFeatures(QgsFeatureRequest(features2[0].id())).next()
+        feature = next(layer3.getFeatures(QgsFeatureRequest(features2[0].id())))
         self.assertEquals(1001, feature["n"])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))

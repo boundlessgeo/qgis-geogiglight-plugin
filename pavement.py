@@ -35,10 +35,12 @@ options(
 @task
 @cmdopts([
     ('clean', 'c', 'clean out dependencies first'),
+    ('qgis3', '3', 'get dependencies for QGIS 3'),
 ])
 def setup(options):
     '''install dependencies'''
     clean = getattr(options, 'clean', False)
+    qgis3 = getattr(options, 'qgis3', False)
     ext_libs = options.plugin.ext_libs
     ext_src = options.plugin.ext_src
     if clean:
@@ -58,10 +60,17 @@ def setup(options):
             else:
                 sh('git clone  %s %s' % (urlspec, localpath))
             req = localpath
-        sh('easy_install -a -d %(ext_libs)s %(dep)s' % {
-            'ext_libs' : ext_libs.abspath(),
-            'dep' : req
-        })
+        if qgis3:
+            sh('easy_install3 -a -d %(ext_libs)s %(dep)s' % {
+                'ext_libs' : ext_libs.abspath(),
+                'dep' : req
+            })
+        else:
+            sh('easy_install -a -d %(ext_libs)s %(dep)s' % {
+                'ext_libs' : ext_libs.abspath(),
+                'dep' : req
+            })
+
 
 
 def read_requirements():

@@ -25,8 +25,9 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtCore import pyqtSignal, QThread, QCoreApplication, Qt, QEventLoop
-from PyQt4.QtGui import QApplication, QCursor
+from qgis.PyQt.QtCore import pyqtSignal, QThread, QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtGui import QCursor
 
 from geogig import config
 
@@ -45,7 +46,7 @@ class GeoGigThread(QThread):
         try:
             self.returnValue = self.func()
             self.finished.emit()
-        except Exception, e:
+        except Exception as e:
             self.exception = e
             self.finished.emit()
 

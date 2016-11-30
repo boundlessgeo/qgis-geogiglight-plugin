@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -25,19 +26,19 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 
-from PyQt4.QtCore import Qt, QMetaObject
-from PyQt4.QtGui import (QDialog,
-                         QHBoxLayout,
-                         QVBoxLayout,
-                         QDialogButtonBox,
-                         QTableWidget,
-                         QAbstractItemView,
-                         QPushButton,
-                         QHeaderView,
-                         QTableWidgetItem,
-                         QLineEdit,
-                         QLabel
-                        )
+from qgis.PyQt.QtCore import Qt, QMetaObject
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QHBoxLayout,
+                                 QVBoxLayout,
+                                 QDialogButtonBox,
+                                 QTableWidget,
+                                 QAbstractItemView,
+                                 QPushButton,
+                                 QHeaderView,
+                                 QTableWidgetItem,
+                                 QLineEdit,
+                                 QLabel
+                                )
 
 
 class RemotesDialog(QDialog):
@@ -195,8 +196,8 @@ class NewRemoteDialog(QDialog):
         self.resize(400, 200)
 
     def okPressed(self):
-        self.name = unicode(self.nameBox.text())
-        self.url = unicode(self.urlBox.text())
+        self.name = str(self.nameBox.text())
+        self.url = str(self.urlBox.text())
         self.ok = True
         self.close()
 

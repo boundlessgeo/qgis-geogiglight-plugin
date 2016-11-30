@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import zip
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,22 +30,22 @@ import os
 from functools import partial
 from collections import defaultdict
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QIcon,
-                         QTreeWidget,
-                         QAbstractItemView,
-                         QMessageBox,
-                         QAction,
-                         QMenu,
-                         QInputDialog,
-                         QTreeWidgetItem,
-                         QLabel,
-                         QTextEdit,
-                         QListWidgetItem,
-                         QDialog,
-                         QVBoxLayout,
-                         QDialogButtonBox
-                        )
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import (QTreeWidget,
+                                 QAbstractItemView,
+                                 QMessageBox,
+                                 QAction,
+                                 QMenu,
+                                 QInputDialog,
+                                 QTreeWidgetItem,
+                                 QLabel,
+                                 QTextEdit,
+                                 QListWidgetItem,
+                                 QDialog,
+                                 QVBoxLayout,
+                                 QDialogButtonBox
+                                )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -205,7 +207,7 @@ class HistoryViewer(QTreeWidget):
             if not solved:
                 self.repo.closeTransaction(conflicts[0].transactionId)
                 return
-            for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
+            for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
                 if resolution == ConflictDialog.LOCAL:
                     conflict.resolveWithLocalVersion()
                 elif resolution == ConflictDialog.REMOTE:
@@ -307,7 +309,7 @@ class BranchTreeItem(QTreeWidgetItem):
     def populate(self):
         if not self.childCount():
             tags = defaultdict(list)
-            for k, v in self.repo.tags().iteritems():
+            for k, v in self.repo.tags().items():
                 tags[v].append(k)
             commits = self.repo.log(until = self.branch, limit = 100, path = self.path)
             for commit in commits:

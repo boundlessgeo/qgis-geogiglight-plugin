@@ -31,7 +31,7 @@ from sqlite3 import OperationalError
 import unittest
 import shutil
 
-from PyQt4.QtCore import Qt
+from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint
 from qgis.utils import iface
 

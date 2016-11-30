@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import object
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'

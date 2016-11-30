@@ -28,7 +28,7 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 
-from PyQt4 import uic
+from qgis.PyQt import uic
 
 sys.path.append(os.path.dirname(__file__))
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]

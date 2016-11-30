@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -68,7 +70,7 @@ def getVectorLayers(shapetype = -1):
     for layer in layers:
         if layer.type() == layer.VectorLayer:
             if shapetype == ALL_TYPES or layer.geometryType() == shapetype:
-                uri = unicode(layer.source())
+                uri = str(layer.source())
                 if not uri.lower().endswith("csv") and not uri.lower().endswith("dbf"):
                     vector.append(layer)
     return vector
@@ -148,7 +150,7 @@ def hasLocalChanges(layer):
     con.close()
     return changes
 
-ADDED, REMOVED, MODIFIED_BEFORE, MODIFIED_AFTER = range(4)
+ADDED, REMOVED, MODIFIED_BEFORE, MODIFIED_AFTER = list(range(4))
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, "resources")
 diffStylePoints = os.path.join(resourcesPath, "difflayer_points.qml")
@@ -191,7 +193,7 @@ def addDiffLayer(repo, layername, commit):
         attrs["changetype"] = MODIFIED_BEFORE
         request = QgsFeatureRequest()
         request.setFilterFid(beforeGpkgfid)
-        feature = beforeLayer.getFeatures(request).next()
+        feature = next(beforeLayer.getFeatures(request))
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
         afterGpkgfid = gpkgfidFromGeogigfid(afterCursor, layername, geogigfid)
         afterCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername,afterGpkgfid))
@@ -200,7 +202,7 @@ def addDiffLayer(repo, layername, commit):
         attrs["changetype"] = MODIFIED_AFTER
         request = QgsFeatureRequest()
         request.setFilterFid(beforeGpkgfid)
-        feature = afterLayer.getFeatures(request).next()
+        feature = next(afterLayer.getFeatures(request))
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
 
 
@@ -215,7 +217,7 @@ def addDiffLayer(repo, layername, commit):
         attrs["changetype"] = ADDED
         request = QgsFeatureRequest()
         request.setFilterFid(afterGpkgfid)
-        feature = afterLayer.getFeatures(request).next()
+        feature = next(afterLayer.getFeatures(request))
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
 
     beforeCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
@@ -229,7 +231,7 @@ def addDiffLayer(repo, layername, commit):
         attrs["changetype"] = REMOVED
         request = QgsFeatureRequest()
         request.setFilterFid(beforeGpkgfid)
-        feature = beforeLayer.getFeatures(request).next()
+        feature = next(beforeLayer.getFeatures(request))
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
 
     attrnames.append("changetype")

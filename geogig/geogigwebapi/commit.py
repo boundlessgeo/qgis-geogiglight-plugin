@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from __future__ import absolute_import
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -27,7 +29,7 @@ __revision__ = '$Format:%H$'
 import datetime
 import time
 
-from commitish import Commitish
+from .commitish import Commitish
 from geogig.tools.utils import relativeDate
 
 NULL_ID = "0" * 40
@@ -46,7 +48,7 @@ class Commit(Commitish):
         self.commitid = commitid
         self.treeid = treeid
         self._parents = parents or [NULL_ID]
-        self.message = unicode(message)
+        self.message = str(message)
         self.authorname = authorname
         self.authordate = authordate
         self.committername = committername
@@ -108,7 +110,7 @@ class Commit(Commitish):
 
     def __str__(self):
         try:
-            msg = unicode(self.message, errors = "ignore")
+            msg = str(self.message, errors = "ignore")
         except TypeError:
             msg = self.message
         s = "id " + self.commitid + "\n"

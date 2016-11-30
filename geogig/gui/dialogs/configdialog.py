@@ -15,6 +15,8 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,21 +28,21 @@ __revision__ = '$Format:%H$'
 
 
 import os
-from PyQt4.QtCore import Qt, QSettings
-from PyQt4.QtGui import (QDialog,
-                         QIcon,
-                         QVBoxLayout,
-                         QTreeWidget,
-                         QDialogButtonBox,
-                         QTreeWidgetItem,
-                         QTreeWidgetItemIterator,
-                         QHBoxLayout,
-                         QLineEdit,
-                         QLabel,
-                         QSizePolicy,
-                         QFileDialog,
-                         QWidget
-                        )
+from qgis.PyQt.QtCore import Qt, QSettings
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QTreeWidget,
+                                 QDialogButtonBox,
+                                 QTreeWidgetItem,
+                                 QTreeWidgetItemIterator,
+                                 QHBoxLayout,
+                                 QLineEdit,
+                                 QLabel,
+                                 QSizePolicy,
+                                 QFileDialog,
+                                 QWidget
+                                )
+from qgis.PyQt.QtGui import QIcon
 from qgis.gui import QgsFilterLineEdit
 from geogig import config
 
@@ -84,7 +86,7 @@ class ConfigDialog(QDialog):
         self.setLayout(self.verticalLayout)
 
     def filterTree(self):
-        text = unicode(self.searchBox.text())
+        text = str(self.searchBox.text())
         for i in range(self.tree.topLevelItemCount()):
             item = self.tree.topLevelItem(i)
             visible = False
@@ -181,7 +183,7 @@ class TreeSettingItem(QTreeWidgetItem):
         else:
             self.value = QSettings().value(name, defaultValue = defaultValue)
             self.setFlags(self.flags() | Qt.ItemIsEditable)
-            self.setText(1, unicode(self.value))
+            self.setText(1, str(self.value))
 
     def getValue(self):
         if self.paramType == config.TYPE_FOLDER:

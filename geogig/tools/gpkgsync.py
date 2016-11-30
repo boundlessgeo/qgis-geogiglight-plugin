@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import zip
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,7 +29,7 @@ __revision__ = '$Format:%H$'
 import os
 import sqlite3
 
-from PyQt4.QtGui import QInputDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QInputDialog, QMessageBox
 
 from qgis.core import QgsMessageLog, QgsMapLayerRegistry
 from qgis.gui import QgsMessageBar
@@ -114,7 +115,7 @@ def syncLayer(layer):
             if not solved:
                 repo.closeTransaction(conflicts[0].transactionId)
                 return
-            for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
+            for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
                 if resolution == ConflictDialog.LOCAL:
                     conflict.resolveWithLocalVersion()
                 elif resolution == ConflictDialog.REMOTE:
@@ -197,8 +198,8 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
         changesCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, changesGpkgfid))
         featureRow = changesCursor.fetchone()
         attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
-        vals = ",".join(["%s=?" % k for k in attrs.keys()])
-        cursor.execute("UPDATE %s SET %s WHERE fid='%s'" % (layername, vals, gpkgfid), attrs.values())
+        vals = ",".join(["%s=?" % k for k in list(attrs.keys())])
+        cursor.execute("UPDATE %s SET %s WHERE fid='%s'" % (layername, vals, gpkgfid), list(attrs.values()))
 
     changesCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
     added = changesCursor.fetchall()
@@ -208,9 +209,9 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
         changesCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, changesGpkgfid))
         featureRow = changesCursor.fetchone()
         attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
-        cols = ', '.join('"%s"' % col for col in attrs.keys())
-        vals = ', '.join('?' for val in attrs.values())
-        cursor.execute('INSERT INTO "%s" (%s) VALUES (%s)' % (layername, cols, vals), attrs.values())
+        cols = ', '.join('"%s"' % col for col in list(attrs.keys()))
+        vals = ', '.join('?' for val in list(attrs.values()))
+        cursor.execute('INSERT INTO "%s" (%s) VALUES (%s)' % (layername, cols, vals), list(attrs.values()))
         gpkgfid = cursor.lastrowid
         cursor.execute('INSERT INTO "%s_fids" VALUES ("%s", "%s")' % (layername, gpkgfid, geogigfid))
 

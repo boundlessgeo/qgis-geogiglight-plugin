@@ -15,6 +15,9 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import zip
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -31,21 +34,22 @@ import sqlite3
 import webbrowser
 from collections import defaultdict
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QUrl, QSize
-from PyQt4.QtGui import (QIcon,
-                         QHeaderView,
-                         QVBoxLayout,
-                         QAbstractItemView,
-                         QTreeWidgetItem,
-                         QMessageBox,
-                         QInputDialog,
-                         QLabel,
-                         QHBoxLayout,
-                         QSizePolicy,
-                         QWidget,
-                         QPushButton,
-                         QApplication)
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QUrl, QSize
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import (QHeaderView,
+                                 QVBoxLayout,
+                                 QAbstractItemView,
+                                 QTreeWidgetItem,
+                                 QMessageBox,
+                                 QInputDialog,
+                                 QLabel,
+                                 QHBoxLayout,
+                                 QSizePolicy,
+                                 QWidget,
+                                 QPushButton,
+                                 QApplication
+                                )
 
 from qgis.core import QgsApplication, QgsMessageLog
 from qgis.gui import QgsMessageBar
@@ -248,7 +252,7 @@ class NavigatorDialog(BASE, WIDGET):
         if self.reposItem.childCount():
             self.filterRepos()
         self.reposItem.setExpanded(True)
-        for i in xrange(self.reposItem.childCount()):
+        for i in range(self.reposItem.childCount()):
             self.reposItem.child(i).setExpanded(True)
         #self.repoTree.expandAll()
         self.repoTree.sortItems(0, Qt.AscendingOrder)
@@ -332,9 +336,9 @@ class NavigatorDialog(BASE, WIDGET):
 
     def filterRepos(self):
         text = self.leFilter.text().strip()
-        for i in xrange(self.repoTree.topLevelItemCount()):
+        for i in range(self.repoTree.topLevelItemCount()):
             parent = self.repoTree.topLevelItem(i)
-            for j in xrange(parent.childCount()):
+            for j in range(parent.childCount()):
                 item = parent.child(j)
                 itemText = item.text(0)
                 item.setHidden(text != "" and text not in itemText)
@@ -353,7 +357,7 @@ class NavigatorDialog(BASE, WIDGET):
                     if item.repo != self.currentRepo:
                         self.updateCurrentRepo(item.repo)
 
-            except Exception, e:
+            except Exception as e:
                     msg = "An error occurred while fetching repository data! %s"
                     QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
                     QMessageBox.warning(self, 'Add repositories',
@@ -393,7 +397,7 @@ class NavigatorDialog(BASE, WIDGET):
             url = repository.repoEndpoints[group]
             try:
                 repo = execute(lambda: createRepoAtUrl(url, group, name))
-            except GeoGigException, e:
+            except GeoGigException as e:
                 config.iface.messageBar().pushMessage("Error", str(e),
                                level=QgsMessageBar.CRITICAL,
                                duration=5)
@@ -434,7 +438,7 @@ class NavigatorDialog(BASE, WIDGET):
                     item = RepoItem(self.repoTree, repo)
                     groupItem.addChild(item)
 
-        except Exception, e:
+        except Exception as e:
             msg = "No geogig server found at the specified url. %s"
             QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
             QMessageBox.warning(self, 'Add repositories',
@@ -510,7 +514,7 @@ class NavigatorDialog(BASE, WIDGET):
                 if not solved:
                     self.repo.closeTransaction(conflicts[0].transactionId)
                     return
-                for conflict, resolution in zip(conflicts, resolvedConflicts.values()):
+                for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
                     if resolution == ConflictDialog.LOCAL:
                         conflict.resolveWithLocalVersion()
                     elif resolution == ConflictDialog.REMOTE:
@@ -605,7 +609,7 @@ class BranchItem(QTreeWidgetItem):
 
 class LayerItem(QTreeWidgetItem):
 
-    NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = range(3)
+    NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = list(range(3))
 
     def __init__(self, tree, parent, repo, layer, branch, branchCommitId):
         QTreeWidgetItem.__init__(self, parent)

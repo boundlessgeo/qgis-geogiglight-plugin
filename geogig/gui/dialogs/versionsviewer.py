@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,17 +27,16 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings
-from PyQt4.QtGui import (QDialog,
-                         QHBoxLayout,
-                         QFont,
-                         QTableWidgetItem,
-                         QLabel,
-                         QTextEdit,
-                         QListWidgetItem,
-                         QIcon
-                        )
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QSettings
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QHBoxLayout,
+                                 QTableWidgetItem,
+                                 QLabel,
+                                 QTextEdit,
+                                 QListWidgetItem
+                                )
+from qgis.PyQt.QtGui import QFont, QIcon
 try:
     from qgis.core import  Qgis
 except ImportError:
@@ -110,7 +110,7 @@ class VersionViewerDialog(BASE, WIDGET):
             item = QTableWidgetItem(attrname)
             item.setFont(font)
             self.ui.attributesTable.setItem(idx, 0, item);
-            self.ui.attributesTable.setItem(idx, 1, QTableWidgetItem(unicode(value)));
+            self.ui.attributesTable.setItem(idx, 1, QTableWidgetItem(str(value)));
             if geom is None:
                 try:
                     geom = QgsGeometry.fromWkt(value)

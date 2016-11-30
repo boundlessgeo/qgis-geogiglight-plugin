@@ -15,6 +15,9 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import zip
+from builtins import str
+from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -28,16 +31,15 @@ __revision__ = '$Format:%H$'
 import os
 import sys
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt, QSettings, QSize
-from PyQt4.QtGui import (QIcon,
-                         QHBoxLayout,
-                         QTreeWidgetItem,
-                         QMessageBox,
-                         QFont,
-                         QTableWidgetItem,
-                         QPushButton,
-                        )
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QSettings, QSize
+from qgis.PyQt.QtGui import QIcon, QFont
+from qgis.PyQt.QtWidgets import (QHBoxLayout,
+                                 QTreeWidgetItem,
+                                 QMessageBox,
+                                 QTableWidgetItem,
+                                 QPushButton
+                                )
 
 from qgis.core import QgsMapLayerRegistry, QgsGeometry, QgsFeature
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
@@ -131,7 +133,7 @@ class ConflictDialog(WIDGET, BASE):
                 topTreeItems[path] = topItem
             conflictItem = ConflictItem(c)
             topItem.addChild(conflictItem)
-        for item in topTreeItems.values():
+        for item in list(topTreeItems.values()):
             self.conflictsTree.addTopLevelItem(item)
 
     def cellClicked(self, row, col):
@@ -238,9 +240,9 @@ class ConflictDialog(WIDGET, BASE):
 
     def solve(self):
         attribs = {}
-        for i in xrange(self.attributesTable.rowCount()):
+        for i in range(self.attributesTable.rowCount()):
             value = self.attributesTable.item(i, 4).value
-            name = unicode(self.attributesTable.item(i, 3).text())
+            name = str(self.attributesTable.item(i, 3).text())
             attribs[name] = value
         self.resolvedConflicts[self.currentPath] = attribs
         self._afterSolve()
@@ -255,7 +257,7 @@ class ConflictDialog(WIDGET, BASE):
         self.theirsgeom = None
         geoms = (self.oursgeom, self.theirsgeom)
         self.currentConflictedAttributes = []
-        attribs = conflictItem.origin.keys()
+        attribs = list(conflictItem.origin.keys())
         self.attributesTable.setRowCount(len(attribs))
 
         self.conflicted = []
@@ -386,7 +388,7 @@ class ValueItem(QTableWidgetItem):
         self.value = value
         if value is None:
             s = ""
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             s = value
         else:
             s = str(value)

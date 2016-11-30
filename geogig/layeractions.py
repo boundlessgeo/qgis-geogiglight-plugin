@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from __future__ import absolute_import
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -26,7 +27,7 @@ __revision__ = '$Format:%H$'
 
 from functools import partial
 
-from PyQt4.QtGui import QAction, QMessageBox
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
 from qgis.core import QgsMapLayer
 from qgis.gui import QgsMessageBar
@@ -34,9 +35,9 @@ from qgis.gui import QgsMessageBar
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from geogigwebapi import repository
-from geogigwebapi.repository import Repository
-from geogigwebapi.commit import Commit
+from .geogigwebapi import repository
+from .geogigwebapi.repository import Repository
+from .geogigwebapi.commit import Commit
 
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog

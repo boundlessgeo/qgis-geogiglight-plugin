@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import str
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -24,15 +25,15 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-from PyQt4.QtCore import Qt, QMetaObject
-from PyQt4.QtGui import (QDialog,
-                         QVBoxLayout,
-                         QSplitter,
-                         QTableWidget,
-                         QAbstractItemView,
-                         QTableWidgetItem,
-                         QTextBrowser
-                        )
+from qgis.PyQt.QtCore import Qt, QMetaObject
+from qgis.PyQt.QtWidgets import (QDialog,
+                                 QVBoxLayout,
+                                 QSplitter,
+                                 QTableWidget,
+                                 QAbstractItemView,
+                                 QTableWidgetItem,
+                                 QTextBrowser
+                                )
 
 from geogig.geogigwebapi.repository import GeoGigException
 

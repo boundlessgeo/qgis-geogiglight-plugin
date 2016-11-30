@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from builtins import object
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -29,8 +30,9 @@ import sys
 import inspect
 import webbrowser
 
-from PyQt4.QtCore import Qt, QSettings
-from PyQt4.QtGui import QIcon, QAction, QMenu, QToolButton, QMessageBox
+from qgis.PyQt.QtCore import Qt, QSettings
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton, QMessageBox
 
 from qgis.core import QgsMapLayerRegistry, QgsApplication
 
@@ -61,7 +63,7 @@ def layerRemoved(layer):
         layer = QgsMapLayerRegistry.instance().mapLayer(layer)
         removeLayerActions(layer)
 
-class GeoGigPlugin:
+class GeoGigPlugin(object):
 
     def __init__(self, iface):
         self.iface = iface
@@ -69,7 +71,7 @@ class GeoGigPlugin:
 
         config.initConfigParams()
 
-        layers = QgsMapLayerRegistry.instance().mapLayers().values()
+        layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
         for layer in layers:
             trackLayer(layer)
         try:
@@ -97,7 +99,7 @@ class GeoGigPlugin:
             pass
         self.menu.deleteLater()
         self.toolButton.deleteLater()
-        layers = QgsMapLayerRegistry.instance().mapLayers().values()
+        layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
         for layer in layers:
             removeLayerActions(layer)
         removeNonexistentTrackedLayers()
