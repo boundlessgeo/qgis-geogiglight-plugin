@@ -31,6 +31,7 @@ from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
 from qgis.core import QgsMapLayer
 from qgis.gui import QgsMessageBar
+from qgis.utils import iface
 
 from geogig import config
 from geogig.repowatcher import repoWatcher

@@ -32,7 +32,7 @@ import unittest
 import shutil
 
 from qgis.PyQt.QtCore import Qt
-from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint, edit
 from qgis.utils import iface
 
 from geogig import tests

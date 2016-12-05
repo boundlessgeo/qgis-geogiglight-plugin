@@ -1,13 +1,14 @@
-from __future__ import print_function
-from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function
+from builtins import str
 
 import os
 import uuid
 import unittest
 
-from qgis.core import QgsFeatureRequest
+from qgis.core import QgsFeatureRequest, edit
 
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
