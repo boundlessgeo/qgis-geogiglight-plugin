@@ -15,9 +15,6 @@
 *                                                                         *
 ***************************************************************************
 """
-from builtins import zip
-from builtins import str
-from builtins import range
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -36,7 +33,7 @@ from collections import defaultdict
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QUrl, QSize, QT_VERSION_STR
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QMessageBox
 from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QVBoxLayout,
                                  QAbstractItemView,
@@ -82,7 +79,12 @@ from geogig.tools.layertracking import (removeTrackedLayer,
                                         getTrackedPathsForRepo
                                        )
 from geogig.geogigwebapi import repository
-from geogig.geogigwebapi.repository import GeoGigException, CannotPushException, readRepos
+from geogig.geogigwebapi.repository import (GeoGigException, CannotPushException, 
+                                            readRepos, removeRepo, removeRepoEndpoint,
+                                            createRepoAtUrl, addRepoEndpoint, addRepo)
+from builtins import zip
+from builtins import str
+from builtins import range
 
 
 qtVersion = int(QT_VERSION_STR.split(".")[0])
@@ -501,11 +503,11 @@ class NavigatorDialog(BASE, WIDGET):
         if dlg.remote is not None:
             conflicts = execute(lambda: self.currentRepo.pull(dlg.remote, dlg.branch))
             if conflicts:
-                ret = QtGui.QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+                ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
                                           "There are conflicts between local and remote changes.\n"
                                           "Do you want to continue and fix them?",
-                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-                if ret == QtGui.QMessageBox.No:
+                                          QMessageBox.Yes | QMessageBox.No)
+                if ret == QMessageBox.No:
                     self.currentRepo.closeTransaction(conflicts[0].transactionId)
                     return
 

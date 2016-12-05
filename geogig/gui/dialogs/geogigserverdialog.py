@@ -38,7 +38,7 @@ WIDGET, BASE = uic.loadUiType(
 class GeoGigServerDialog(WIDGET, BASE):
 
     def __init__(self, url = None, title = None):
-        super(GeoGigServerDialog).__init__(self)
+        super(GeoGigServerDialog, self).__init__()
         self.setupUi(self)
 
         self.buttonBox.accepted.connect(self.okPressed)
