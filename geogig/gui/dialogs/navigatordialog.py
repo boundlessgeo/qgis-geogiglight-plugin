@@ -180,10 +180,12 @@ class NavigatorDialog(BASE, WIDGET):
             layernames = url[url.find(":")+1:].split(",")
             for layername in layernames:
                 if layername:
-                    self._checkoutLayer(layername, None)
-            #self.updateCurrentRepo(self.currentRepo)
-
-
+                    try:
+                        self._checkoutLayer(layername, None)
+                    except HasLocalChangesError:
+                        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+                                            "There are local changes that would be overwritten.\n"
+                                            "Revert them before changing version.",QMessageBox.Ok)
 
     def updateNavigator(self):
         readRepos()
