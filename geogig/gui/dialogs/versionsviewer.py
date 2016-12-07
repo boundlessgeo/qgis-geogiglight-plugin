@@ -38,11 +38,11 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                 )
 from qgis.PyQt.QtGui import QFont, QIcon
 try:
-    from qgis.core import  Qgis
+    from qgis.core import  QGis
 except ImportError:
-    from qgis.core import  QGis as Qgis
+    from qgis.core import  Qgis as QGis
 
-if Qgis.QGIS_VERSION_INT < 29900:
+if QGis.QGIS_VERSION_INT < 29900:
     from qgis.core import QgsSymbolV2, QgsSingleSymbolRendererV2
 else:
     from qgis.core import QgsSymbol as QgsSymbolV2
@@ -140,7 +140,7 @@ class VersionViewerDialog(BASE, WIDGET):
             symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
             symbol.setColor(Qt.green)
             symbol.setAlpha(0.5)
-            if Qgis.QGIS_VERSION_INT < 29900:
+            if QGis.QGIS_VERSION_INT < 29900:
                 layer.setRendererV2(QgsSingleSymbolRendererV2(symbol))
             else:
                 layer.setRenderer(QgsSingleSymbolRenderer(symbol))
