@@ -622,6 +622,7 @@ class LayerItem(QTreeWidgetItem):
         self.tree = tree
         self.layer = layer
         self.branch = branch
+        self.currentCommitId = None
         self.setIcon(0, layerIcon)
 
         layout = QHBoxLayout()
@@ -645,7 +646,7 @@ class LayerItem(QTreeWidgetItem):
                 QApplication.restoreOverrideCursor()
                 ret = msgBox.exec_()
                 if ret == 0:
-                    checkoutLayer(self.repo, self.layer, None)
+                    checkoutLayer(self.repo, self.layer, None, self.currentCommitId)
                 elif ret == 1:
                     try:
                         layer = checkoutLayer(self.repo, self.layer, None, branchCommitId)
@@ -669,10 +670,10 @@ class LayerItem(QTreeWidgetItem):
                 con = sqlite3.connect(trackedlayer.geopkg)
                 cursor = con.cursor()
                 cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
-                currentCommitId = cursor.fetchone()[0]
+                self.currentCommitId = cursor.fetchone()[0]
                 cursor.close()
                 con.close()
-                if branchCommitId == currentCommitId:
+                if branchCommitId == self.currentCommitId:
                     self.status = self.IN_SYNC
                 else:
                     self.status = self.NOT_IN_SYNC
