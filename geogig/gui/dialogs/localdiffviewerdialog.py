@@ -70,7 +70,7 @@ WIDGET, BASE = uic.loadUiType(
 class LocalDiffViewerDialog(WIDGET, BASE):
 
     def __init__(self, parent, layer):
-        super(LocalDiffViewerDialog).__init__(self, parent,
+        super(LocalDiffViewerDialog, self).__init__(parent,
                                Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.layer = layer
         self.setupUi(self)
