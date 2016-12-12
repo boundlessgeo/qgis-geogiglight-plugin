@@ -402,7 +402,6 @@ class Repository(object):
                    "message": message, 'destPath':layername, "format": "gpkg",
                    "transactionId": transactionId}
         # fix_print_with_import
-        print(filename)
         if interchange:
             payload["interchange"]= True
             filename = self.saveaudittables(filename, layername)
@@ -424,14 +423,18 @@ class Repository(object):
         if interchange:
             try:
                 nconflicts = checker.response["task"]["result"]["Merge"]["conflicts"]
-            except KeyError:
+            except KeyError, e:
                 nconflicts = 0
             if nconflicts:
                 mergeCommitId = self.HEAD
                 importCommitId = checker.response["task"]["result"]["import"]["importCommit"]["id"]
                 ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
                 remote = checker.response["task"]["result"]["Merge"]["ours"]
-                featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"].get("ids", [])
+                newFeatures = checker.response["task"]["result"]["import"]["NewFeatures"]["type"]
+                if newFeatures:
+                    featureIds = newFeatures[0].get("ids", [])
+                else:
+                    featureIds = []
                 con = sqlite3.connect(filename)
                 cursor = con.cursor()
                 geomField = cursor.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='%s';" % layername).fetchone()[0]
@@ -473,9 +476,13 @@ class Repository(object):
                 self.closeTransaction(transactionId)
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
-                featureIds = _ensurelist(checker.response["task"]["result"]["NewFeatures"]["type"].get("id", []))
+                newFeatures = checker.response["task"]["result"]["import"]["NewFeatures"]["type"]
+                if newFeatures:
+                    featureIds = newFeatures[0].get("id", [])
+                else:
+                    featureIds = []
                 conflicts = []
-            featureIds = [(f["@provided"], f["@assigned"]) for f in featureIds]
+            featureIds = [(f["provided"], f["assigned"]) for f in featureIds]
             return mergeCommitId, importCommitId, conflicts, featureIds
         else:
             self.closeTransaction(transactionId)
