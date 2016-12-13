@@ -430,10 +430,9 @@ class Repository(object):
                 importCommitId = checker.response["task"]["result"]["import"]["importCommit"]["id"]
                 ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
                 remote = checker.response["task"]["result"]["Merge"]["ours"]
-                newFeatures = checker.response["task"]["result"]["import"]["NewFeatures"]["type"]
-                if newFeatures:
-                    featureIds = newFeatures[0].get("ids", [])
-                else:
+                try:
+                    featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"][0].get("ids", [])
+                except:
                     featureIds = []
                 con = sqlite3.connect(filename)
                 cursor = con.cursor()
@@ -449,7 +448,7 @@ class Repository(object):
                     except:
                         return None
                     def _ensureNone(v):
-                        if isinstance(v, NULL):
+                        if v == NULL:
                             return None
                         else:
                             return v
@@ -476,10 +475,9 @@ class Repository(object):
                 self.closeTransaction(transactionId)
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
-                newFeatures = checker.response["task"]["result"]["import"]["NewFeatures"]["type"]
-                if newFeatures:
-                    featureIds = newFeatures[0].get("id", [])
-                else:
+                try:
+                    featureIds = checker.response["task"]["result"]["NewFeatures"]["type"][0].get("id", [])
+                except:
                     featureIds = []
                 conflicts = []
             featureIds = [(f["provided"], f["assigned"]) for f in featureIds]
@@ -666,8 +664,6 @@ class Repository(object):
                 if c["change"] == "CONFLICT":
                     conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
                                     c["ourvalue"], c["theirvalue"], transactionId))
-            # fix_print_with_import
-            print(conflicts)
             return conflicts
         else:
             self.closeTransaction(transactionId)
