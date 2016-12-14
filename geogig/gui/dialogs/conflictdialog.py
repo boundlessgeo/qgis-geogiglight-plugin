@@ -69,7 +69,7 @@ class ConflictDialog(WIDGET, BASE):
     LOCAL, REMOTE, DELETE = 1,2, 3
 
     def __init__(self, conflicts):
-        super(ConflictDialog).__init__(self, None, Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        super(ConflictDialog, self).__init__(None, Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.solved = False
         self.resolvedConflicts = {}
         self.conflicts = conflicts

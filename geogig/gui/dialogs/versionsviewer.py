@@ -63,13 +63,12 @@ WIDGET, BASE = uic.loadUiType(
 class VersionViewerDialog(BASE, WIDGET):
 
     def __init__(self, repo, path):
-        super(VersionViewerDialog).__init__(self, config.iface.mainWindow(), Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        super(VersionViewerDialog, self).__init__(config.iface.mainWindow(), Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.repo = repo
         self.path = path
-        self.ui = Ui_VersionViewer()
-        self.ui.setupUi(self)
+        self.setupUi(self)
 
-        self.ui.listWidget.itemClicked.connect(self.commitClicked)
+        self.listWidget.itemClicked.connect(self.commitClicked)
 
         settings = QSettings()
         horizontalLayout = QHBoxLayout()
@@ -83,7 +82,7 @@ class VersionViewerDialog(BASE, WIDGET):
         zoomFactor = settings.value("/qgis/zoom_factor", 2, type = float)
         self.mapCanvas.setWheelAction(QgsMapCanvas.WheelAction(action), zoomFactor)
         horizontalLayout.addWidget(self.mapCanvas)
-        self.ui.mapWidget.setLayout(horizontalLayout)
+        self.mapWidget.setLayout(horizontalLayout)
         self.panTool = QgsMapToolPan(self.mapCanvas)
         self.mapCanvas.setMapTool(self.panTool)
 
@@ -91,7 +90,7 @@ class VersionViewerDialog(BASE, WIDGET):
         if versions:
             for commit in versions:
                 item = CommitListItem(commit, repo, path)
-                self.ui.listWidget.addItem(item)
+                self.listWidget.addItem(item)
                 ''''w = CommitListItemWidget(commit)
                 self.ui.listWidget.setItemWidget(item, w)'''
         else:
@@ -99,9 +98,9 @@ class VersionViewerDialog(BASE, WIDGET):
 
 
     def commitClicked(self):
-        feature = self.ui.listWidget.currentItem().feature
+        feature = self.listWidget.currentItem().feature
         geom = None
-        self.ui.attributesTable.setRowCount(len(feature))
+        self.attributesTable.setRowCount(len(feature))
         for idx, attrname in enumerate(feature):
             value = feature[attrname]
             font = QFont()
@@ -109,17 +108,17 @@ class VersionViewerDialog(BASE, WIDGET):
             font.setWeight(75)
             item = QTableWidgetItem(attrname)
             item.setFont(font)
-            self.ui.attributesTable.setItem(idx, 0, item);
-            self.ui.attributesTable.setItem(idx, 1, QTableWidgetItem(str(value)));
+            self.attributesTable.setItem(idx, 0, item);
+            self.attributesTable.setItem(idx, 1, QTableWidgetItem(str(value)));
             if geom is None:
                 try:
                     geom = QgsGeometry.fromWkt(value)
                 except:
                     pass
 
-        self.ui.attributesTable.resizeRowsToContents()
-        self.ui.attributesTable.horizontalHeader().setMinimumSectionSize(150)
-        self.ui.attributesTable.horizontalHeader().setStretchLastSection(True)
+        self.attributesTable.resizeRowsToContents()
+        self.attributesTable.horizontalHeader().setMinimumSectionSize(150)
+        self.attributesTable.horizontalHeader().setStretchLastSection(True)
 
         settings = QSettings()
         prjSetting = settings.value('/Projections/defaultBehaviour')
