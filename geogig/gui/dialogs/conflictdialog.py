@@ -46,6 +46,7 @@ from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 
 from geogig.tools.utils import loadLayerNoCrsDialog
 from geogig.gui.executor import execute
+from geogig.geogigwebapi.repository import GeoGigException
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")
 ptOursStyle = os.path.join(resourcesPath, "pt_ours.qml")
@@ -277,7 +278,7 @@ class ConflictDialog(WIDGET, BASE):
                 self._afterSolve(False)
                 self.solveModifyAndDelete(conflictItem.conflict.path, self.REMOTE)
                 return
-            except GeoGigException: #Remote has been deleted
+            except Exception: #Remote has been deleted
                 self._afterSolve(False)
                 self.solveModifyAndDelete(conflictItem.conflict.path,self.LOCAL)
                 return

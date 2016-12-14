@@ -288,7 +288,7 @@ def _checkLayerHasTrackedContextMenus():
     layer = layerFromName("points")
     actions = layer.geogigActions
     assert 1 < len(actions)
-    assert "remove" in actions[0].text().lower()
+    assert "revert" in actions[0].text().lower()
 
 def _checkContextMenuInfo(text):
     layer = layerFromName("points")

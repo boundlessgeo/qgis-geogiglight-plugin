@@ -8,7 +8,7 @@ import os
 import uuid
 import unittest
 
-from qgis.core import QgsFeatureRequest, edit
+from qgis.core import QgsFeatureRequest, edit, QgsGeometry, QgsPoint
 
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
@@ -271,6 +271,22 @@ class WebApiTests(unittest.TestCase):
         features2 = list(layer2.getFeatures())
         self.assertEqual(1, len(features2))
 
+    def testImportWithNullValue(self):
+        repo = _createTestRepo("simple", True)
+        filename = tempFilename("gpkg")
+        repo.checkoutlayer(filename, "points")
+        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+        self.assertTrue(layer.isValid())
+        features = list(layer.getFeatures())
+        self.assertEqual(2, len(features))
+        idx = layer.dataProvider().fieldNameIndex("n")
+        features = list(layer.getFeatures())
+        with edit(layer):
+            layer.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(123, 456)))
+            layer.changeAttributeValue(features[0].id(), idx, None)
+        repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+        log = repo.log()
+        self.assertEqual("message", log[0].message)
 
     def testConflictsWithDeleteAndModify(self):
         repo = _createTestRepo("simple", True)

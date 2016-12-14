@@ -383,8 +383,11 @@ class Repository(object):
         c.execute(c.fetchone()[0])
         c.execute("SELECT * FROM db2.%s_audit WHERE audit_op<>3;" % layer)
         changed = c.fetchall()
-        for feature in changed:
-            c.execute('INSERT INTO main.%s SELECT * FROM db2.%s WHERE fid=%s;' % (layer, layer, feature[0]))
+        used = []
+        for feature in changed[::-1]:
+            if feature[0] not in used:
+                c.execute('INSERT INTO main.%s SELECT * FROM db2.%s WHERE fid=%s;' % (layer, layer, feature[0]))
+                used.append(feature[0])
 
         conn.commit()
         conn.close()

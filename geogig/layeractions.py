@@ -234,27 +234,3 @@ def showLocalChanges(layer):
     dlg = LocalDiffViewerDialog(iface.mainWindow(), layer)
     dlg.exec_()
 
-
-def removeLayer(layer):
-    ret = QMessageBox.warning(config.iface.mainWindow(), "Delete layer",
-                        "Are you sure you want to delete this layer?",
-                        QMessageBox.Yes | QMessageBox.No,
-                        QMessageBox.Yes);
-    if ret == QMessageBox.No:
-        return
-
-    user, email = config.getUserInfo()
-    if user is None:
-        return
-
-    tracking = getTrackingInfo(layer)
-    repo = Repository(tracking.repoUrl)
-    repo.removetree(tracking.layername, user, email)
-
-    #TODO remove triggers from layer
-
-    removeTrackedLayer(layer)
-    config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                           level = QgsMessageBar.INFO, duration = 5)
-    setAsNonRepoLayer(layer)
-    repoWatcher.repoChanged.emit(repo)

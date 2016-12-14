@@ -67,7 +67,7 @@ WIDGET, BASE = uic.loadUiType(
 class DiffViewerDialog(WIDGET, BASE):
 
     def __init__(self, parent, repo, refa, refb):
-        super(DiffViewerDialog).__init__(self, parent,
+        super(DiffViewerDialog, self).__init__(parent,
                                Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.repo = repo
 

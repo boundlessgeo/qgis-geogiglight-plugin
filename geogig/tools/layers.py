@@ -34,7 +34,8 @@ from qgis.core import (QgsMapLayerRegistry,
                        QgsRasterLayer,
                        QgsVectorLayer,
                        QgsFeatureRequest,
-                       QgsGeometry
+                       QgsGeometry,
+                       QgsFeature
                       )
 from qgis.utils import iface
 
@@ -163,8 +164,9 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     return gpkgfid
 
 def addDiffLayer(repo, layername, commit):
-    styles = {QGis.Point: diffStylePoints, QGis.Line: diffStyleLines, QGis.Polygon: diffStylePolygons}
-    geomTypes = {QGis.Point: "Point", QGis.Line: "LineString", QGis.Polygon: "Polygon"}
+    
+    styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
+    geomTypes = ["Point","LineString","Polygon"]
     beforeFilename = tempFilename("gpkg")
     repo.exportdiff(layername, commit.commitid, commit.parent.commitid, beforeFilename)
     beforeLayer = loadLayerNoCrsDialog(beforeFilename, layername, "ogr")
