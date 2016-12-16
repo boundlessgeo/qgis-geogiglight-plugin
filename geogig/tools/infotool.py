@@ -91,7 +91,7 @@ class MapToolGeoGigInfo(QgsMapTool):
 
     def versions(self, repo, tree, fid):
         try:
-            path = str(tree) + "/" + str(fid)
+            path = tree + "/" + fid
             dlg = VersionViewerDialog(repo, path)
             dlg.exec_()
         except GeoGigException as e:
