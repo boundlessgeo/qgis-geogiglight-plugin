@@ -76,7 +76,6 @@ class WebApiTests(unittest.TestCase):
         repo = _createTestRepo("simple")
         blame = repo.blame("points/fid--678854f5_155b574742f_-8000")
         # fix_print_with_import
-        print(blame)
 
     def testDownload(self):
         repo = _createTestRepo("simple")
