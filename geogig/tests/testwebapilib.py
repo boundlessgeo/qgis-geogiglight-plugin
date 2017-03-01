@@ -110,7 +110,7 @@ class WebApiTests(unittest.TestCase):
 
     def testFeature(self):
         repo = _createSimpleTestRepo()
-        expected = {u'geometry': u'POINT (10 10)', u'n': 2}
+        expected = {u'geometry': u'POINT (5 5)', u'n': 2}
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
         feature = repo.feature(path, repo.HEAD)
@@ -193,7 +193,7 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(3, len(log))
         expected = [{u'changetype': u'ADDED', u'attributename': u'n', u'newvalue': 2},
                     {u'geometry': True, u'crs': u'EPSG:4326', u'changetype': u'ADDED',
-                     u'attributename': u'geometry', u'newvalue': u'POINT (10 10)'}]
+                     u'attributename': u'geometry', u'newvalue': u'POINT (5 5)'}]
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
         diff = repo.diff(log[-1].commitid, log[0].commitid, path)
