@@ -22,7 +22,7 @@ from geogig.geogigwebapi.repository import (Repository,
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from geogig.tools.gpkgsync import getCommitId
 
-from geogig.tests import _createTestRepo, _layer
+from geogig.tests import _layer, _createSimpleTestRepo, _createEmptyTestRepo, _createMultilayerTestRepo
 from geogig.tests import conf
 
 
@@ -41,51 +41,55 @@ class WebApiTests(unittest.TestCase):
         self.assertTrue(name in [r.title for r in repos])
 
     def testCreateRepoWithNameThatAlreadyExists(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         self.assertRaises(GeoGigException, lambda: createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_simple"))
 
     def testLog(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         log = repo.log()
         self.assertEqual(3, len(log))
         self.assertEqual("third", log[0].message)
 
     def testLogInEmptyRepo(self):
-        repo = _createTestRepo("empty")
+        repo = _createEmptyTestRepo()
         log = repo.log()
         self.assertEqual(0, len(log))
 
     def testLogInEmptyBranch(self):
-        repo = _createTestRepo("empty")
+        repo = _createEmptyTestRepo()
         log = repo.log(until="master")
         self.assertEqual(0, len(log))
 
     def testLogWithPath(self):
-        repo = _createTestRepo("simple")
-        log = repo.log(path = "points/fid--678854f5_155b574742f_-8000")
+        repo = _createSimpleTestRepo()
+        diff = repo.diff(repo.log()[1].commitid, repo.log()[0].commitid)
+        path = diff[0].path
+        log = repo.log(path = path)
         self.assertEqual(2, len(log))
         self.assertEqual("third", log[0].message)
         self.assertEqual("first", log[1].message)
 
-    def testLogMultipleParents(self):
-        repo = _createTestRepo("withmerge")
-        log = repo.log()
-        self.assertEqual(2, len(log[0].parents))
+    #===========================================================================
+    # def testLogMultipleParents(self):
+    #     repo = _createTestRepo("withmerge")
+    #     log = repo.log()
+    #     self.assertEqual(2, len(log[0].parents))
+    #===========================================================================
 
     def testBlame(self):
-        repo = _createTestRepo("simple")
-        blame = repo.blame("points/fid--678854f5_155b574742f_-8000")
+        repo = _createSimpleTestRepo()
+        #blame = repo.blame("points/fid--678854f5_155b574742f_-8000")
         # fix_print_with_import
 
     def testDownload(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points")
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
         self.assertTrue(layer.isValid())
 
     def testDownloadNonHead(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         log = repo.log()
         self.assertEqual(3, len(log))
         commitid = log[-1].commitid
@@ -97,66 +101,70 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(1, len(features))
 
     def testDescription(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         self.assertTrue("<p>LAST VERSION: <b>third" in repo.fullDescription())
 
     def testDescriptionInEmptyRepo(self):
-        repo = _createTestRepo("empty")
+        repo = _createEmptyTestRepo()
         self.assertTrue("<p>LAST VERSION: <b></b></p>" in repo.fullDescription())
 
     def testFeature(self):
-        repo = _createTestRepo("simple")
-        expected = {'geometry': 'POINT (20.532220860123836 83.62989408803831)', 'n': 1}
-        feature = repo.feature("points/fid--678854f5_155b574742f_-8000", repo.HEAD)
+        repo = _createSimpleTestRepo()
+        expected = {u'geometry': u'POINT (10 10)', u'n': 2}
+        diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
+        path = diff[0].path
+        feature = repo.feature(path, repo.HEAD)
         self.assertEqual(expected, feature)
 
-    def testFeatureDiff(self):
-        pass
-
     def testTrees(self):
-        repo = _createTestRepo("severallayers")
+        repo = _createMultilayerTestRepo()
         self.assertEquals(["points", "lines"], repo.trees())
 
     def testTreesNonHead(self):
-        repo = _createTestRepo("severallayers")
+        repo = _createMultilayerTestRepo()
         log = repo.log()
         self.assertEqual(4, len(log))
         commitid = log[-1].commitid
         self.assertEquals(["points"], repo.trees(commit = commitid))
 
     def testRemoveTree(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         self.assertEquals(["points"], repo.trees())
         repo.removetree("points", "me", "me@email.com")
         self.assertEquals([], repo.trees())
 
     def testRemoveTreeFromBranch(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         self.assertEquals(["points"], repo.trees("mybranch"))
         repo.removetree("points", "me", "me@email.com", "mybranch")
         self.assertEquals([], repo.trees("mybranch"))
         self.assertEquals(["points"], repo.trees())
 
     def testTags(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         tags = repo.tags()
         log = repo.log()
-        self.assertEqual({"mytag": log[0].commitid}, tags)
+        self.assertEqual(1, len(tags))
+        self.assertEqual(tags["mytag"], log[0].commitid)
 
     def testNoTags(self):
-        repo = _createTestRepo("empty")
+        repo = _createEmptyTestRepo()
         tags = repo.tags()
         self.assertEqual({}, tags)
 
     def testCreateTag(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         repo.createtag(repo.HEAD, "anothertag")
         tags = repo.tags()
         log = repo.log()
-        self.assertEqual({"mytag": log[0].commitid, "anothertag": log[0].commitid}, tags)
+        self.assertEqual(2, len(tags))
+        self.assertTrue("mytag" in tags)
+        self.assertEqual(tags["mytag"], log[0].commitid)
+        self.assertTrue("anothertag" in tags)
+        self.assertEqual(tags["anothertag"], log[0].commitid)
 
     def testRemoveTags(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         tags = repo.tags()
         self.assertEquals(1, len(tags))
         repo.deletetag(list(tags.keys())[0])
@@ -164,13 +172,11 @@ class WebApiTests(unittest.TestCase):
         self.assertEquals(0, len(tags))
 
     def testDiff(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         log = repo.log()
         self.assertEqual(3, len(log))
-        diff = repo.diff(log[-1].commitid, log[0].commitid)
-        self.assertEqual(2, len(diff))
-        self.assertEqual({"points/fid--678854f5_155b574742f_-8000", "points/fid--678854f5_155b574742f_-7ffd"},
-                         {d.path for d in diff})
+        diff = {d.path for d in repo.diff(log[0].commitid, log[1].commitid)}
+        self.assertEqual(1, len(diff))
 
     def _compareLists(self, s, t):
         t = list(t)
@@ -182,25 +188,27 @@ class WebApiTests(unittest.TestCase):
         return not t
 
     def testDiffWithPath(self):
-        repo = _createTestRepo("simple")
+        repo =_createSimpleTestRepo()
         log = repo.log()
         self.assertEqual(3, len(log))
-        expected = [{u'changetype': u'NO_CHANGE', u'attributename': u'n', u'oldvalue': 1},
-                    {u'crs': u'EPSG:4326', u'geometry': True, u'changetype': u'MODIFIED', u'attributename': u'geometry', u'oldvalue': u'POINT (13.997099976619822 76.31340005541968)',
-                      u'newvalue': u'POINT (20.532220860123836 83.62989408803831)'}]
-        diff = repo.diff(log[-1].commitid, log[0].commitid, "points/fid--678854f5_155b574742f_-8000")
+        expected = [{u'changetype': u'ADDED', u'attributename': u'n', u'newvalue': 2},
+                    {u'geometry': True, u'crs': u'EPSG:4326', u'changetype': u'ADDED',
+                     u'attributename': u'geometry', u'newvalue': u'POINT (10 10)'}]
+        diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
+        path = diff[0].path
+        diff = repo.diff(log[-1].commitid, log[0].commitid, path)
         self.assertTrue(1, len(diff))
         self.assertTrue(self._compareLists(expected, diff[0].featurediff()))
 
     def testExportDiff(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         filename = tempFilename("gpkg")
         repo.exportdiff("points", "HEAD", "HEAD~1", filename)
         self.assertTrue(os.path.exists(filename))
         #Check exported gpkg is correct
 
     def testRevParse(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         head = repo.log()[0].commitid
         self.assertEqual(head, repo.revparse(repo.HEAD))
 
@@ -208,28 +216,28 @@ class WebApiTests(unittest.TestCase):
         pass
 
     def testBranches(self):
-        repo = _createTestRepo("simple")
+        repo = _createSimpleTestRepo()
         self.assertEquals(["master", "mybranch"], repo.branches())
 
     def testBranchesInEmptyRepo(self):
-        repo = _createTestRepo("empty")
+        repo = _createEmptyTestRepo()
         self.assertEquals(["master"], repo.branches())
 
     def testCreateBranch(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         self.assertEquals(["master", "mybranch"], repo.branches())
         repo.createbranch(repo.HEAD, "anotherbranch")
         self.assertEquals({"master", "mybranch", "anotherbranch"}, set(repo.branches()))
         self.assertEqual(repo.revparse(repo.HEAD), repo.revparse("anotherbranch"))
 
     def testRemoveBranch(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         self.assertEquals(["master", "mybranch"], repo.branches())
         repo.deletebranch("mybranch")
         self.assertEquals(["master"], repo.branches())
 
     def testFirstImport(self):
-        repo = _createTestRepo("empty", True)
+        repo = _createEmptyTestRepo(True)
         layer = _layer("points")
         repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", False)
         log = repo.log()
@@ -238,7 +246,7 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(["points"], repo.trees())
 
     def testNonAsciiImport(self):
-        repo = _createTestRepo("empty", True)
+        repo = _createEmptyTestRepo(True)
         layer = _layer("points")
         msg = "Покупая птицу, смотри, нет ли у нее зубов. Если есть зубы, то это не птица"
         repo.importgeopkg(layer, "master", msg, "Даниил Хармс", "daniil@kharms.com", False)
@@ -248,7 +256,7 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(["points"], repo.trees())
 
     def testImportInterchangeFormat(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points")
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -271,7 +279,7 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual(1, len(features2))
 
     def testImportWithNullValue(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points")
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -288,8 +296,9 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual("message", log[0].message)
 
     def testConflictsWithDeleteAndModify(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         log = repo.log()
+        origCommit = log[0].commitid
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = log[0].commitid)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -309,9 +318,10 @@ class WebApiTests(unittest.TestCase):
             layer2.deleteFeatures([features2[1].id()])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
-        self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual("74c26fa429b847bc7559f4105975bc2d7b2ef80c", conflicts[0].originCommit)
-        self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
+        diff = repo.diff(repo.log()[0].commitid, repo.log()[1].commitid)
+        self.assertEqual(diff[0].path, conflicts[0].path)
+        self.assertEqual(origCommit, conflicts[0].originCommit)
+        self.assertEqual(diff[1].path, conflicts[1].path)
 
     def testResolveConflictWithLocalVersion(self):
         repo, conflicts = self._createConflict()
@@ -353,7 +363,7 @@ class WebApiTests(unittest.TestCase):
         self.assertTrue([2, 2000], features[1].attributes())
 
     def _createConflict(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         log = repo.log()
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = log[0].commitid)
@@ -377,15 +387,15 @@ class WebApiTests(unittest.TestCase):
         self.assertEquals(1001, feature["n"])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
-        self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual(conflicts[0].localFeature['geometry'], 'Point (20.53222086012383585 83.62989408803831282)')
+        #self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
+        self.assertEqual(conflicts[0].localFeature['geometry'], 'Point (5 5)')
         self.assertEqual(conflicts[0].localFeature['n'], 1001)
-        self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
+        #self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
         return repo, conflicts
 
 
     def testLayerCommitId(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         log = repo.log()
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = log[1].commitid)
@@ -393,7 +403,7 @@ class WebApiTests(unittest.TestCase):
         self.assertTrue(log[1].commitid, getCommitId(layer))
 
     def testRemotes(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
         remotes = repo.remotes()
         self.assertEqual({}, remotes)
         repo.addremote("myremote", "http://myurl.com")
@@ -404,24 +414,23 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual({}, remotes)
 
     def testPush(self):
-        repo = _createTestRepo("simple", True)
-        filename = tempFilename("gpkg")
-        repo.checkoutlayer(filename, "points", ref = repo.HEAD)
-        layer = loadLayerNoCrsDialog(filename, "points", "ogr")
-        idx = layer.dataProvider().fieldNameIndex("n")
-        features = list(layer.getFeatures())
-        with edit(layer):
-            layer.changeAttributeValue(features[0].id(), idx, 1000)
-            layer.changeAttributeValue(features[1].id(), idx, 2000)
-        _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
-        repo2 = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
+        repo2 = _createEmptyTestRepo(True)
         repo.addremote("myremote", repo2.url)
         repo2.addremote("myremote", repo.url)
         repo.push("myremote", "master")
+        log = repo.log()
+        log2 = repo2.log()
+        self.assertEqual(log[0].message, log2[0].message)
+        self.assertEqual(len(log), len(log2))
         self.assertRaises(CannotPushException, lambda: repo2.push("myremote", "master"))
 
     def testPullWithoutConflicts(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
+        repo2 = _createEmptyTestRepo(True)
+        repo.addremote("myremote", repo2.url)
+        repo2.addremote("myremote", repo.url)
+        repo.push("myremote", "master")
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = repo.HEAD)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -431,9 +440,6 @@ class WebApiTests(unittest.TestCase):
             layer.changeAttributeValue(features[0].id(), idx, 1000)
             layer.changeAttributeValue(features[1].id(), idx, 2000)
         _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
-        repo2 = _createTestRepo("simple", True)
-        repo.addremote("myremote", repo2.url)
-        repo2.addremote("myremote", repo.url)
         conflicts = repo2.pull("myremote", "master")
         self.assertEqual([], conflicts)
         log = repo.log()
@@ -442,7 +448,11 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual("message", log2[0].message)
 
     def testPullWithConflicts(self):
-        repo = _createTestRepo("simple", True)
+        repo = _createSimpleTestRepo(True)
+        repo2 = _createEmptyTestRepo(True)
+        repo.addremote("myremote", repo2.url)
+        repo2.addremote("myremote", repo.url)
+        repo.push("myremote", "master")
         filename = tempFilename("gpkg")
         repo.checkoutlayer(filename, "points", ref = repo.HEAD)
         layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -452,7 +462,6 @@ class WebApiTests(unittest.TestCase):
             layer.changeAttributeValue(features[0].id(), idx, 1000)
             layer.changeAttributeValue(features[1].id(), idx, 2000)
         _, _, conflicts, _ = repo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
-        repo2 = _createTestRepo("simple", True)
         filename2 = tempFilename("gpkg")
         repo2.checkoutlayer(filename2, "points", ref = repo.HEAD)
         layer2 = loadLayerNoCrsDialog(filename2, "points", "ogr")
@@ -461,9 +470,6 @@ class WebApiTests(unittest.TestCase):
             layer2.changeAttributeValue(features[0].id(), idx, 1001)
             layer2.changeAttributeValue(features[1].id(), idx, 2001)
         _, _, conflicts, _ = repo2.importgeopkg(layer2, "master", "message2", "me", "me@mysite.com", True)
-
-        repo.addremote("myremote", repo2.url)
-        repo2.addremote("myremote", repo.url)
         conflicts = repo2.pull("myremote", "master")
         self.assertEqual(2, len(conflicts))
 
