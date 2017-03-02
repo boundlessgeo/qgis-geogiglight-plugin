@@ -22,7 +22,8 @@ from geogig.geogigwebapi.repository import (Repository,
 from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from geogig.tools.gpkgsync import getCommitId
 
-from geogig.tests import _layer, _createSimpleTestRepo, _createEmptyTestRepo, _createMultilayerTestRepo
+from geogig.tests import (_layer, _createSimpleTestRepo, _createEmptyTestRepo,
+                        _createMultilayerTestRepo, _createWithMergeTestRepo)
 from geogig.tests import conf
 
 
@@ -69,12 +70,10 @@ class WebApiTests(unittest.TestCase):
         self.assertEqual("third", log[0].message)
         self.assertEqual("first", log[1].message)
 
-    #===========================================================================
-    # def testLogMultipleParents(self):
-    #     repo = _createTestRepo("withmerge")
-    #     log = repo.log()
-    #     self.assertEqual(2, len(log[0].parents))
-    #===========================================================================
+    def testLogMultipleParents(self):
+        repo = _createWithMergeTestRepo("withmerge")
+        log = repo.log()
+        self.assertEqual(2, len(log[0].parents))
 
     def testBlame(self):
         repo = _createSimpleTestRepo()

@@ -55,6 +55,52 @@ def _createSimpleTestRepo(modifiesRepo = False):
     _lastRepo = repo
     return _lastRepo
 
+
+withMergeTestRepo = None
+def _createWithMergeTestRepo(modifiesRepo = False):
+    conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
+
+    if modifiesRepo:
+        repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "withmerge_%s" %  str(time.time()))
+    else:
+        global withMergeTestRepo
+        if withMergeTestRepo is not None:
+            return withMergeTestRepo
+        try:
+            withMergeTestRepo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_withmerge")
+        except GeoGigException:
+            withMergeTestRepo = Repository(conf['REPOS_SERVER_URL'] + "repos/original_withmerge/", "test", "original_withmerge")
+            return withMergeTestRepo
+        repo = withMergeTestRepo
+    _importLayerToRepo(repo, "first")
+
+    repo.createbranch(repo.HEAD, "mybranch")
+    filename = tempFilename("gpkg")
+    repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    with edit(layer):
+        feat = QgsFeature()
+        feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(10, 10)))
+        feat.setAttributes([3, 2])
+        layer.addFeatures([feat])
+    repo.importgeopkg(layer, "mybranch", "second", "tester", "test@test.test", True)
+
+    filename = tempFilename("gpkg")
+    repo.checkoutlayer(filename, "points", ref = repo.HEAD)
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    with edit(layer):
+        feat = QgsFeature()
+        feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(9, 9)))
+        feat.setAttributes([9, 9])
+        layer.addFeatures([feat])
+    repo.importgeopkg(layer, "master", "second", "tester", "test@test.test", True)
+
+    repo.merge("mybranch", "master")
+    global _lastRepo
+    _lastRepo = repo
+    return _lastRepo
+
+
 emptyTestRepo = None
 def _createEmptyTestRepo(modifiesRepo = False):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
