@@ -86,7 +86,7 @@ def restoreConfiguration():
     repository.repos = _repos
     layertracking._tracked = _tracked
 
-def _openNavigator(empty = False, group = "test repositories"):
+def _openNavigator(empty = False, group = "test"):
     if empty:
         repository.repos = []
         repository.repoEndpoints = {}
