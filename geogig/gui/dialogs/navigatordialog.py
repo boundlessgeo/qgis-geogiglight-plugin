@@ -79,7 +79,7 @@ from geogig.tools.layertracking import (removeTrackedLayer,
                                         getTrackedPathsForRepo
                                        )
 from geogig.geogigwebapi import repository
-from geogig.geogigwebapi.repository import (GeoGigException, CannotPushException, 
+from geogig.geogigwebapi.repository import (GeoGigException, CannotPushException,
                                             readRepos, removeRepo, removeRepoEndpoint,
                                             createRepoAtUrl, addRepoEndpoint, addRepo)
 from builtins import zip
@@ -282,7 +282,7 @@ class NavigatorDialog(BASE, WIDGET):
             dlg = ImportDialog(self, repo = self.currentRepo)
             dlg.exec_()
             if dlg.ok:
-                self.versionsTree.updateCurrentBranchItem()
+                #self.versionsTree.updateCurrentBranchItem()
                 setAsRepoLayer(dlg.layer)
                 repoWatcher.repoChanged.emit(self.currentRepo)
         else:
