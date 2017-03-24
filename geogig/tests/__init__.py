@@ -141,6 +141,7 @@ def _createMultilayerTestRepo(modifiesRepo = False):
     _importLayerToRepo(repo, "second")
     _importLayerToRepo(repo, "third")
     _importLayerToRepo(repo, "lines")
+    repo.createbranch(repo.HEAD, "mybranch")
     global _lastRepo
     _lastRepo = repo
     return _lastRepo
