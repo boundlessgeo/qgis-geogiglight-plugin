@@ -274,11 +274,11 @@ class ConflictDialog(WIDGET, BASE):
 
             try:
                 values = (conflictItem.origin[name], conflictItem.local[name], conflictItem.remote[name])
-            except TypeError: #Local has been deleted
+            except Exception: #Local has been deleted
                 self._afterSolve(False)
                 self.solveModifyAndDelete(conflictItem.conflict.path, self.REMOTE)
                 return
-            except Exception: #Remote has been deleted
+            except TypeError: #Remote has been deleted
                 self._afterSolve(False)
                 self.solveModifyAndDelete(conflictItem.conflict.path,self.LOCAL)
                 return
