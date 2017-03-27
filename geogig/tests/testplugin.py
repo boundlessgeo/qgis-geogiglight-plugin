@@ -244,7 +244,10 @@ def _createConflictedPullScenario():
     global _localRepo
     _localRepo = _createSimpleTestRepo(True)
     global _remoteRepo
-    _remoteRepo = _createSimpleTestRepo(True)
+    _remoteRepo = _createEmptyTestRepo(True)
+    _localRepo.addremote("myremote", _remoteRepo.url)
+    _remoteRepo.addremote("myremote", _localRepo.url)
+    _localRepo.push("myremote", "master")
     filename = tempFilename("gpkg")
     _localRepo.checkoutlayer(filename, "points")
     layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -260,8 +263,7 @@ def _createConflictedPullScenario():
         layer2.changeAttributeValue(features2[0].id(), idx, 1001)
     _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
     _remoteRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
-    _localRepo.addremote("myremote", _remoteRepo.url)
-    _remoteRepo.addremote("myremote", _localRepo.url)
+
 
 
 def _exportLayer():
