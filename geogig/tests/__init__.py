@@ -46,8 +46,13 @@ def _createSimpleTestRepo(modifiesRepo = False):
     repo.checkoutlayer(filename, "points", ref = log[0].commitid)
     layer = loadLayerNoCrsDialog(filename, "points", "ogr")
     features = list(layer.getFeatures())
+    for feature in features:
+        pt = feature.geometry().asPoint()
+        if pt.x() == 10 and pt.y()== 10:
+            featureid = feature.id()
+            break
     with edit(layer):
-        layer.changeGeometry(features[0].id(), QgsGeometry.fromPoint(QgsPoint(5, 5)))
+        layer.changeGeometry(featureid, QgsGeometry.fromPoint(QgsPoint(5, 5)))
     repo.importgeopkg(layer, "master", "third", "tester", "test@test.test", True)
     repo.createbranch(repo.HEAD, "mybranch")
     repo.createtag(repo.HEAD, "mytag")

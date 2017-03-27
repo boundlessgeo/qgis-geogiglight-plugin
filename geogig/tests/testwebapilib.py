@@ -68,7 +68,7 @@ class WebApiTests(unittest.TestCase):
         log = repo.log(path = path)
         self.assertEqual(2, len(log))
         self.assertEqual("third", log[0].message)
-        self.assertEqual("first", log[1].message)
+        self.assertEqual("second", log[1].message)
 
     def testLogMultipleParents(self):
         repo = _createWithMergeTestRepo("withmerge")
@@ -112,6 +112,8 @@ class WebApiTests(unittest.TestCase):
         expected = {u'geometry': u'POINT (5 5)', u'n': 2}
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
+        print (path)
+        print (repo.title)
         feature = repo.feature(path, repo.HEAD)
         self.assertEqual(expected, feature)
 
@@ -386,10 +388,7 @@ class WebApiTests(unittest.TestCase):
         self.assertEquals(1001, feature["n"])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
-        #self.assertEqual("points/fid--678854f5_155b574742f_-8000", conflicts[0].path)
-        self.assertEqual(conflicts[0].localFeature['geometry'], 'Point (5 5)')
         self.assertEqual(conflicts[0].localFeature['n'], 1001)
-        #self.assertEqual("points/fid--678854f5_155b574742f_-7ffd", conflicts[1].path)
         return repo, conflicts
 
 
