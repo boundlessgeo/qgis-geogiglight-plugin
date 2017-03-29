@@ -137,9 +137,11 @@ class HistoryViewer(QTreeWidget):
                 diffAction = QAction(diffIcon, "Show changes introduced by this version...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
                 menu.addAction(diffAction)
-                exportDiffAction = QAction(diffIcon, "Export changes introduced by this version as new layer", None)
-                exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
-                menu.addAction(exportDiffAction)
+                #===============================================================
+                # exportDiffAction = QAction(diffIcon, "Export changes introduced by this version as new layer", None)
+                # exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
+                # menu.addAction(exportDiffAction)
+                #===============================================================
                 createBranchAction = QAction(newBranchIcon, "Create new branch at this version...", None)
                 createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
                 menu.addAction(createBranchAction)

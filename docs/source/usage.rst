@@ -259,7 +259,7 @@ Removing a layer from a repository
 
 If you no longer want to have a layer in a repository branch, you can select the layer item in the repository tree of the GeoGig navigator, and click on the delete button in the navigator toolbar. A new version will be added to the selected branch, which removes the selected layer from that branch.
 
-The layer will not be unloaded from QGIS and will still be part of you QGIS project. If, after removing the layer from the selected branch, it is not found in any other branch in the repopsitory, the layer won't be tracked anymore. The layer file and the repository will now independent and not linked. Otherwise, the layer will remained tracked, since it can still be synced with ther branches of the repo.
+The layer will not be unloaded from QGIS and will still be part of you QGIS project. If, after removing the layer from the selected branch, it is not found in any other branch in the repository, the layer won't be tracked anymore. The layer file and the repository will now independent and not linked. Otherwise, the layer will remained tracked, since it can still be synced with other branches of the repo.
 
 Tags
 *****
