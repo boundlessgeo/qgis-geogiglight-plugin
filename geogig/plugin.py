@@ -81,13 +81,6 @@ class GeoGigPlugin(object):
         except Exception as e:
             pass
 
-        try:
-            from lessons import addLessonsFolder
-            folder = os.path.join(os.path.dirname(__file__), "_lessons")
-            addLessonsFolder(folder, "geogig")
-        except Exception as e:
-            pass
-
         QSettings().setValue("/qgis/walForSqlite3", False)
 
     def unload(self):
@@ -165,6 +158,13 @@ class GeoGigPlugin(object):
         #self.mapTool.setAction(self.toolAction)
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
+
+        try:
+            from lessons import addLessonsFolder
+            folder = os.path.join(os.path.dirname(__file__), "_lessons")
+            addLessonsFolder(folder, "geogig")
+        except Exception as e:
+            pass
 
     def setWarning(self, msg):
         QMessageBox.warning(None, 'Could not complete GeoGig command',
