@@ -1,14 +1,13 @@
 <RCC>
   <qresource prefix="/icon">
     <file>Close.png</file>
-    <file>filter.png</file>
+    <file>filter.svg</file>
     <file>search.gif</file>
     <file>geogig-16.png</file>
     <file>geogig-24.png</file>
-    <file>repo-notlocal.png</file>
+    <file>repo-notlocal.svg</file>
     <file>search-repos.png</file>
     <file>new-repo.png</file>
-    <file>repo-notlocal.png</file>
     <file>merge-24.png</file>
     <file>zoom-extent.png</file>
     <file>search.png</file>
@@ -27,12 +26,12 @@
     <file>swap.png</file>
     <file>add-repo-16.png</file>
     <file>undock-panel.png</file>
-    <file>branch-inactive.png</file>
+    <file>branch-inactive.svg</file>
     <file>download-repo.png</file>
     <file>open-repo.png</file>
     <file>repo-notdownloaded.png</file>
     <file>shared-repos.png</file>
-    <file>branch-active.png</file>
+    <file>branch-active.svg</file>
     <file>refresh-repo.png</file>
     <file>repo-downloaded.png</file>
     <file>repo-needsync.png</file>
