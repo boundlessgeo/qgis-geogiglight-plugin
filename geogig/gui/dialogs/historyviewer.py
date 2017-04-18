@@ -48,6 +48,7 @@ from qgis.PyQt.QtWidgets import (QTreeWidget,
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
+from qgis.core import QgsApplication
 
 from geogig import config
 from geogig.repowatcher import repoWatcher
