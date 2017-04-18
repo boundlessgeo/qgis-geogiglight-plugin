@@ -94,7 +94,7 @@ def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
 repoIcon = icon("repo-downloaded.png")
-branchIcon = icon("branch-active.png")
+branchIcon = icon("branch-active.svg")
 layerIcon = icon('geometry.png')
 
 WIDGET, BASE = uic.loadUiType(
@@ -112,17 +112,17 @@ class NavigatorDialog(BASE, WIDGET):
         self.filterWidget.hide()
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
 
-        self.actionAddGeoGigServer.setIcon(icon('geogig_server.png'))
+        self.actionAddGeoGigServer.setIcon(icon('geogig_server.svg'))
         self.actionCreateRepository.setIcon(icon('new-repo.png'))
-        self.actionAddLayer.setIcon(icon('layer_group.gif'))
+        self.actionAddLayer.setIcon(icon('layer_group.svg'))
         self.actionManageRemotes.setIcon(icon('geogig.png'))
-        self.actionEdit.setIcon(QgsApplication.getThemeIcon('/symbologyEdit.png'))
+        self.actionEdit.setIcon(icon('edit.svg'))
         self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
         self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
         self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
         self.actionHelp.setIcon(QgsApplication.getThemeIcon('/mActionHelpContents.svg'))
-        self.actionPull.setIcon(icon('pull.png'))
-        self.actionPush.setIcon(icon('push.png'))
+        self.actionPull.setIcon(icon('pull.svg'))
+        self.actionPush.setIcon(icon('push.svg'))
 
         self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
         self.actionCreateRepository.triggered.connect(self.createRepo)

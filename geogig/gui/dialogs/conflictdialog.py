@@ -56,7 +56,7 @@ lineTheirsStyle = os.path.join(resourcesPath, "line_theirs.qml")
 polygonOursStyle = os.path.join(resourcesPath, "polygon_ours.qml")
 polygonTheirsStyle = os.path.join(resourcesPath, "polygon_theirs.qml")
 
-layerIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.gif"))
+layerIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "layer_group.svg"))
 featureIcon = QIcon(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "ui", "resources", "geometry.png"))
 
 sys.path.append(os.path.dirname(__file__))
