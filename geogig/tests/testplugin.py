@@ -557,15 +557,13 @@ def functionalTests():
     test.addStep("Right click on 'points' layer and select 'GeoGig/view local changes'. Check that diff viewer works correctly")
     tests.append(test)
 
-    #===========================================================================
-    # test = Test("Check export diff layer")
-    # test.addStep("New project", iface.newProject)
-    # test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
-    # test.addStep("Add commit", _addNewCommit)
-    # test.addStep("Open navigator",  _openNavigator)
-    # test.addStep("Click on latest version in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
-    # tests.append(test)
-    #===========================================================================
+    test = Test("Check export diff layer")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Add commit", _addNewCommit)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Click on latest version in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
+    tests.append(test)
 
     test = GeoGigTest("Add layer to repository from context menu")
     test.addStep("Open test data", lambda: openTestProject("points"))
