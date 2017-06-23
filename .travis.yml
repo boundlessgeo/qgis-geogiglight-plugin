@@ -7,8 +7,6 @@ services:
 env:
   global:
   - PLUGIN_NAME=geogig
-  - DOCKER_VERSION=1.12.3-0~trusty
-  - DOCKER_COMPOSE_VERSION=1.7.1
   - secure: EicD30T03M22sPH0DK7rHfetKjKvWuDL9joTPf/RT949Ard4s2Qs3fFn67gRZEAXEVTl8RP6JPHyTdNh7jamvvh/EVdmerMOGh26Up/WAmoaXPXpR6frbvE5sTVMXYk21s24OlhhSU6Q/9FFskiZh2cB9fksJn+iYtZndtAfjZH3pohC00ZMr2KTCmY97EDJkk/cdWqzBSDP0KPjhfAKwn6wFJB9AuILCihNaWqWuzLBe+52SeQZNb3fpMjezNnKlKauARfO0nk13wj9eQe4cwKaki2NwESt5/5a4mxRrKymqc2fAHpgp92FyBhbO6krhzO56W3tWBfnpRmIi3H8wwPULfFRDtAcvczCwLHtiuKOPfLmJ+RKIhqoHpaafWo93ES+1miGO0HqAD6yV64MflBIOj5MhcqCM2UNIChSYq/WF1KEYrCuRWQPhXuY8HKHKFuZYi2rLvIZAUacnEhSFTuOiSpFqAXOA0HHzLqlYsHFoRzzqSJXVXJWxNRH2wIu/aZnMNR27KGCLdCXgrumGb82QRJHgzIHmehemBYmWi6c1GKrKmdd63K2wCFSZblEHcMKCHmEj38qvlhzimF8ejRGiYyJ8La6TqT3Gf0YZPnYTxfH4lzY+39a28NzwsED9qHcgK1hMm/rS4Krs0EPVknDL+A6F6UXOyYbVJcQAPU=
   - secure: sj2Pxqc1aYhEvDxkVQLrhEwNolrwxUFwHOzBG7OcE2lhB5UpSHJ0Kli1Z/vNF9clCEtwPPH8jJHg4qdp9c2RKrvAHuNRt0QuoFcAUJ4wczH5l37mefFYfkYCuuKWEZ0OTgpvCJZ4rDZAfNAdeGsJbbrVYtw4VgIDoURakWaokdclBmNm8BreSudNhfKtRI+npoWBMoUZFSWCCbOAMeuG+fOH2ln9xKvBkFt0GaIsdKM1VKfsbMxmc3N9n1yWiVPZiNdRXlI5ReSeKaf9ulTQYwb6eDuZ7EHABN41K3rvFI4Vp4h2/0tfAHNjbHafRtJC2xCkSnwvXeTXsIJ5xmLE+GCUM/lRDrNIaMtgJG3nFU+qRyLaYwv9Q2Ow2Vqe3ub5RL+eqwfPzonVQv/uDNk5C8uhgqok5ejquCq6J+u4BrbMVgLZz6lEe0+tpaWf8GQublxF419J4qtvn6mp2J9PTJYN7AqzMZVWuU1KRQ2B3yqsd+g4/4ANPYCZMr0OAYcuO11MFDE4VfpXIoILI6m+FtyRTVmC2N3gFXVFHCHTPU8MW1FTDXTkVeTrHhvzId4j4C0A8oi5ULxpsV3hjhwe5dp8gsW5f/9HlG2DApaDuVrsf5gPGKbCyk4/nz6oIoRTVmktvwOnBizZQG2XiprptLyUwl1eTfNDHqU3Y2miNE8=
   matrix:
@@ -19,11 +17,6 @@ matrix:
   allow_failures:
   - env: QGIS_VERSION_TAG=master PYTHON_EXECUTABLE=python3 PIP_EXECUTABLE=pip3
 before_install:
-- apt-cache madison docker-engine
-- sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine=${DOCKER_VERSION}
-- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-- chmod +x docker-compose
-- sudo mv docker-compose /usr/local/bin
 - docker-compose up -d
 - docker-compose ps
 - sleep 10
