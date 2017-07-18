@@ -7,8 +7,8 @@ from osgeo import ogr
 from qgis.utils import iface
 from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsPoint
 
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
-
+from qgiscommons.files import tempFilename
+from qgiscommons.layers import loadLayerNoCrsDialog
 
 class GeoPackageEditTests(unittest.TestCase):
 

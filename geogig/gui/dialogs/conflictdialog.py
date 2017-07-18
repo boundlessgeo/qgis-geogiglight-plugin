@@ -44,8 +44,8 @@ from qgis.PyQt.QtWidgets import (QHBoxLayout,
 from qgis.core import QgsMapLayerRegistry, QgsGeometry, QgsFeature
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 
-from geogig.tools.utils import loadLayerNoCrsDialog
-from geogig.gui.executor import execute
+from qgiscommons.layers import loadLayerNoCrsDialog
+from qgiscommons.gui import execute
 from geogig.geogigwebapi.repository import GeoGigException
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")

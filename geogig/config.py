@@ -27,79 +27,38 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from qgis.PyQt.QtCore import QSettings
-from qgis.core import NULL
-
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 
 iface = None
 explorer = None
 
-GENERAL = "General"
-
-USE_MAIN_MENUBAR = "UseMainMenuBar"
 REPOS_FOLDER = "ReposFolder"
 USERNAME = "Username"
 EMAIL = "Email"
 LOG_SERVER_CALLS = "LogServerCalls"
 
-TYPE_NUMBER, TYPE_STRING, TYPE_FOLDER, TYPE_BOOL = list(range(4))
-
-def checkFolder(f):
-    if os.path.isdir(f):
-        return True
-    try:
-        os.makedirs(f)
-        return True
-    except:
-        return False
-
-
-generalParams = [(USE_MAIN_MENUBAR, "Put GeoGig menus in main menu bar (requires restart)", True, TYPE_BOOL, lambda x: True),
-                 (REPOS_FOLDER, "Base folder for repository data", "", TYPE_FOLDER, checkFolder),
-                 (USERNAME, "User name", "", TYPE_STRING, lambda x: True),
-                 (EMAIL, "User email", "", TYPE_STRING, lambda x: True),
-                 (LOG_SERVER_CALLS, "Log server calls", False, TYPE_BOOL, lambda x: True)]
-
+from qgiscommons.settings import pluginSetting, setPluginSetting
 
 def initConfigParams():
-    folder = getConfigValue(GENERAL, REPOS_FOLDER)
+    folder = pluginSetting(REPOS_FOLDER)
     if folder.strip() == "":
         folder = os.path.join(os.path.expanduser('~'), 'geogig', 'repos')
-        setConfigValue(GENERAL, REPOS_FOLDER, folder)
+        setPluginSetting(REPOS_FOLDER, folder)
 
-
-def getConfigValue(group, name):
-    default = None
-    for param in generalParams:
-        if param[0] == name:
-            default = param[2]
-
-    if isinstance(default, bool):
-        return QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, bool)
-    else:
-        v = QSettings().value("/GeoGig/Settings/%s/%s" % (group, name), default, str)
-        if v == NULL:
-            v = None
-        return v
-
-
-def setConfigValue(group, name, value):
-    return QSettings().setValue("/GeoGig/Settings/%s/%s" % (group, name), value)
 
 
 def getUserInfo():
     """Return user information from the settings dialog"""
-    user = getConfigValue(GENERAL, USERNAME).strip()
-    email = getConfigValue(GENERAL, EMAIL).strip()
+    user = pluginSetting(USERNAME).strip()
+    email = pluginSetting(EMAIL).strip()
     if not (user and email):
         configdlg = UserConfigDialog(iface.mainWindow())
         configdlg.exec_()
         if configdlg.user is not None:
             user = configdlg.user
             email = configdlg.email
-            setConfigValue(GENERAL, USERNAME, user)
-            setConfigValue(GENERAL, EMAIL, email)
+            setPluginSetting(USERNAME, user)
+            setPluginSetting(EMAIL, email)
             return user, email
         else:
             return None, None

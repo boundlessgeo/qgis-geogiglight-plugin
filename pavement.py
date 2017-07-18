@@ -52,20 +52,8 @@ def setup(options):
         error('FATAL: Unable to import pip, please install it first!')
         sys.exit(1)
 
-    os.environ['PYTHONPATH']=ext_libs.abspath()
+    os.environ['PYTHONPATH']=str(ext_libs.abspath())
     for req in runtime + test:
-        if "#egg" in req:
-            urlspec, req = req.split('#egg=')
-            localpath = ext_src / req
-            if os.path.exists(localpath):
-                cwd = os.getcwd()
-                os.chdir(localpath)
-                sh("git pull")
-                os.chdir(cwd)
-            else:
-                sh('git clone  %s %s' % (urlspec, localpath))
-            req = localpath
-
         pip.main(['install',
                   '-t',
                   ext_libs.abspath(),

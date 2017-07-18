@@ -39,45 +39,21 @@ from qgis.core import (QgsMapLayerRegistry,
                       )
 from qgis.utils import iface
 
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
+from qgiscommons.files import tempFilename
+from qgiscommons.layers import loadLayerNoCrsDialog, vectorLayers
 
 ALL_TYPES = -1
-
-
-class WrongLayerNameException(BaseException) :
-    pass
 
 class WrongLayerSourceException(BaseException) :
     pass
 
-def resolveLayer(name):
-    layers = getAllLayers()
-    for layer in layers:
-        if layer.name() == name:
-            return layer
-    raise WrongLayerNameException()
-
-def resolveLayerFromSource(source):
-    layers = getAllLayers()
+def layerFromSource(source):
+    layers = vectorLayers()
     for layer in layers:
         if formatSource(layer.source()) == formatSource(source):
             return layer
     raise WrongLayerSourceException()
 
-
-def getVectorLayers(shapetype = -1):
-    layers = iface.legendInterface().layers()
-    vector = list()
-    for layer in layers:
-        if layer.type() == layer.VectorLayer:
-            if shapetype == ALL_TYPES or layer.geometryType() == shapetype:
-                uri = str(layer.source())
-                if not uri.lower().endswith("csv") and not uri.lower().endswith("dbf"):
-                    vector.append(layer)
-    return vector
-
-def getAllLayers():
-    return getVectorLayers()
 
 def getGroups():
     groups = {}
@@ -164,7 +140,7 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     return gpkgfid
 
 def addDiffLayer(repo, layername, commit):
-    
+
     styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
     geomTypes = ["Point","LineString","Polygon"]
     beforeFilename = tempFilename("gpkg")

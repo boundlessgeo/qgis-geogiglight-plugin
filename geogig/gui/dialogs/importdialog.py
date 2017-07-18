@@ -43,7 +43,9 @@ from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import GeoGigException
 from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.gpkgsync import getCommitId
-from geogig.tools.layers import resolveLayer, getVectorLayers, namesFromLayer
+from geogig.tools.layers import namesFromLayer
+
+from qgiscommons.layers import layerFromName, vectorLayers
 
 
 class ImportDialog(QDialog):
@@ -71,7 +73,7 @@ class ImportDialog(QDialog):
             layerLabel = QLabel('Layer')
             verticalLayout.addWidget(layerLabel)
             self.layerCombo = QComboBox()
-            layerNames = [layer.name() for layer in getVectorLayers()
+            layerNames = [layer.name() for layer in vectorLayers()
                           if layer.source().lower().split("|")[0].split(".")[-1] in["gpkg", "geopkg"]
                           and not isRepoLayer(layer)]
             self.layerCombo.addItems(layerNames)
@@ -121,7 +123,7 @@ class ImportDialog(QDialog):
             self.repo = repository.repos[self.repoCombo.currentIndex()]
         if self.layer is None:
             text = self.layerCombo.currentText()
-            self.layer = resolveLayer(text)
+            self.layer = layerFromName(text)
 
         user, email = config.getUserInfo()
         if user is None:

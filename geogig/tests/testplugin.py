@@ -46,7 +46,6 @@ from geogig.tests.testwebapilib import webapiSuite
 from geogig.tests.testgpkg import GeoPackageEditTests
 
 from geogig.tools import layertracking
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog, tempSubfolder
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
 
 try:
@@ -54,9 +53,12 @@ try:
 except:
     pass
 
+from qgiscommons.files import tempFolderInTempFolder, tempFilename
+from qgiscommons.layers import loadLayerNoCrsDialog
+
 def openTestProject(name):
     orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)
-    destPath = tempSubfolder()
+    destPath = tempFolderInTempFolder()
     shutil.copytree(orgPath, destPath)
     projectFile = os.path.join(destPath, name + ".qgs")
     if projectFile != QgsProject.instance().fileName():

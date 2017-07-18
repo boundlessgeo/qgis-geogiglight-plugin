@@ -33,9 +33,11 @@ from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
 
 from geogig import config
-from geogig.tools.utils import userFolder, loadLayerNoCrsDialog
-from geogig.tools.layers import  resolveLayerFromSource, WrongLayerSourceException
-from geogig.tools.layers import formatSource, getAllLayers
+from geogig.tools.utils import userFolder
+from geogig.tools.layers import  layerFromSource, WrongLayerSourceException
+from geogig.tools.layers import formatSource
+
+from qgiscommons.layers import vectorLayers, loadLayerNoCrsDialog
 
 
 tracked = []
@@ -134,7 +136,7 @@ def getTrackingInfoForGeogigLayer(repoUrl, layername):
 def getProjectLayerForGeoGigLayer(repoUrl, layername):
     tracking = getTrackingInfoForGeogigLayer(repoUrl, layername)
     if tracking:
-        layers = getAllLayers()
+        layers = vectorLayers()
         for layer in layers:
             if formatSource(layer) == tracking.source:
                 return layer

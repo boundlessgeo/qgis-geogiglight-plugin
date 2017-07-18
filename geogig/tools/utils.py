@@ -37,72 +37,44 @@ from datetime import tzinfo, timedelta, datetime
 from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsVectorLayer
 from geogig import config
-
+from qgiscommons.settings import pluginSetting
 
 def userFolder():
     folder = os.path.join(os.path.expanduser('~'), 'geogig')
-    mkdir(folder)
+    try:
+        os.makedirs(folder)
+    except os.error:
+        pass
     return folder
 
 def parentReposFolder():
-    folder = config.getConfigValue(config.GENERAL, config.REPOS_FOLDER)
+    folder = pluginSetting(config.REPOS_FOLDER)
     if folder.strip() == "":
         folder = os.path.join(os.path.expanduser('~'), 'geogig', 'repos')
-    mkdir(folder)
+    try:
+        os.makedirs(folder)
+    except os.error:
+        pass
     return folder
 
 def groupRepoFolder(group):
     folder = os.path.join(parentReposFolder(), group)
-    mkdir(folder)
+    try:
+        os.makedirs(folder)
+    except os.error:
+        pass
     return folder
 
 def repoFolder(repogroup, reponame):
     folder = os.path.join(groupRepoFolder(repogroup), reponame)
-    mkdir(folder)
+    try:
+        os.makedirs(folder)
+    except os.error:
+        pass
     return folder
 
 def layerGeopackageFilename(layername, reponame, repogroup):
     return os.path.join(repoFolder(repogroup, reponame), layername + ".gpkg")
-
-_tempFolder = None
-def tempFolder():
-    global _tempFolder
-    if _tempFolder is None:
-        _tempFolder = tempfile.mkdtemp()
-    return _tempFolder
-
-def deleteTempFolder():
-    if _tempFolder is not None:
-        shutil.rmtree(_tempFolder, True)
-
-def tempSubfolder():
-    path = tempFolder()
-    folder = os.path.join(path, str(uuid.uuid4()).replace("-", ""))
-    return folder
-
-def tempFilename(ext):
-    path = tempFolder()
-    ext = "" if ext is None else ext
-    filename = path + os.sep + str(time.time()) + "." + ext
-    return filename
-
-def tempFilenameInTempFolder(basename):
-    '''returns a temporary filename for a given file, putting it into a temp folder but not changing its basename'''
-    path = tempFolder()
-    folder = os.path.join(path, str(uuid.uuid4()).replace("-", ""))
-    mkdir(folder)
-    filename = os.path.join(folder, basename)
-    return filename
-
-def mkdir(newdir):
-    if os.path.isdir(newdir):
-        pass
-    else:
-        head, tail = os.path.split(newdir)
-        if head and not os.path.isdir(head):
-            mkdir(head)
-        if tail:
-            os.mkdir(newdir)
 
 def relativeDate(d):
     try:
@@ -148,10 +120,3 @@ def userFromRepoPath(path):
 def ownerFromRepoPath(path):
     return os.path.basename(os.path.dirname(path))
 
-def loadLayerNoCrsDialog(filename, layername, provider):
-    settings = QSettings()
-    prjSetting = settings.value('/Projections/defaultBehaviour')
-    settings.setValue('/Projections/defaultBehaviour', '')
-    layer = QgsVectorLayer(filename, layername, provider)
-    settings.setValue('/Projections/defaultBehaviour', prjSetting)
-    return layer

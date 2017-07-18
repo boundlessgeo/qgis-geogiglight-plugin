@@ -1,0 +1,30 @@
+[
+    {"name":"ReposFolder",
+     "label": "Base folder for repository data",
+     "description": "Base folder for repository data",
+     "type": "folder",
+     "default": "",
+     "group": "General"
+    },
+    {"name":"Username",
+     "label": "User name",
+     "description": "User name",
+     "type": "string",
+     "default": "",
+     "group": "General"
+    },
+    {"name":"Email",
+     "label": "User email",
+     "description": "User email",
+     "type": "string",
+     "default": "",
+     "group": "General"
+    },
+    {"name":"LogServerCalls",
+     "label": "Log server calls",
+     "description": "Log server calls",
+     "type": "bool",
+     "default": true,
+     "group": "General"
+    }
+]

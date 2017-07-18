@@ -53,16 +53,15 @@ from qgis.core import QgsApplication
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from geogig.gui.executor import execute
+from qgiscommons.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
-from geogig.gui.dialogs.htmldialog import HtmlDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
 from geogig.tools.layers import hasLocalChanges, addDiffLayer
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
-
+from qgiscommons.layers import loadLayerNoCrsDialog
+from qgiscommons.gui import showMessageDialog
 
 def icon(f):
     return QIcon(os.path.join(os.path.dirname(__file__),
@@ -239,7 +238,7 @@ class HistoryViewer(QTreeWidget):
                 % (commit.commitid, commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
                    commit.message.replace("\n", "<br>"),commit.modified, commit.added,
                    commit.removed))
-        dlg = HtmlDialog("Version description", html, self)
+        dlg = showMessageDialog("Version description", html)
         dlg.exec_()
 
     def exportDiffs(self, commit):

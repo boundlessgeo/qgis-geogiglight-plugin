@@ -33,7 +33,7 @@ from collections import defaultdict
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QUrl, QSize, QT_VERSION_STR
-from qgis.PyQt.QtGui import QIcon, QMessageBox
+from qgis.PyQt.QtGui import QIcon, QMessageBox, QPixmap
 from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QVBoxLayout,
                                  QAbstractItemView,
@@ -55,7 +55,7 @@ from qgis.utils import iface
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from geogig.gui.executor import execute
+from qgiscommons.gui import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
@@ -64,10 +64,7 @@ from geogig.gui.dialogs.remoterefdialog import RemoteRefDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, updateInfoActions
-from geogig.tools.layers import (getAllLayers,
-                                 getVectorLayers,
-                                 resolveLayerFromSource,
-                                 WrongLayerSourceException,
+from geogig.tools.layers import (WrongLayerSourceException,
                                  formatSource)
 from geogig.tools.utils import resourceFile
 from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
@@ -86,6 +83,7 @@ from builtins import zip
 from builtins import str
 from builtins import range
 
+from qgiscommons.layers import vectorLayers
 
 qtVersion = int(QT_VERSION_STR.split(".")[0])
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
@@ -111,7 +109,6 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.filterWidget.hide()
         self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
-
         self.actionAddGeoGigServer.setIcon(icon('geogig_server.svg'))
         self.actionCreateRepository.setIcon(icon('new-repo.png'))
         self.actionAddLayer.setIcon(icon('layer_group.svg'))
@@ -275,7 +272,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoDescription.setVisible(True)
 
     def addLayer(self):
-        layers = [layer for layer in getVectorLayers()
+        layers = [layer for layer in vectorLayers()
                         if layer.source().lower().split("|")[0].split(".")[-1] in["gpkg", "geopkg"]
                         and not isRepoLayer(layer)]
         if layers:
@@ -307,7 +304,7 @@ class NavigatorDialog(BASE, WIDGET):
             item.repo.delete()
             removeRepo(item.repo)
             removeTrackedForRepo(item.repo)
-            layers = getVectorLayers()
+            layers = vectorLayers()
             for layer in layers:
                 if formatSource(layer) in tracked:
                     setAsNonRepoLayer(layer)

@@ -37,16 +37,18 @@ from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton, QMessageBox
 from qgis.core import QgsMapLayerRegistry, QgsApplication
 
 from geogig import config
-from geogig.gui.dialogs.configdialog import ConfigDialog
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
 
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerActions
 
-from geogig.tools.utils import deleteTempFolder
 from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import removeNonexistentTrackedLayers, readTrackedLayers, isRepoLayer
+
+from qgiscommons.gui import addAboutMenu, removeAboutMenu, addHelpMenu, removeHelpMenu
+from qgiscommons.settings import addSettingsMenu, removeSettingsMenu, readSettings
+from qgiscommons.files import removeTempFolder
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
@@ -68,7 +70,7 @@ class GeoGigPlugin(object):
     def __init__(self, iface):
         self.iface = iface
         config.iface = iface
-
+        readSettings()
         config.initConfigParams()
 
         layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
@@ -96,7 +98,7 @@ class GeoGigPlugin(object):
         for layer in layers:
             removeLayerActions(layer)
         removeNonexistentTrackedLayers()
-        deleteTempFolder()
+        removeTempFolder()
 
         try:
             from qgistester.tests import removeTestModule
@@ -109,7 +111,11 @@ class GeoGigPlugin(object):
             from lessons import removeLessonsFolder
             removeLessonsFolder(folder, "geogig")
         except:
-            return
+            pass
+
+        removeHelpMenu("GeoGig")
+        removeAboutMenu("GeoGig")
+        removeSettingsMenu("GeoGig")
 
     def initGui(self):
         readTrackedLayers()
@@ -121,39 +127,30 @@ class GeoGigPlugin(object):
         self.explorerAction = navigatorInstance.toggleViewAction()
         self.explorerAction.setIcon(icon)
         self.explorerAction.setText("GeoGig Navigator")
-        icon = QIcon(os.path.dirname(__file__) + "/ui/resources/config.png")
-        self.configAction = QAction(icon, "GeoGig Settings", self.iface.mainWindow())
-        self.configAction.triggered.connect(self.openSettings)
         icon = QIcon(os.path.dirname(__file__) + "/ui/resources/identify.png")
         self.toolAction = QAction(icon, "GeoGig Feature Info Tool", self.iface.mainWindow())
         self.toolAction.setCheckable(True)
         self.toolAction.triggered.connect(self.setTool)
-        helpIcon = QgsApplication.getThemeIcon('/mActionHelpAPI.png')
-        self.helpAction = QAction(helpIcon, "GeoGig Plugin Help", self.iface.mainWindow())
-        self.helpAction.setObjectName("GeoGigHelp")
-        self.helpAction.triggered.connect(lambda: webbrowser.open_new("file://" + os.path.join(os.path.dirname(__file__), "docs", "html", "index.html")))
+
         self.menu = QMenu(self.iface.mainWindow())
         self.menu.setTitle("GeoGig")
         self.menu.addAction(self.explorerAction)
         self.menu.addAction(self.toolAction)
-        self.menu.addAction(self.configAction)
-        self.menu.addAction(self.helpAction)
         bar = self.iface.layerToolBar()
         self.toolButton = QToolButton()
         self.toolButton.setMenu(self.menu)
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
         self.toolButton.setDefaultAction(self.explorerAction)
-        useMainMenu = config.getConfigValue(config.GENERAL, config.USE_MAIN_MENUBAR)
         bar.addWidget(self.toolButton)
-        if useMainMenu:
-            menuBar = self.iface.mainWindow().menuBar()
-            menuBar.insertMenu(self.iface.firstRightStandardMenu().menuAction(), self.menu)
-        else:
-            self.iface.addPluginToMenu(u"&GeoGig", self.explorerAction)
-            self.iface.addPluginToMenu(u"&GeoGig", self.configAction)
-            self.iface.addPluginToMenu(u"&GeoGig", self.toolAction)
+        self.iface.addPluginToMenu(u"&GeoGig", self.explorerAction)
+        self.iface.addPluginToMenu(u"&GeoGig", self.toolAction)
+
+        addSettingsMenu("&GeoGig")
+        addHelpMenu("&GeoGig")
+        addAboutMenu("&GeoGig")
 
         self.mapTool = MapToolGeoGigInfo(self.iface.mapCanvas())
+
         #This crashes QGIS, so we comment it out until finding a solution
         #self.mapTool.setAction(self.toolAction)
 
@@ -175,7 +172,3 @@ class GeoGigPlugin(object):
         self.toolAction.setChecked(True)
         self.iface.mapCanvas().setMapTool(self.mapTool)
 
-
-    def openSettings(self):
-        dlg = ConfigDialog()
-        dlg.exec_()

@@ -46,18 +46,20 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
 
 from geogig import config
-from geogig.config import GENERAL, LOG_SERVER_CALLS, getConfigValue
+from geogig.config import LOG_SERVER_CALLS
 
 from geogig.geogigwebapi.commit import NULL_ID, Commit
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
-from geogig.gui.executor import execute
+from qgiscommons.gui import execute
 
 from geogig.tools.layers import formatSource, namesFromLayer
-from geogig.tools.utils import userFolder, resourceFile, tempFilenameInTempFolder
+from geogig.tools.utils import userFolder, resourceFile
 from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
 
+from qgiscommons.settings import pluginSetting
+from qgiscommons.files import tempFilenameInTempFolder
 
 class GeoGigException(Exception):
     pass
@@ -119,7 +121,7 @@ class Repository(object):
         return not self.__eq__(o)
 
     def __log(self, url, response, params, operation = "GET"):
-        if getConfigValue(GENERAL, LOG_SERVER_CALLS):
+        if pluginSetting(LOG_SERVER_CALLS):
             msg = "%s: %s\nPARAMS: %s\nRESPONSE: %s" % (operation, url, params, response)
             QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
 

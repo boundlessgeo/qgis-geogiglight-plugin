@@ -51,15 +51,15 @@ from geogig.tools.layertracking import (getTrackingInfoForGeogigLayer,
                                         removeTrackedLayer,
                                         addTrackedLayer,
                                         getTrackingInfo)
-from geogig.tools.utils import (layerGeopackageFilename,
-                                loadLayerNoCrsDialog,
-                                tempFilename
-                               )
+from geogig.tools.utils import (layerGeopackageFilename)
 from geogig.tools.layers import (WrongLayerSourceException,
-                                 resolveLayerFromSource,
+                                 layerFromSource,
                                  namesFromLayer,
                                  hasLocalChanges
                                 )
+
+from qgiscommons.files import tempFilename
+from qgiscommons.layers import loadLayerNoCrsDialog
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
@@ -284,7 +284,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         repo.checkoutlayer(filename, layername, bbox, ref or repo.HEAD)
         addTrackedLayer(source, repo.url)
         try:
-            layer = resolveLayerFromSource(source)
+            layer = layerFromSource(source)
             iface.messageBar().pushMessage("GeoGig", "Layer was already included in the current QGIS project",
                                           level=QgsMessageBar.INFO,
                                           duration=5)
@@ -297,7 +297,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
     elif ref is not None:
         currentCommitId = getCommitId(source)
         try:
-            layer = resolveLayerFromSource(source)
+            layer = layerFromSource(source)
             wasLoaded = True
         except WrongLayerSourceException:
             layer = loadLayerNoCrsDialog(source, layername, "ogr")

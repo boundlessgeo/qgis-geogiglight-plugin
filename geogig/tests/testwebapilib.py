@@ -19,13 +19,14 @@ from geogig.geogigwebapi.repository import (Repository,
                                             CannotPushException
                                            )
 
-from geogig.tools.utils import tempFilename, loadLayerNoCrsDialog
 from geogig.tools.gpkgsync import getCommitId
 
 from geogig.tests import (_layer, _createSimpleTestRepo, _createEmptyTestRepo,
                         _createMultilayerTestRepo, _createWithMergeTestRepo)
 from geogig.tests import conf
 
+from qgiscommons.files import tempFilename
+from qgiscommons.layers import loadLayerNoCrsDialog
 
 class WebApiTests(unittest.TestCase):
 
@@ -112,8 +113,6 @@ class WebApiTests(unittest.TestCase):
         expected = {u'geometry': u'POINT (5 5)', u'n': 2}
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
-        print (path)
-        print (repo.title)
         feature = repo.feature(path, repo.HEAD)
         self.assertEqual(expected, feature)
 
