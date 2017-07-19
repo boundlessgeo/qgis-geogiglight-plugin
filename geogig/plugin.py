@@ -47,7 +47,8 @@ from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import removeNonexistentTrackedLayers, readTrackedLayers, isRepoLayer
 
 from qgiscommons.gui import addAboutMenu, removeAboutMenu, addHelpMenu, removeHelpMenu
-from qgiscommons.settings import addSettingsMenu, removeSettingsMenu, readSettings
+from qgiscommons.settings import readSettings
+from qgiscommons.gui.settings import addSettingsMenu, removeSettingsMenu
 from qgiscommons.files import removeTempFolder
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
