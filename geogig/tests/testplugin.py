@@ -357,7 +357,7 @@ def functionalTests():
     test.addStep("Check log is correctly displayed in the history tab of the GeoGig navigator")
     tests.append(test)
 
-    test = GeoGigTest("Open repository layers in QGIS")
+    test = GeoGigTest("Open repository layers in QGIS", "Export layers tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
@@ -365,7 +365,7 @@ def functionalTests():
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
-    test = GeoGigTest("Open repository layers in QGIS from tree")
+    test = GeoGigTest("Open repository layers in QGIS from tree", "Export layers tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
@@ -373,7 +373,7 @@ def functionalTests():
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
-    test = GeoGigTest("Open already exported layers in QGIS from tree")
+    test = GeoGigTest("Open already exported layers in QGIS from tree", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
@@ -383,7 +383,7 @@ def functionalTests():
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
 
-    test = GeoGigTest("Open already exported layers in QGIS when there are local changes")
+    test = GeoGigTest("Open already exported layers in QGIS when there are local changes", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndEditLayer)
@@ -392,7 +392,7 @@ def functionalTests():
                  "Verify it show a message in the message bar saying that the layer was already loaded", isVerifyStep = True)
     tests.append(test)
 
-    test = GeoGigTest("Open already exported layers in QGIS to an older version, with local changes")
+    test = GeoGigTest("Open already exported layers in QGIS to an older version, with local changes", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportChangetoFirstVersionAndEditLayer)
@@ -402,7 +402,7 @@ def functionalTests():
                  isVerifyStep = True)
     tests.append(test)
 
-    test = GeoGigTest("Change layer version")
+    test = GeoGigTest("Change layer version", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
@@ -411,7 +411,7 @@ def functionalTests():
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
 
-    test = GeoGigTest("Change layer version when there are local changes")
+    test = GeoGigTest("Change layer version when there are local changes", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndEditLayer)
@@ -419,7 +419,7 @@ def functionalTests():
                  "Check it is not permitted due to local changes in the layer", isVerifyStep = True)
     tests.append(test)
 
-    test = Test("Sync with only local changes")
+    test = Test("Sync with only local changes", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
@@ -428,7 +428,7 @@ def functionalTests():
     test.addStep("Check in repo history that a new version has been created")
     tests.append(test)
 
-    test = Test("Sync to non-master branch")
+    test = Test("Sync to non-master branch", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
@@ -438,7 +438,7 @@ def functionalTests():
     tests.append(test)
 
 
-    test = Test("Sync with only upstream changes")
+    test = Test("Sync with only upstream changes", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
@@ -448,7 +448,7 @@ def functionalTests():
     test.addStep("Check that layer has been modified")
     tests.append(test)
 
-    test = Test("Sync with no changes at all")
+    test = Test("Sync with no changes at all", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportLayer)
@@ -457,7 +457,7 @@ def functionalTests():
     test.addStep("Check that no changes are made in the layer or the history")
     tests.append(test)
 
-    test = Test("Merge without conflicts")
+    test = Test("Merge without conflicts", "Merge tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Create merge conflict", _createMergeScenario)
@@ -466,7 +466,7 @@ def functionalTests():
     test.addStep("Check that the merge was correctly completed")
     tests.append(test)
 
-    test = Test("Merge with conflicts")
+    test = Test("Merge with conflicts", "Merge tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Create merge conflict", _createMergeConflict)
@@ -475,7 +475,7 @@ def functionalTests():
     test.addStep("Check that the merge was correctly completed")
     tests.append(test)
 
-    test = Test("Merge with conflicts in several layers")
+    test = Test("Merge with conflicts in several layers", "Merge tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createMultilayerTestRepo(True))
     test.addStep("Create merge conflict", _createMergeConflictInSeveralLayers)
@@ -484,7 +484,7 @@ def functionalTests():
     test.addStep("Check that the merge was correctly completed")
     tests.append(test)
 
-    test = Test("Sync with conflicts")
+    test = Test("Sync with conflicts", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export and edit repo layer", _exportAndCreateConflict)
@@ -493,7 +493,7 @@ def functionalTests():
     test.addStep("Check that new version has been created in the repo history")
     tests.append(test)
 
-    test = Test("Sync with conflict, with remove and modify")
+    test = Test("Sync with conflict, with remove and modify", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export and edit repo layer", _exportAndCreateConflictWithRemoveAndModify)
@@ -502,7 +502,7 @@ def functionalTests():
     test.addStep("Check that new version has been created in the repo history")
     tests.append(test)
 
-    test = Test("Sync with conflicts and null values")
+    test = Test("Sync with conflicts and null values", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export and edit repo layer", _exportAndCreateConflictWithNulls)
@@ -511,7 +511,7 @@ def functionalTests():
     test.addStep("Check that new version has been created in the repo history")
     tests.append(test)
 
-    test = Test("Sync with conflicts, without resolving them")
+    test = Test("Sync with conflicts, without resolving them", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export and edit repo layer", _exportAndCreateConflict)
@@ -520,7 +520,7 @@ def functionalTests():
     test.addStep("Check that no new version has been created in the repo history, and the layer hasn't been modified")
     tests.append(test)
 
-    test = Test("Sync with both local and upstream changes, without conflict")
+    test = Test("Sync with both local and upstream changes, without conflict", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
@@ -529,7 +529,7 @@ def functionalTests():
     test.addStep("Check that layer has been modified and a new version has been created in the repo history")
     tests.append(test)
 
-    test = Test("Sync with layer only in one branch")
+    test = Test("Sync with layer only in one branch", "Synchronization tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
@@ -582,20 +582,20 @@ def functionalTests():
     test.addStep("Right click on repo's last commit and select 'Show detailed description'\nVerify description is correctly shown")
     tests.append(test)
 
-    test = GeoGigTest("Create new branch")
+    test = GeoGigTest("Create new branch", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Create new branch at master branch's last commit and verify it is added to history tree")
     tests.append(test)
 
-    test = GeoGigTest("Delete branch")
+    test = GeoGigTest("Delete branch", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Verify that 'master' branch cannot be deleted from history tree", isVerifyStep = True)
     test.addStep("Delete 'mybranch' using repo history panel and verify the versions tree is updated")
     tests.append(test)
 
-    test = GeoGigTest("Delete branch in repositories tree")
+    test = GeoGigTest("Delete branch in repositories tree", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Verify that 'master' branch cannot be deleted from repositories tree", isVerifyStep = True)
@@ -625,13 +625,13 @@ def functionalTests():
     tests.append(test)
 
 
-    test = GeoGigTest("Create new tag")
+    test = GeoGigTest("Create new tag", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Create new tag at current branch's last commit and verify it is added to history tree")
     tests.append(test)
 
-    test = GeoGigTest("Delete tag")
+    test = GeoGigTest("Delete tag", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Delete 'mytag' tag and verify the versions tree is updated")
