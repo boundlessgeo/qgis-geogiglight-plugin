@@ -196,8 +196,8 @@ class NewRemoteDialog(QDialog):
         self.resize(400, 200)
 
     def okPressed(self):
-        self.name = str(self.nameBox.text())
-        self.url = str(self.urlBox.text())
+        self.name = self.nameBox.text()
+        self.url = self.urlBox.text()
         self.ok = True
         self.close()
 
