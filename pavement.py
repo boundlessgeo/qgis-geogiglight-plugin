@@ -55,6 +55,7 @@ def setup(options):
     os.environ['PYTHONPATH']=str(ext_libs.abspath())
     for req in runtime + test:
         pip.main(['install',
+                  '--upgrade',
                   '-t',
                   ext_libs.abspath(),
                   req])
