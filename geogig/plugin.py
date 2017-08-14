@@ -146,9 +146,9 @@ class GeoGigPlugin(object):
         self.iface.addPluginToMenu(u"&GeoGig", self.explorerAction)
         self.iface.addPluginToMenu(u"&GeoGig", self.toolAction)
 
-        addSettingsMenu("&GeoGig")
-        addHelpMenu("&GeoGig")
-        addAboutMenu("&GeoGig")
+        addSettingsMenu("GeoGig")
+        addHelpMenu("GeoGig")
+        addAboutMenu("GeoGig")
 
         self.mapTool = MapToolGeoGigInfo(self.iface.mapCanvas())
 

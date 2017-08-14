@@ -15,19 +15,19 @@ def _importLayerToRepo(repo, layer):
     repo.importgeopkg(filepath, "master", layer, "tester", "test@test.test", False)
 
 simpleTestRepo = None
-def _createSimpleTestRepo(modifiesRepo = False):
+def _createSimpleTestRepo(modifiesRepo = False, group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:
-        repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "simple_%s" %  str(time.time()))
+        repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "simple_%s" %  str(time.time()))
     else:
         global simpleTestRepo
         if simpleTestRepo is not None:
             return simpleTestRepo
         try:
-            simpleTestRepo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_simple")
+            simpleTestRepo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "original_simple")
         except GeoGigException:
-            simpleTestRepo = Repository(conf['REPOS_SERVER_URL'] + "repos/original_simple/", "test", "original_simple")
+            simpleTestRepo = Repository(conf['REPOS_SERVER_URL'] + "repos/original_simple/", group or "test", name or "original_simple")
             return simpleTestRepo
         repo = simpleTestRepo
     _importLayerToRepo(repo, "first")
@@ -108,19 +108,19 @@ def _createWithMergeTestRepo(modifiesRepo = False):
 
 
 emptyTestRepo = None
-def _createEmptyTestRepo(modifiesRepo = False):
+def _createEmptyTestRepo(modifiesRepo = False, group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:
-        repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "empty_%s" %  str(time.time()))
+        repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "empty_%s" %  str(time.time()))
     else:
         global emptyTestRepo
         if emptyTestRepo is not None:
             return emptyTestRepo
         try:
-            emptyTestRepo = createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_empty")
+            emptyTestRepo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "original_empty")
         except GeoGigException:
-            emptyTestRepo = Repository(conf['REPOS_SERVER_URL'] + "repos/original_empty/", "test", "original_empty")
+            emptyTestRepo = Repository(conf['REPOS_SERVER_URL'] + "repos/original_empty/", group or "test", name or "original_empty")
             return emptyTestRepo
         repo = emptyTestRepo
     global _lastRepo
