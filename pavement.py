@@ -10,7 +10,7 @@ from paver.doctools import html
 options(
     plugin = Bunch(
         name = 'geogig',
-        ext_libs = path('geogig/ext-libs'),
+        ext_libs = path('geogig/extlibs'),
         ext_src = path('geogig/ext-src'),
         source_dir = path('geogig'),
         package_dir = path('.'),
@@ -189,7 +189,7 @@ def pep8(args):
     ignore = ['E203', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127',
         'E128', 'E402']
     styleguide = pep8.StyleGuide(ignore=ignore,
-                                 exclude=['*/ext-libs/*', '*/ext-src/*'],
+                                 exclude=['*/extlibs/*', '*/ext-src/*'],
                                  repeat=True, max_line_length=79,
                                  parse_argv=args)
     styleguide.input_dir(options.plugin.source_dir)
@@ -216,7 +216,7 @@ def autopep8(args):
 
     cmd_args = autopep8.parse_args(args)
 
-    excludes = ('ext-lib', 'ext-src')
+    excludes = ('extlib', 'ext-src')
     for p in options.plugin.source_dir.walk():
         if any(exclude in p for exclude in excludes):
             continue
