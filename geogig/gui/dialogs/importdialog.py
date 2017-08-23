@@ -45,7 +45,7 @@ from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.gpkgsync import getCommitId
 from geogig.tools.layers import namesFromLayer
 
-from qgiscommons.layers import layerFromName, vectorLayers
+from qgiscommons2.layers import layerFromName, vectorLayers
 
 
 class ImportDialog(QDialog):

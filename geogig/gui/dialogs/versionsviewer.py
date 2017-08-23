@@ -53,7 +53,7 @@ from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 
 from geogig import config
 from geogig.geogigwebapi.repository import GeoGigException
-from qgiscommons.layers import loadLayerNoCrsDialog
+from qgiscommons2.layers import loadLayerNoCrsDialog
 
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 WIDGET, BASE = uic.loadUiType(

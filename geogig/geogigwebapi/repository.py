@@ -52,14 +52,14 @@ from geogig.geogigwebapi.commit import NULL_ID, Commit
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
-from qgiscommons.gui import execute
+from qgiscommons2.gui import execute
 
 from geogig.tools.layers import formatSource, namesFromLayer
 from geogig.tools.utils import userFolder, resourceFile
 from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
 
-from qgiscommons.settings import pluginSetting
-from qgiscommons.files import tempFilenameInTempFolder
+from qgiscommons2.settings import pluginSetting
+from qgiscommons2.files import tempFilenameInTempFolder
 
 class GeoGigException(Exception):
     pass

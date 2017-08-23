@@ -37,7 +37,7 @@ from geogig.tools.utils import userFolder
 from geogig.tools.layers import  layerFromSource, WrongLayerSourceException
 from geogig.tools.layers import formatSource
 
-from qgiscommons.layers import vectorLayers, loadLayerNoCrsDialog
+from qgiscommons2.layers import vectorLayers, loadLayerNoCrsDialog
 
 
 tracked = []

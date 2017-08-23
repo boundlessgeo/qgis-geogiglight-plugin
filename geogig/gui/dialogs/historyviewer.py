@@ -53,15 +53,15 @@ from qgis.core import QgsApplication
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from qgiscommons.gui import execute
+from qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
 from geogig.tools.layers import hasLocalChanges, addDiffLayer
-from qgiscommons.layers import loadLayerNoCrsDialog
-from qgiscommons.gui import showMessageDialog
+from qgiscommons2.layers import loadLayerNoCrsDialog
+from qgiscommons2.gui import showMessageDialog
 
 def icon(f):
     return QIcon(os.path.join(os.path.dirname(__file__),

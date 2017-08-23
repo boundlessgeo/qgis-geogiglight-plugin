@@ -54,8 +54,8 @@ try:
 except:
     pass
 
-from qgiscommons.files import tempFolderInTempFolder, tempFilename
-from qgiscommons.layers import loadLayerNoCrsDialog
+from qgiscommons2.files import tempFolderInTempFolder, tempFilename
+from qgiscommons2.layers import loadLayerNoCrsDialog
 
 def openTestProject(name):
     orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)

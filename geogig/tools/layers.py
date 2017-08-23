@@ -39,8 +39,8 @@ from qgis.core import (QgsMapLayerRegistry,
                       )
 from qgis.utils import iface
 
-from qgiscommons.files import tempFilename
-from qgiscommons.layers import loadLayerNoCrsDialog, vectorLayers
+from qgiscommons2.files import tempFilename
+from qgiscommons2.layers import loadLayerNoCrsDialog, vectorLayers
 
 ALL_TYPES = -1
 

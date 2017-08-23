@@ -3,8 +3,8 @@ import shutil
 import time
 from geogig.geogigwebapi.repository import createRepoAtUrl, GeoGigException, Repository
 from qgis.core import *
-from qgiscommons.files import tempFilename
-from qgiscommons.layers import loadLayerNoCrsDialog
+from qgiscommons2.files import tempFilename
+from qgiscommons2.layers import loadLayerNoCrsDialog
 
 conf = dict(
         REPOS_SERVER_URL = "http://localhost:8182/",

@@ -45,7 +45,7 @@ from qgis.PyQt.QtWidgets import (QTableWidgetItem,
 from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem, QgsFeatureRequest
 
 from geogig import config
-from qgiscommons.gui import execute
+from qgiscommons2.gui import execute
 from geogig.gui.dialogs.geogigref import RefPanel
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 from geogig.geogigwebapi.commit import Commit

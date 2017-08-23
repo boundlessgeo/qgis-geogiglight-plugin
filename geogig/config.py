@@ -28,6 +28,7 @@ __revision__ = '$Format:%H$'
 import os
 
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
+from qgiscommons2.settings import pluginSetting, setPluginSetting
 
 iface = None
 explorer = None
@@ -37,7 +38,6 @@ USERNAME = "Username"
 EMAIL = "Email"
 LOG_SERVER_CALLS = "LogServerCalls"
 
-from qgiscommons.settings import pluginSetting, setPluginSetting
 
 def initConfigParams():
     folder = pluginSetting(REPOS_FOLDER)
