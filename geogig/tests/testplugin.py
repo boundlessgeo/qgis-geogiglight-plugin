@@ -30,6 +30,7 @@ import sqlite3
 from sqlite3 import OperationalError
 import unittest
 import shutil
+from distutils.dir_util import copy_tree
 
 from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint, edit
@@ -59,7 +60,7 @@ from qgiscommons.layers import loadLayerNoCrsDialog
 def openTestProject(name):
     orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)
     destPath = tempFolderInTempFolder()
-    shutil.copytree(orgPath, destPath)
+    copy_tree(orgPath, destPath)
     projectFile = os.path.join(destPath, name + ".qgs")
     if projectFile != QgsProject.instance().fileName():
         iface.addProject(projectFile)
@@ -312,8 +313,8 @@ def functionalTests():
     try:
         from qgistester.test import Test
         class GeoGigTest(Test):
-            def __init__(self, name):
-                Test.__init__(self, name)
+            def __init__(self, name, category = "General"):
+                Test.__init__(self, name, category)
                 self.addStep("Preparing test", backupConfiguration)
                 self.setCleanup(restoreConfiguration)
 
