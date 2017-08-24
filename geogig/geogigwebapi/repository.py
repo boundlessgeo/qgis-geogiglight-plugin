@@ -270,8 +270,8 @@ class Repository(object):
             parents = [NULL_ID]
         else:
             parents = [p for p in _ensurelist(c["parents"]["id"])]
-        committerdate = datetime.fromtimestamp((c["committer"]["timestamp"] - c["committer"]["timeZoneOffset"]) /1e3)
-        authordate = datetime.fromtimestamp((c["author"]["timestamp"] - c["author"]["timeZoneOffset"]) / 1e3)
+        committerdate = datetime.fromtimestamp(c["committer"]["timestamp"] / 1e3)
+        authordate = datetime.fromtimestamp(c["author"]["timestamp"] / 1e3)
         return Commit(self, c["id"], c["tree"],
                  parents, c["message"],
                  c["author"]["name"], authordate,
