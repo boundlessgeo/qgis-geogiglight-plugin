@@ -77,6 +77,9 @@ def layerGeopackageFilename(layername, reponame, repogroup):
     return os.path.join(repoFolder(repogroup, reponame), layername + ".gpkg")
 
 def relativeDate(d):
+    epoch = time.mktime(d.timetuple())
+    offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
+    d = d + offset
     try:
         now = datetime.now()
         diff = now - d
