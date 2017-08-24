@@ -238,8 +238,7 @@ class HistoryViewer(QTreeWidget):
                 % (commit.commitid, commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
                    commit.message.replace("\n", "<br>"),commit.modified, commit.added,
                    commit.removed))
-        dlg = showMessageDialog("Version description", html)
-        dlg.exec_()
+        showMessageDialog("Version description", html)
 
     def exportDiffs(self, commit):
         for tree in self.repo.trees(commit.commitid):
