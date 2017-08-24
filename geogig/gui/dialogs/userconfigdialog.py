@@ -84,8 +84,8 @@ class UserConfigDialog(QDialog):
         self.resize(400, 200)
 
     def okPressed(self):
-        self.user = str(self.usernameBox.text())
-        self.email = str(self.emailBox.text())
+        self.user = self.usernameBox.text()
+        self.email = self.emailBox.text()
         self.close()
 
     def cancelPressed(self):
