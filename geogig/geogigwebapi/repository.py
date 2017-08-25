@@ -620,6 +620,7 @@ class Repository(object):
         r.raise_for_status()
 
     def addremote(self, name, url):
+        url = url.strip(" ")
         payload = {"remoteURL": url, "remoteName": name}
         self._apicall("remote", payload)
 
