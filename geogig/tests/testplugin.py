@@ -49,13 +49,8 @@ from geogig.tests.testgpkg import GeoPackageEditTests
 from geogig.tools import layertracking
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
 
-try:
-    from qgistester.utils import layerFromName
-except:
-    pass
-
 from qgiscommons2.files import tempFolderInTempFolder, tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from qgiscommons2.layers import loadLayerNoCrsDialog, layerFromName
 
 def openTestProject(name):
     orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)
