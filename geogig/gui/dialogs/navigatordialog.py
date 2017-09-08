@@ -663,20 +663,21 @@ class LayerItem(QTreeWidgetItem):
         self.status = self.NOT_EXPORTED
         trackedlayer = getTrackingInfoForGeogigLayer(self.repo.url, layer)
         if trackedlayer:
-            try:
-                con = sqlite3.connect(trackedlayer.geopkg)
-                cursor = con.cursor()
-                cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
-                self.currentCommitId = cursor.fetchone()[0]
-                cursor.close()
-                con.close()
-                if branchCommitId == self.currentCommitId:
-                    self.status = self.IN_SYNC
-                else:
-                    self.status = self.NOT_IN_SYNC
-                    self.label.setText("<font color='orange'>%s</font>" % layer)
-            except:
-                pass
+            if os.path.exists(trackedlayer.geopkg):
+                try:
+                    con = sqlite3.connect(trackedlayer.geopkg)
+                    cursor = con.cursor()
+                    cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
+                    self.currentCommitId = cursor.fetchone()[0]
+                    cursor.close()
+                    con.close()
+                    if branchCommitId == self.currentCommitId:
+                        self.status = self.IN_SYNC
+                    else:
+                        self.status = self.NOT_IN_SYNC
+                        self.label.setText("<font color='orange'>%s</font>" % layer)
+                except:
+                    pass
 
 
 
