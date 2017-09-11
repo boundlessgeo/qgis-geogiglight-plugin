@@ -590,15 +590,19 @@ class Repository(object):
                 trackedlayer = getTrackingInfoForGeogigLayer(self.url, tree)
                 if trackedlayer:
                     filepath = trackedlayer.geopkg
-                    try:
-                        con = sqlite3.connect(trackedlayer.geopkg)
-                        cursor = con.cursor()
-                        cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % tree)
-                        commitid = cursor.fetchone()[0]
-                        cursor.close()
-                        con.close()
-                        current = commitid
-                    except:
+                    if os.path.exists(trackedlayer.geopkg):
+                        try:
+                            con = sqlite3.connect(trackedlayer.geopkg)
+                            cursor = con.cursor()
+                            cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % tree)
+                            commitid = cursor.fetchone()[0]
+                            cursor.close()
+                            con.close()
+                            current = commitid
+                        except:
+                            current = "Not available"
+                    else:
+                        filepath = "Not exported"
                         current = "Not available"
                 else:
                     filepath = "Not exported"
