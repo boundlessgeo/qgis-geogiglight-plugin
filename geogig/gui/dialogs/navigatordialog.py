@@ -184,13 +184,17 @@ class NavigatorDialog(BASE, WIDGET):
                                             "There are local changes that would be overwritten.\n"
                                             "Revert them before changing version.",QMessageBox.Ok)
 
-    def updateNavigator(self):
-        readRepos()
+    def updateNavigator(self, read=False):
+        if read:
+            readRepos()
         self.fillTree()
         self.updateCurrentRepo(None)
         self.checkButtons()
 
     def _itemExpanded(self, item):
+        if item is not None and isinstance(item, RepositoriesItem):
+            if not repository.repos:
+                self.updateNavigator(True)
         if item is not None and isinstance(item, (RepoItem, BranchItem)):
             item.populate()
 
@@ -228,11 +232,11 @@ class NavigatorDialog(BASE, WIDGET):
     def fillTree(self):
         self.updateCurrentRepo(None)
         self.repoTree.clear()
-        self.reposItem = None
         repos = repository.repos
-
         self.reposItem = RepositoriesItem()
         self.reposItem.setIcon(0, repoIcon)
+        self.reposItem.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+
         groupedRepos = defaultdict(list)
         for repo in repos:
             groupedRepos[repo.group].append(repo)
@@ -253,10 +257,10 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoTree.addTopLevelItem(self.reposItem)
         if self.reposItem.childCount():
             self.filterRepos()
-        self.reposItem.setExpanded(True)
+        if repos:
+            self.reposItem.setExpanded(True)
         for i in range(self.reposItem.childCount()):
             self.reposItem.child(i).setExpanded(True)
-        #self.repoTree.expandAll()
         self.repoTree.sortItems(0, Qt.AscendingOrder)
 
     def showHistoryTab(self):

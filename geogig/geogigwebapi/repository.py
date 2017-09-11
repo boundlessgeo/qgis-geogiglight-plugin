@@ -798,4 +798,4 @@ def readRepos():
             except:
                 pass
 
-readRepos()
+#readRepos()
