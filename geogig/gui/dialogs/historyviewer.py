@@ -259,7 +259,10 @@ class HistoryViewer(QTreeWidget):
 
     def deleteTags(self, item):
         w = self.itemWidget(item, 0)
-        for tag in w.tags:
+        tags = defaultdict(list)
+        for k, v in self.repo.tags().items():
+            tags[v].append(k)
+        for tag in tags[w.commit.commitid]:
             self.repo.deletetag(tag)
         w.tags = []
         w.updateText()
