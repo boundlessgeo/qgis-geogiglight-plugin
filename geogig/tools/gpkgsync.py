@@ -31,7 +31,7 @@ import sqlite3
 
 from qgis.PyQt.QtWidgets import QInputDialog, QMessageBox
 
-from qgis.core import QgsMessageLog, QgsMapLayerRegistry
+from qgis.core import QgsMessageLog, QgsMapLayerRegistry, QgsVectorLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -269,13 +269,15 @@ def checkoutLayer(repo, layername, bbox, ref = None):
     newCommitId = repo.revparse(ref)
     trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername)
     if trackedlayer is not None:
-        if not os.path.exists(trackedlayer.geopkg):
+        try:
+            source = trackedlayer.source
+            layer = QgsVectorLayer(source, layername, "ogr")
+            assert layer.isValid()
+        except:
             removeTrackedLayer(trackedlayer.source)
             trackedlayer = None
             filename = layerGeopackageFilename(layername, repo.title, repo.group)
             source = "%s|layername=%s" % (filename, layername)
-        else:
-            source = trackedlayer.source
     else:
         filename = layerGeopackageFilename(layername, repo.title, repo.group)
         source = "%s|layername=%s" % (filename, layername)

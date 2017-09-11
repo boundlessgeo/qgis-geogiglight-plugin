@@ -683,7 +683,4 @@ class LayerItem(QTreeWidgetItem):
                 except:
                     pass
 
-
-
-
 navigatorInstance = NavigatorDialog()
