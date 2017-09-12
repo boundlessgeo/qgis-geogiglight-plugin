@@ -8,15 +8,15 @@ from qgis.utils import iface
 
 from lessons.lesson import Step
 
-from geogig._lessons import GeoGigLesson
-from geogig import tests
-from geogig.tests import _createSimpleTestRepo
-from geogig.tests.testplugin import openTestProject, _openNavigator
+from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, createSimpleTestRepo
+import geogig._lessons as ls
 from geogig.tools.layers import hasLocalChanges
 
+
 def checkVersions(n):
-    log = tests._lastRepo.log()
+    log = ls._lastRepo.log()
     return len(log) == n
+
 
 def checkEdited():
     layer = iface.activeLayer()
@@ -40,7 +40,7 @@ def checkLayerInProject():
 
 lesson = GeoGigLesson("Basic GeoGig workflow with an existing repo")
 lesson.addStep("Create repository", "Create repository",
-               function = lambda: _createSimpleTestRepo(True, "Lesson repos", "repo"))
+               function = lambda: createSimpleTestRepo("Lesson repos", "repo"))
 lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator(group = "Lesson repos"))
 lesson.addStep("Export layer", "export.html", endcheck=checkLayerInProject, steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
