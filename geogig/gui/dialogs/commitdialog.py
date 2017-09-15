@@ -33,7 +33,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QDialogButtonBox
                                 )
 
-suggestedMessage = ""
+from datetime import datetime
 
 
 class CommitDialog(QDialog):
@@ -43,9 +43,12 @@ class CommitDialog(QDialog):
         self.repo = repo
         self.branch = None
         self.layername = layername
-        self._message = _message or suggestedMessage
+        self._message = _message or self.timestampMessage()
         self.message = None
         self.initGui()
+
+    def timestampMessage(self):
+        return str(datetime.now())
 
     def initGui(self):
         self.resize(600, 250)
@@ -78,7 +81,6 @@ class CommitDialog(QDialog):
 
         self.text = QPlainTextEdit()
         self.text.setPlainText(self._message)
-        self.text.textChanged.connect(self.textHasChanged)
         self.verticalLayout.addWidget(self.text)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -91,10 +93,10 @@ class CommitDialog(QDialog):
 
         self.text.setFocus()
 
-    def textHasChanged(self):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self.text.toPlainText() != "" and bool(self.branches))
 
     def okPressed(self):
         self.branch = self.branchCombo.currentText()
         self.message = self.text.toPlainText()
+        if not self.message:
+            self.message = self.timestampMessage()
         self.close()

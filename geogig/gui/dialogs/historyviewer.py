@@ -103,14 +103,14 @@ class HistoryViewer(QTreeWidget):
 
     def changeVersion(self, repo, layer, commit):
         if hasLocalChanges(layer):
-            QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+            QMessageBox.warning(config.iface.mainWindow(), 'Cannot switch to this commit',
                 "There are local changes that would be overwritten.\n"
-                "Revert them before changing version.",
+                "Revert them before retrying this operation.",
                 QMessageBox.Ok)
         else:
             tracking = getTrackingInfo(layer)
             repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commit)
-            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % commit,
+            config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to commit %s" % commit,
                                                    level=QgsMessageBar.INFO,
                                                    duration=5)
             layer.reload()
@@ -128,25 +128,25 @@ class HistoryViewer(QTreeWidget):
                 for tree in trees:
                     layer = getProjectLayerForGeoGigLayer(self.repo.url, tree)
                     if layer is not None:
-                        changeVersionActions.append(QAction(resetIcon, "Change '%s' layer to this version" % tree, None))
+                        changeVersionActions.append(QAction(resetIcon, "Change '%s' layer to this commit" % tree, None))
                         changeVersionActions[-1].triggered.connect(partial(self.changeVersion, self.repo, layer, item.commit.commitid))
                 menu = QMenu()
-                describeAction = QAction(infoIcon, "Show detailed description of this version", None)
+                describeAction = QAction(infoIcon, "Show detailed description of this commit", None)
                 describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
                 menu.addAction(describeAction)
-                diffAction = QAction(diffIcon, "Show changes introduced by this version...", None)
+                diffAction = QAction(diffIcon, "Show changes introduced by this commit...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
                 menu.addAction(diffAction)
-                exportDiffAction = QAction(diffIcon, "Export changes introduced by this version as new layer", None)
+                exportDiffAction = QAction(diffIcon, "Export changes introduced by this commit as new layer", None)
                 exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
                 menu.addAction(exportDiffAction)
-                createBranchAction = QAction(newBranchIcon, "Create new branch at this version...", None)
+                createBranchAction = QAction(newBranchIcon, "Create new branch at this commit...", None)
                 createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
                 menu.addAction(createBranchAction)
-                createTagAction = QAction(tagIcon, "Create new tag at this version...", None)
+                createTagAction = QAction(tagIcon, "Create new tag at this commit...", None)
                 createTagAction.triggered.connect(lambda: self.createTag(item))
                 menu.addAction(createTagAction)
-                deleteTagsAction = QAction(tagIcon, "Delete tags at this version", None)
+                deleteTagsAction = QAction(tagIcon, "Delete tags at this commit", None)
                 deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
                 menu.addAction(deleteTagsAction)
                 if changeVersionActions:
@@ -156,7 +156,6 @@ class HistoryViewer(QTreeWidget):
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
-                menu = QMenu()
                 mergeActions = []
                 menu = QMenu()
                 for branch in self.repo.branches():
@@ -180,7 +179,7 @@ class HistoryViewer(QTreeWidget):
         elif len(selected) == 2:
             if isinstance(selected[0], CommitTreeItem) and isinstance(selected[1], CommitTreeItem):
                 menu = QMenu()
-                diffAction = QAction(diffIcon, "Show changes between selected versions...", None)
+                diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
                 menu.addAction(diffAction)
                 point = self.mapToGlobal(point)
@@ -231,14 +230,14 @@ class HistoryViewer(QTreeWidget):
                 "<p><b>Author:</b> %s </p>"
                 "<p><b>Created at:</b> %s</p>"
                 "<p><b>Description message:</b> %s</p>"
-                "<p><b>Changes added by this version </b>:"
+                "<p><b>Changes added by this commit </b>:"
                 "<ul><li><b><font color='#FBB117'>%i features modified</font></b></li>"
                 "<li><b><font color='green'>%i features added</font></b></li>"
                 "<li><b><font color='red'>%i features deleted</font></b></li></ul></p>"
                 % (commit.commitid, commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
                    commit.message.replace("\n", "<br>"),commit.modified, commit.added,
                    commit.removed))
-        showMessageDialog("Version description", html)
+        showMessageDialog("Commit description", html)
 
     def exportDiffs(self, commit):
         for tree in self.repo.trees(commit.commitid):
@@ -381,7 +380,7 @@ class HistoryViewerDialog(QDialog):
         selected = self.history.getRef()
         if selected is None:
             QMessageBox.warning(self, 'No reference selected',
-                    "Select a version or branch from the from the history tree.",
+                    "Select a commit or branch from the from the history tree.",
                     QMessageBox.Ok)
         else:
             self.ref = selected

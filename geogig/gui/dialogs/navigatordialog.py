@@ -45,7 +45,9 @@ from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QSizePolicy,
                                  QWidget,
                                  QPushButton,
-                                 QApplication
+                                 QApplication,
+                                 QAction,
+                                 QMenu
                                 )
 
 from qgis.core import QgsApplication, QgsMessageLog
@@ -107,44 +109,18 @@ class NavigatorDialog(BASE, WIDGET):
         self.reposItem = None
         self.setupUi(self)
 
-        self.filterWidget.hide()
-        self.leFilter.setPlaceholderText(self.tr("Type here to filter repositories..."))
-        self.actionAddGeoGigServer.setIcon(icon('geogig_server.svg'))
-        self.actionCreateRepository.setIcon(icon('new-repo.png'))
-        self.actionAddLayer.setIcon(icon('layer_group.svg'))
-        self.actionManageRemotes.setIcon(icon('geogig.png'))
-        self.actionEdit.setIcon(icon('edit.svg'))
-        self.actionRefresh.setIcon(QgsApplication.getThemeIcon('/mActionDraw.svg'))
-        self.actionShowFilter.setIcon(QgsApplication.getThemeIcon('/mActionFilter2.svg'))
-        self.actionDelete.setIcon(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'))
-        self.actionHelp.setIcon(QgsApplication.getThemeIcon('/mActionHelpContents.svg'))
-        self.actionPull.setIcon(icon('pull.svg'))
-        self.actionPush.setIcon(icon('push.svg'))
 
-        self.actionAddGeoGigServer.triggered.connect(self.addGeoGigServer)
-        self.actionCreateRepository.triggered.connect(self.createRepo)
-        self.actionAddLayer.triggered.connect(self.addLayer)
-        self.actionEdit.triggered.connect(self.editGeoGigServer)
-        self.actionRefresh.triggered.connect(self.updateNavigator)
-        self.actionShowFilter.triggered.connect(self.showFilterWidget)
-        self.actionDelete.triggered.connect(self.deleteCurrentElement)
-        self.actionHelp.triggered.connect(self.openHelp)
-        self.actionManageRemotes.triggered.connect(self.manageRemotes)
-        self.actionPull.triggered.connect(self.pull)
-        self.actionPush.triggered.connect(self.push)
-
-        self.leFilter.returnPressed.connect(self.filterRepos)
-        self.leFilter.cleared.connect(self.filterRepos)
-        self.leFilter.textChanged.connect(self.filterRepos)
-
+        self.repoTree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.repoTree.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
-        self.repoDescription.anchorClicked.connect(self.descriptionLinkClicked)
-        self.repoDescription.setOpenLinks(False)
-        self.repoTree.setFocusPolicy(Qt.NoFocus)
+        self.repoTree.customContextMenuRequested.connect(self.showPopupMenu)
 
-        with open(resourceFile("repodescription.css")) as f:
-            sheet = "".join(f.readlines())
-        self.repoDescription.document().setDefaultStyleSheet(sheet)
+        self.comboEndpoint.currentIndexChanged.connect(self.fillTree)
+
+        self.btnAddServer.clicked.connect(self.addGeoGigServer)
+        self.btnAddRepo.clicked.connect(self.createRepo)
+        self.btnRefresh.clicked.connect(self.fillTree)
+
         if qtVersion < 5:
             self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
             self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
@@ -159,121 +135,58 @@ class NavigatorDialog(BASE, WIDGET):
         def _repoChanged(repo):
             if self.currentRepo is not None and repo.url == self.currentRepo.url:
                 self.updateCurrentRepo(repo)
-            for i in range(self.reposItem.childCount()):
-                item = self.reposItem.child(i)
-                for j in range(item.childCount()):
-                    subitem = item.child(j)
-                    if subitem.repo == repo:
-                        subitem.refreshContent()
+            for i in range(self.repoTree.topLevelItemCount()):
+                item = self.repoTree.topLevelItem(i)
+                if item.repo == repo:
+                    item.refreshContent()
         repoWatcher.repoChanged.connect(_repoChanged)
 
         self.updateNavigator()
 
         self.repoTree.itemExpanded.connect(self._itemExpanded)
 
-    def descriptionLinkClicked(self, url):
-        url = url.toString()
-        if url.startswith("checkout"):
-            layernames = url[url.find(":")+1:].split(",")
-            for layername in layernames:
-                if layername:
-                    try:
-                        self._checkoutLayer(layername, None)
-                    except HasLocalChangesError:
-                        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
-                                            "There are local changes that would be overwritten.\n"
-                                            "Revert them before changing version.",QMessageBox.Ok)
 
-    def updateNavigator(self, read=False):
-        if read:
-            readRepos()
-        self.fillTree()
+    def showPopupMenu(self, point):
+        item = self.repoTree.currentItem()
+        self.menu = item.menu()
+        point = self.mapToGlobal(point)
+        self.menu.popup(point)
+
+    def updateNavigator(self):
+        self.fillCombo()
         self.updateCurrentRepo(None)
-        self.checkButtons()
+        #self.checkButtons()
 
     def _itemExpanded(self, item):
-        if item is not None and isinstance(item, RepositoriesItem):
-            if not repository.repos:
-                self.updateNavigator(True)
         if item is not None and isinstance(item, (RepoItem, BranchItem)):
             item.populate()
-
-    def _removeLayer(self, layeritem):
-        user, email = config.getUserInfo()
-        if user is None:
-            return
-
-        self.currentRepo.removetree(layeritem.layer, user, email, layeritem.branch)
-
-        config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                               level = QgsMessageBar.INFO, duration = 5)
-
-        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layeritem.layer)
-        if layer:
-            branches = self.currentRepo.branches()
-            layerInRepo = False
-            for branch in branches:
-                layers = self.currentRepo.trees(branch)
-                if layeritem.layer in layers:
-                    layerInRepo = True
-                    break
-            if not layerInRepo:
-                setAsNonRepoLayer(layer)
-                tracking = getTrackingInfoForGeogigLayer(self.currentRepo.url, layeritem.layer)
-                if tracking:
-                    removeTrackedLayer(tracking.source)
-        #TODO remove triggers from layer
-        repoWatcher.repoChanged.emit(self.currentRepo)
-
 
     def _checkoutLayer(self, layername, bbox):
         checkoutLayer(self.currentRepo, layername, bbox)
 
+    def fillCombo(self):
+        self.comboEndpoint.clear()
+        groups = repository.repoEndpoints.keys()
+        #groups.insert(0, "Select a GeoGig server")
+        self.comboEndpoint.addItems(groups)
+
     def fillTree(self):
+        groupName = self.comboEndpoint.currentText()
+        #repository.refreshEndpoint(groupName)
+        self.btnAddRepo.setEnabled(groupName in repository.availableRepoEndpoints)
         self.updateCurrentRepo(None)
         self.repoTree.clear()
-        repos = repository.repos
-        self.reposItem = RepositoriesItem()
-        self.reposItem.setIcon(0, repoIcon)
-        self.reposItem.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
 
-        groupedRepos = defaultdict(list)
-        for repo in repos:
-            groupedRepos[repo.group].append(repo)
+        groupRepos = repository.endpointRepos(groupName)
+        for repo in groupRepos:
+            try:
+                item = RepoItem(self.repoTree, repo)
+                self.repoTree.addTopLevelItem(item)
+            except:
+                #TODO: inform of failed repos
+                pass
 
-        for groupName in repository.repoEndpoints:
-            groupRepos = groupedRepos.get(groupName, [])
-            groupItem = GroupItem(groupName)
-            for repo in groupRepos:
-                try:
-                    item = RepoItem(self.repoTree, repo)
-                    groupItem.addChild(item)
-                except:
-                    #TODO: inform of failed repos
-                    pass
-
-            self.reposItem.addChild(groupItem)
-
-        self.repoTree.addTopLevelItem(self.reposItem)
-        if self.reposItem.childCount():
-            self.filterRepos()
-        if repos:
-            self.reposItem.setExpanded(True)
-        for i in range(self.reposItem.childCount()):
-            self.reposItem.child(i).setExpanded(True)
         self.repoTree.sortItems(0, Qt.AscendingOrder)
-
-    def showHistoryTab(self):
-        self.historyTabButton.setAutoRaise(False)
-        self.descriptionTabButton.setAutoRaise(True)
-        self.versionsWidget.setVisible(True)
-        self.repoDescription.setVisible(False)
-
-    def showDescriptionTab(self):
-        self.historyTabButton.setAutoRaise(True)
-        self.descriptionTabButton.setAutoRaise(False)
-        self.versionsWidget.setVisible(False)
-        self.repoDescription.setVisible(True)
 
     def addLayer(self):
         layers = [layer for layer in vectorLayers()
@@ -292,101 +205,28 @@ class NavigatorDialog(BASE, WIDGET):
                 "Only Geopackage layers that do not already belong to a repository can be added.",
                 QMessageBox.Ok)
 
-    def deleteCurrentElement(self):
-        if len(self.repoTree.selectedItems()) == 0:
-            return
-
-        item = self.repoTree.selectedItems()[0]
-        if isinstance(item, RepoItem):
-            ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
-                            "Are you sure you want to remove this repository and all the data in it?",
-                            QMessageBox.Yes | QMessageBox.No,
-                            QMessageBox.Yes);
-            if ret == QMessageBox.No:
-                return
-            tracked = getTrackedPathsForRepo(item.repo)
-            item.repo.delete()
-            removeRepo(item.repo)
-            removeTrackedForRepo(item.repo)
-            layers = vectorLayers()
-            for layer in layers:
-                if formatSource(layer) in tracked:
-                    setAsNonRepoLayer(layer)
-            parent = item.parent()
-            parent.removeChild(item)
-            self.updateCurrentRepo(None)
-        elif isinstance(item, GroupItem):
-            self._removeRepoEndpoint(item)
-        elif isinstance(item, BranchItem):
-            ret = QMessageBox.question(self, 'Delete branch',
-                    'Are you sure you want to delete this branch?',
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if ret == QMessageBox.No:
-                return
-            item.repo.deletebranch(item.branch)
-            repoWatcher.repoChanged.emit(item.repo)
-
-        elif isinstance(item, LayerItem):
-            ret = QMessageBox.question(self, 'Delete layer',
-                'Are you sure you want to delete this layer from the selected branch?',
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if ret == QMessageBox.No:
-                return
-            execute(lambda: self._removeLayer(item))
-
 
     def _removeRepoEndpoint(self, item):
         parent = item.parent()
         parent.removeChild(item)
         removeRepoEndpoint(item.text(0))
 
-    def filterRepos(self):
-        text = self.leFilter.text().strip()
-        for i in range(self.repoTree.topLevelItemCount()):
-            parent = self.repoTree.topLevelItem(i)
-            for j in range(parent.childCount()):
-                item = parent.child(j)
-                itemText = item.text(0)
-                item.setHidden(text != "" and text not in itemText)
 
     def selectionChanged(self):
-        self.checkButtons()
         items = self.repoTree.selectedItems()
         if items:
-            item = items[0]
-            try:
-                if isinstance(item, (GroupItem, RepositoriesItem)):
-                    self.updateCurrentRepo(None)
-                    url = QUrl.fromLocalFile(resourceFile("localrepos_offline.html"))
-                    self.repoDescription.setSource(url)
-                else:
-                    if item.repo != self.currentRepo:
-                        self.updateCurrentRepo(item.repo)
-
-            except Exception as e:
-                    msg = "An error occurred while fetching repository data! %s"
-                    QgsMessageLog.logMessage(msg % e, level=QgsMessageLog.CRITICAL)
-                    QMessageBox.warning(self, 'Add repositories',
-                                        msg % "See the logs for details.",
-                                        QMessageBox.Ok)
+            self.updateCurrentRepo(items[0].repo)
         else:
             self.updateCurrentRepo(None)
 
     def updateCurrentRepo(self, repo):
         def _update():
-            if repo != self.currentRepo:
-                self.tabWidget.setCurrentIndex(0)
             if repo is None:
-                self.tabWidget.setTabEnabled(1, False)
                 self.currentRepo = None
-                self.repoDescription.setText("")
             else:
                 self.currentRepo = repo
-                self.repoDescription.setText(repo.fullDescription())
                 self.versionsTree.updateContent(repo)
-                self.tabWidget.setTabEnabled(1, True)
         try:
-            self.checkButtons()
             self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
             self.repoTree.blockSignals(True)
             execute(_update)
@@ -398,8 +238,7 @@ class NavigatorDialog(BASE, WIDGET):
         name, ok = QInputDialog.getText(self, 'Create repository',
                                               'Enter the repository name:')
         if ok:
-            groupItem = self.repoTree.selectedItems()[0]
-            group = groupItem.text(0)
+            group = self.comboEndpoint.currentText()
             url = repository.repoEndpoints[group]
             try:
                 repo = execute(lambda: createRepoAtUrl(url, group, name))
@@ -410,7 +249,7 @@ class NavigatorDialog(BASE, WIDGET):
                 return
             item = RepoItem(self.repoTree, repo)
             addRepo(repo)
-            groupItem.addChild(item)
+            self.repoTree.addTopLevelItem(item)
             config.iface.messageBar().pushMessage("Create repository", "Repository correctly created",
                                            level=QgsMessageBar.INFO,
                                            duration=5)
@@ -437,12 +276,7 @@ class NavigatorDialog(BASE, WIDGET):
                 QMessageBox.warning(self, 'Add repositories',
                                 "No repositories found at the specified server",
                                 QMessageBox.Ok)
-                groupItem = GroupItem(title)
-            else:
-                groupItem = GroupItem(title)
-                for repo in repos:
-                    item = RepoItem(self.repoTree, repo)
-                    groupItem.addChild(item)
+
 
         except Exception as e:
             msg = "No geogig server found at the specified url. %s"
@@ -450,126 +284,10 @@ class NavigatorDialog(BASE, WIDGET):
             QMessageBox.warning(self, 'Add repositories',
                                 msg % "See the logs for details.",
                                 QMessageBox.Ok)
-            groupItem = GroupItem(title)
-        self.reposItem.addChild(groupItem)
-        self.reposItem.setExpanded(True)
-        self.repoTree.sortItems(0, Qt.AscendingOrder)
 
-    def showFilterWidget(self, visible):
-        self.filterWidget.setVisible(visible)
-        if not visible:
-            self.leFilter.setText("")
-            self.filterRepos()
-        else:
-            self.leFilter.setFocus()
+        self.comboEndpoint.addItem(title)
+        self.comboEndpoint.setCurrentIndex(self.comboEndpoint.count() - 1)
 
-    def checkButtons(self):
-        self.actionCreateRepository.setEnabled(False)
-        self.actionRefresh.setEnabled(False)
-        self.actionDelete.setEnabled(False)
-        self.actionEdit.setEnabled(False)
-        self.actionPush.setEnabled(False)
-        self.actionPull.setEnabled(False)
-        self.actionManageRemotes.setEnabled(False)
-        if len(self.repoTree.selectedItems()) == 0:
-            return
-
-        item = self.repoTree.selectedItems()[0]
-        if isinstance(item, RepositoriesItem):
-            self.actionRefresh.setEnabled(True)
-        elif isinstance(item, GroupItem):
-            self.actionEdit.setEnabled(True)
-            if item.isRepoAvailable:
-                self.actionCreateRepository.setEnabled(True)
-            self.actionDelete.setEnabled(True)
-        elif isinstance(item, BranchItem):
-            self.actionDelete.setEnabled(item.parent().childCount() > 1 and item.branch != "master")
-        elif isinstance(item, RepoItem):
-            self.actionDelete.setEnabled(True)
-            self.actionManageRemotes.setEnabled(True)
-            self.actionPush.setEnabled(True)
-            self.actionPull.setEnabled(True)
-        else:
-            self.actionDelete.setEnabled(True)
-
-    def openHelp(self):
-        webbrowser.open('file://{}'.format(os.path.join(pluginPath, 'docs', 'html', 'index.html')))
-
-
-    def manageRemotes(self):
-        dlg = RemotesDialog(iface.mainWindow(), self.currentRepo)
-        dlg.exec_()
-
-    def pull(self):
-        dlg = RemoteRefDialog(self.currentRepo)
-        dlg.exec_()
-        if dlg.remote is not None:
-            conflicts = execute(lambda: self.currentRepo.pull(dlg.remote, dlg.branch))
-            if conflicts:
-                ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
-                                          "There are conflicts between local and remote changes.\n"
-                                          "Do you want to continue and fix them?",
-                                          QMessageBox.Yes | QMessageBox.No)
-                if ret == QMessageBox.No:
-                    self.currentRepo.closeTransaction(conflicts[0].transactionId)
-                    return
-
-                dlg = ConflictDialog(conflicts)
-                dlg.exec_()
-                solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
-                if not solved:
-                    self.repo.closeTransaction(conflicts[0].transactionId)
-                    return
-                for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
-                    if resolution == ConflictDialog.LOCAL:
-                        conflict.resolveWithLocalVersion()
-                    elif resolution == ConflictDialog.REMOTE:
-                        conflict.resolveWithRemoteVersion()
-                    elif resolution == ConflictDialog.DELETE:
-                        conflict.resolveDeletingFeature()
-                    else:
-                        conflict.resolveWithNewFeature(resolution)
-                user, email = config.getUserInfo()
-                if user is None:
-                    return
-                self.currentRepo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
-                config.iface.messageBar().pushMessage("Changes have been correctly pulled from remote",
-                                               level = QgsMessageBar.INFO, duration = 5)
-                repoWatcher.repoChanged.emit(self.currentRepo)
-            else:
-                config.iface.messageBar().pushMessage("Changes have been correctly pulled from remote",
-                                               level = QgsMessageBar.INFO, duration = 5)
-                repoWatcher.repoChanged.emit(self.currentRepo)
-
-    def push(self):
-        dlg = RemoteRefDialog(self.currentRepo)
-        dlg.exec_()
-        if dlg.remote is not None:
-            try:
-                self.currentRepo.push(dlg.remote, dlg.branch)
-                config.iface.messageBar().pushMessage("Changes have been correctly pushed to remote",
-                                               level = QgsMessageBar.INFO, duration = 5)
-            except CannotPushException:
-                config.iface.messageBar().pushMessage("Changes could not be pushed to remote. Make sure you have pulled changed from the remote first.",
-                                               level = QgsMessageBar.WARNING, duration = 5)
-
-
-class RepositoriesItem(QTreeWidgetItem):
-    def __init__(self):
-        QTreeWidgetItem.__init__(self)
-        self.setText(0, "Repositories")
-
-class GroupItem(QTreeWidgetItem):
-    def __init__(self, name):
-        QTreeWidgetItem.__init__(self)
-        self.setIcon(0, repoIcon)
-        self.setText(0, name)
-        if name not in repository.availableRepoEndpoints:
-            self.setForeground(0,Qt.gray)
-            self.isRepoAvailable = False
-        else:
-            self.isRepoAvailable = True
-        self.name = name
 
 class RepoItem(QTreeWidgetItem):
     def __init__(self, tree, repo):
@@ -594,6 +312,108 @@ class RepoItem(QTreeWidgetItem):
         if isPopulated:
             self.populate()
 
+    def menu(self):
+        menu = QMenu()
+        copyUrlAction = QAction("Copy repository URL", menu)
+        copyUrlAction.triggered.connect(self.copyUrl)
+        menu.addAction(copyUrlAction)
+        refreshAction = QAction("Refresh", menu)
+        refreshAction.triggered.connect(self.refreshContent)
+        menu.addAction(refreshAction)
+        deleteAction = QAction("Delete", menu)
+        deleteAction.triggered.connect(self.delete)
+        menu.addAction(deleteAction)
+        remotesAction = QAction("Manage connections", menu)
+        remotesAction.triggered.connect(self.manageRemotes)
+        menu.addAction(remotesAction)
+        pullAction = QAction("Pull", menu)
+        pullAction.triggered.connect(self.pull)
+        menu.addAction(pullAction)
+        pushAction = QAction("Push", menu)
+        pushAction.triggered.connect(self.push)
+        menu.addAction(pushAction)
+        return menu
+
+    def copyUrl(self):
+        QApplication.clipboard().setText(self.repo.url)
+
+    def delete(self):
+        ret = QMessageBox.warning(config.iface.mainWindow(), "Remove repository",
+                            "Are you sure you want to remove this repository and all the data in it?",
+                            QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.Yes);
+        if ret == QMessageBox.No:
+            return
+        tracked = getTrackedPathsForRepo(self.repo)
+        self.repo.delete()
+        removeRepo(self.repo)
+        removeTrackedForRepo(self.repo)
+        layers = vectorLayers()
+        for layer in layers:
+            if formatSource(layer) in tracked:
+                setAsNonRepoLayer(layer)
+        self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self))
+        self.tree.updateCurrentRepo(None)
+
+    def manageRemotes(self):
+        dlg = RemotesDialog(iface.mainWindow(), self.repo)
+        dlg.exec_()
+
+    def pull(self):
+        dlg = RemoteRefDialog(self.repo)
+        dlg.exec_()
+        if dlg.remote is not None:
+            conflicts = execute(lambda: self.repo.pull(dlg.remote, dlg.branch))
+            if conflicts:
+                ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+                                          "There are conflicts between local repository and connection.\n"
+                                          "Do you want to continue and fix them?",
+                                          QMessageBox.Yes | QMessageBox.No)
+                if ret == QMessageBox.No:
+                    self.currentRepo.closeTransaction(conflicts[0].transactionId)
+                    return
+
+                dlg = ConflictDialog(conflicts)
+                dlg.exec_()
+                solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
+                if not solved:
+                    self.repo.closeTransaction(conflicts[0].transactionId)
+                    return
+                for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
+                    if resolution == ConflictDialog.LOCAL:
+                        conflict.resolveWithLocalVersion()
+                    elif resolution == ConflictDialog.REMOTE:
+                        conflict.resolveWithRemoteVersion()
+                    elif resolution == ConflictDialog.DELETE:
+                        conflict.resolveDeletingFeature()
+                    else:
+                        conflict.resolveWithNewFeature(resolution)
+                user, email = config.getUserInfo()
+                if user is None:
+                    return
+                self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.repo)
+            else:
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.repo)
+
+    def push(self):
+        dlg = RemoteRefDialog(self.repo)
+        dlg.exec_()
+        if dlg.remote is not None:
+            try:
+                self.repo.push(dlg.remote, dlg.branch)
+                config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+            except CannotPushException:
+                config.iface.messageBar().pushMessage("Changes could not be pushed to connection. Make sure you have pulled changes from it first.",
+                                               level = QgsMessageBar.WARNING, duration = 5)
+
+
+
 class BranchItem(QTreeWidgetItem):
     def __init__(self, tree, repo, branch):
         QTreeWidgetItem.__init__(self)
@@ -613,6 +433,32 @@ class BranchItem(QTreeWidgetItem):
                 item = LayerItem(self.tree, self, self.repo, layer, self.branch, branchCommitId)
                 self.addChild(item)
 
+    def refreshContent(self):
+        isPopulated = self.childCount()
+        self.takeChildren()
+        if isPopulated:
+            self.populate()
+
+    def menu(self):
+        menu = QMenu()
+        refreshAction = QAction("Refresh", menu)
+        refreshAction.triggered.connect(self.refreshContent)
+        menu.addAction(refreshAction)
+        deleteAction = QAction("Delete", menu)
+        deleteAction.triggered.connect(self.delete)
+        menu.addAction(deleteAction)
+        deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
+        return menu
+
+    def delete(self):
+        ret = QMessageBox.question(self, 'Delete branch',
+                'Are you sure you want to delete this branch?',
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if ret == QMessageBox.No:
+            return
+        self.repo.deletebranch(self.branch)
+        repoWatcher.repoChanged.emit(self.repo)
+
 class LayerItem(QTreeWidgetItem):
 
     NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = list(range(3))
@@ -624,45 +470,9 @@ class LayerItem(QTreeWidgetItem):
         self.layer = layer
         self.branch = branch
         self.currentCommitId = None
+        self.branchCommitId = branchCommitId
         self.setIcon(0, layerIcon)
-
-        layout = QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.label = QLabel()
-        self.label.setText(layer)
-        self.labelLinks = QLabel()
-        self.labelLinks.setText("<a href='#'>Add to QGIS</a>")
-        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        layout.addWidget(self.label)
-        layout.addWidget(self.labelLinks)
-        layout.addStretch()
-
-        def add():
-            if self.status == self.NOT_IN_SYNC:
-                msgBox = QMessageBox()
-                msgBox.setText("This layer was exported already at a different version.\nWhich version would you like to add to your QGIS project?")
-                msgBox.addButton(QPushButton('Use exported version'), QMessageBox.YesRole)
-                msgBox.addButton(QPushButton('Use version from this branch'), QMessageBox.NoRole)
-                msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
-                QApplication.restoreOverrideCursor()
-                ret = msgBox.exec_()
-                if ret == 0:
-                    checkoutLayer(self.repo, self.layer, None, self.currentCommitId)
-                elif ret == 1:
-                    try:
-                        layer = checkoutLayer(self.repo, self.layer, None, branchCommitId)
-                        repoWatcher.layerUpdated.emit(layer)
-                    except HasLocalChangesError:
-                        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
-                                            "There are local changes that would be overwritten.\n"
-                                            "Revert them before changing version.",QMessageBox.Ok)
-            else:
-                checkoutLayer(self.repo, self.layer, None, branchCommitId)
-
-        self.labelLinks.linkActivated.connect(add)
-        w = QWidget()
-        w.setLayout(layout)
-        self.tree.setItemWidget(self, 0, w)
+        self.setText(0, self.layer)
 
         self.status = self.NOT_EXPORTED
         trackedlayer = getTrackingInfoForGeogigLayer(self.repo.url, layer)
@@ -679,8 +489,77 @@ class LayerItem(QTreeWidgetItem):
                         self.status = self.IN_SYNC
                     else:
                         self.status = self.NOT_IN_SYNC
-                        self.label.setText("<font color='orange'>%s</font>" % layer)
                 except:
                     pass
+
+
+    def add(self):
+        if self.status == self.NOT_IN_SYNC:
+            msgBox = QMessageBox()
+            msgBox.setText("This layer was exported already at a different commit.\nWhich one would you like to add to your QGIS project?")
+            msgBox.addButton(QPushButton('Use previously exported commit'), QMessageBox.YesRole)
+            msgBox.addButton(QPushButton('Use latest commit from this branch'), QMessageBox.NoRole)
+            msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
+            QApplication.restoreOverrideCursor()
+            ret = msgBox.exec_()
+            if ret == 0:
+                checkoutLayer(self.repo, self.layer, None, self.currentCommitId)
+            elif ret == 1:
+                try:
+                    layer = checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
+                    repoWatcher.layerUpdated.emit(layer)
+                except HasLocalChangesError:
+                    QMessageBox.warning(config.iface.mainWindow(), 'Cannot export this commit',
+                                        "There are local changes that would be overwritten.\n"
+                                        "Revert them before exporting.",QMessageBox.Ok)
+        else:
+            checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
+
+
+    def menu(self):
+        menu = QMenu()
+        status = "[A different commit of the layer has been already exported]" if self.status == self.NOT_IN_SYNC else ""
+        addAction = QAction("Add to project %s" % status, menu)
+        addAction.triggered.connect(self.add)
+        menu.addAction(addAction)
+        deleteAction = QAction("Delete", menu)
+        deleteAction.triggered.connect(self.delete)
+        menu.addAction(deleteAction)
+        return menu
+
+    def delete(self):
+        ret = QMessageBox.question(self, 'Delete layer',
+                'Are you sure you want to delete this layer from this branch?',
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if ret == QMessageBox.No:
+            return
+        execute(lambda: self._removeLayer(self))
+
+    def _removeLayer(self, layeritem):
+        user, email = config.getUserInfo()
+        if user is None:
+            return
+
+        self.currentRepo.removetree(layeritem.layer, user, email, layeritem.branch)
+
+        config.iface.messageBar().pushMessage("Layer correctly removed from repository",
+                                               level = QgsMessageBar.INFO, duration = 5)
+
+        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layeritem.layer)
+        if layer:
+            branches = self.repo.branches()
+            layerInRepo = False
+            for branch in branches:
+                layers = self.repo.trees(branch)
+                if layeritem.layer in layers:
+                    layerInRepo = True
+                    break
+            if not layerInRepo:
+                setAsNonRepoLayer(layer)
+                tracking = getTrackingInfoForGeogigLayer(self.repo.url, layeritem.layer)
+                if tracking:
+                    removeTrackedLayer(tracking.source)
+        #TODO remove triggers from layer
+        repoWatcher.repoChanged.emit(self.repo)
 
 navigatorInstance = NavigatorDialog()

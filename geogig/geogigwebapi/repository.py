@@ -35,6 +35,7 @@ import sqlite3
 from datetime import datetime
 import shutil
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 import requests
 from requests.exceptions import HTTPError, ConnectionError
@@ -798,4 +799,12 @@ def readRepos():
             except:
                 pass
 
-#readRepos()
+def refreshEndpoint(name):
+    #TODO: optimize this
+    readRepos()
+
+def endpointRepos(name):
+    groupRepos = [r for r in repos if r.group == name]
+    return groupRepos
+
+readRepos()
