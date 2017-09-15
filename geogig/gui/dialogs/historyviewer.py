@@ -288,11 +288,12 @@ class HistoryViewer(QTreeWidget):
         self.repo = repo
         self.layername = layername
         self.clear()
-        branches = repo.branches()
-        for branch in branches:
-            item = BranchTreeItem(branch, repo, self.layername)
-            self.addTopLevelItem(item)
-        self.resizeColumnToContents(0)
+        if repo is not None:
+            branches = repo.branches()
+            for branch in branches:
+                item = BranchTreeItem(branch, repo, self.layername)
+                self.addTopLevelItem(item)
+            self.resizeColumnToContents(0)
 
 
 class BranchTreeItem(QTreeWidgetItem):

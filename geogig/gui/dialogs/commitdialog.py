@@ -35,15 +35,18 @@ from qgis.PyQt.QtWidgets import (QDialog,
 
 from datetime import datetime
 
+suggestedMessage = ""
 
 class CommitDialog(QDialog):
+
+
 
     def __init__(self, repo, layername,  _message = "", parent = None):
         super(CommitDialog, self).__init__(parent)
         self.repo = repo
         self.branch = None
         self.layername = layername
-        self._message = _message or self.timestampMessage()
+        self._message = _message or suggestedMessage
         self.message = None
         self.initGui()
 

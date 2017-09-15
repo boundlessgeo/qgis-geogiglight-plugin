@@ -221,11 +221,8 @@ class NavigatorDialog(BASE, WIDGET):
 
     def updateCurrentRepo(self, repo):
         def _update():
-            if repo is None:
-                self.currentRepo = None
-            else:
-                self.currentRepo = repo
-                self.versionsTree.updateContent(repo)
+            self.currentRepo = repo
+            self.versionsTree.updateContent(repo)
         try:
             self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
             self.repoTree.blockSignals(True)
