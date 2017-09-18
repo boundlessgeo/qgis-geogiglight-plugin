@@ -158,6 +158,17 @@ def revertChange(layer):
     dlg.exec_()
     if dlg.ref is not None:
         #TODO check that selected commit is in history line
+
+        # check if we are reverting commit which adds layer to the repo
+        prevLayers = repo.trees(dlg.ref.parent.commitid)
+        layers = repo.trees(currentCommitId)
+        if len(layers) > len(prevLayers):
+            QMessageBox.warning(config.iface.mainWindow(), 'Cannot revert commit',
+                    "Commits which add layer to the repository can not "
+                    "be reverted. Use GeoGig Navigator to remove layer "
+                    "from branch.")
+            return
+
         applyLayerChanges(repo, layer, dlg.ref.commitid, dlg.ref.parent.commitid, False)
         layer.reload()
         layer.triggerRepaint()
