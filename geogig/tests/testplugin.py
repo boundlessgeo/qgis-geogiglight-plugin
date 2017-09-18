@@ -620,6 +620,11 @@ def functionalTests():
                  "Verify that the context menu of the layer shows the layer as untracked")
     tests.append(test)
 
+    test = GeoGigTest("Revert commit that adds a layer")
+    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Right click on 'points' layer and select 'GeoGig/Revert commit...'. Select commit that adds layer and press OK button.")
+    test.addStep("Check that warning message is shown and no error is thrown.")
+    tests.append(test)
 
     test = GeoGigTest("Create new tag", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
