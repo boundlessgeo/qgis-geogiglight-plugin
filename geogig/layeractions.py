@@ -128,7 +128,7 @@ def updateInfoActions(layer):
 
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
-    action = QAction(u"Add layer to Repository...", config.iface.legendInterface())
+    action = QAction("Import to GeoGig...", config.iface.legendInterface())
     action.triggered.connect(partial(addLayer, layer))
     if layer.type() == QgsMapLayer.RasterLayer or layer.storageType() != 'GPKG':
         action.setEnabled(False)
@@ -206,7 +206,7 @@ def changeVersion(layer):
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
-        QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
                 "Only geopackage layers are supported at the moment",
                 QMessageBox.Ok)
         return
@@ -219,7 +219,7 @@ def addLayer(layer):
             repoWatcher.repoChanged.emit(dlg.repo)
 
     else:
-        QMessageBox.warning(config.iface.mainWindow(), 'Cannot add layer',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
                 "No repositories were found",
                 QMessageBox.Ok)
 
