@@ -210,6 +210,14 @@ def addLayer(layer):
                 "Only geopackage layers are supported at the moment",
                 QMessageBox.Ok)
         return
+
+    # only single-layer per file are supported
+    if layer.dataProvider().subLayers():
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
+                "Only geopackage layers with single sublayer are supported at the moment",
+                QMessageBox.Ok)
+        return
+
     repos = repository.repos
     if repos:
         dlg = ImportDialog(config.iface.mainWindow(), layer = layer)
