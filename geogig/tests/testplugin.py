@@ -346,6 +346,14 @@ def functionalTests():
     test.addStep("Check layer has been added to repo", _checkLayerInRepo)
     tests.append(test)
 
+    test = GeoGigTest("Add geopackage with multiple layers to repository")
+    test.addStep("Open test data", lambda: openTestProject("multilayer"))
+    test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Add layer 'points' to the 'empty' repository using navigator button 'Add layer")
+    test.addStep("Check that warning message shown and no error is thrown")
+    tests.append(test)
+
     test = GeoGigTest("Check repository log")
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
