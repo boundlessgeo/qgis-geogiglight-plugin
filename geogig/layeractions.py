@@ -212,11 +212,25 @@ def addLayer(layer):
         return
 
     # only single-layer per file are supported
-    if layer.dataProvider().subLayers():
-        QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
-                "Only geopackage layers with single sublayer are supported at the moment",
-                QMessageBox.Ok)
-        return
+    spatialLayers = 0
+    subLayers = layer.dataProvider().subLayers()
+    if len(subLayers) > 0:
+        for layer in subLayers:
+            tokens = layer.split(':')
+            if len(tokens) > 4:
+                tokens[1] += ":{}".format(tokens[2])
+                del tokens[2]
+            elif len(tokens) == 4:
+                if tokens[3] != "None":
+                    spatialLayers += 1
+            else:
+                continue
+
+        if spatialLayers > 1:
+            QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
+                    "Only geopackage layers with single sublayer are supported at the moment",
+                    QMessageBox.Ok)
+            return
 
     repos = repository.repos
     if repos:
