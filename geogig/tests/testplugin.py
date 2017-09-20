@@ -342,7 +342,7 @@ def functionalTests():
     test.addStep("Open test data", lambda: openTestProject("points"))
     test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Add layer 'points' to the 'empty' repository using navigator button 'Add layer")
+    test.addStep("Add layer 'points' to the 'empty' repository using layer's context menu")
     test.addStep("Check layer has been added to repo", _checkLayerInRepo)
     tests.append(test)
 
@@ -350,7 +350,7 @@ def functionalTests():
     test.addStep("Open test data", lambda: openTestProject("multilayer"))
     test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Add layer 'points' to the 'empty' repository using navigator button 'Add layer")
+    test.addStep("Add layer 'points' to the 'empty' repository using layer's context menu")
     test.addStep("Check that warning message shown and no error is thrown")
     tests.append(test)
 
@@ -365,7 +365,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the repository description panel")
+    test.addStep("Add layer from the 'simple' repository into QGIS. Use context menu of the layer node in the repository tree")
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
@@ -373,7 +373,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree")
+    test.addStep("Add layer from the 'simple' repository into QGIS. Use context menu of the layer node in the repository tree")
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
@@ -440,7 +440,6 @@ def functionalTests():
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch'. Select 'mybranch' in the branch box and sync'")
     test.addStep("Check in repo history that the 'mybranch' branch has been updated with the changes")
     tests.append(test)
-
 
     test = Test("Sync with only upstream changes", "Synchronization tests")
     test.addStep("New project", iface.newProject)
