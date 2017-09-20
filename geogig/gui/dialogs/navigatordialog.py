@@ -350,7 +350,7 @@ class RepoItem(QTreeWidgetItem):
             if formatSource(layer) in tracked:
                 setAsNonRepoLayer(layer)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self))
-        self.tree.updateCurrentRepo(None)
+        self.updateCurrentRepo(None)
 
     def manageRemotes(self):
         dlg = RemotesDialog(iface.mainWindow(), self.repo)
