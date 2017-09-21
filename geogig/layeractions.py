@@ -29,7 +29,7 @@ from functools import partial
 
 from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
-from qgis.core import QgsMapLayer
+from qgis.core import QgsMapLayer, QgsVectorLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -211,9 +211,11 @@ def addLayer(layer):
                 QMessageBox.Ok)
         return
 
+    filename, layername = namesFromLayer(layer)
+    l = QgsVectorLayer(filename, 'tmp', 'ogr')
     # only single-layer per file are supported
     spatialLayers = 0
-    subLayers = layer.dataProvider().subLayers()
+    subLayers = l.dataProvider().subLayers()
     if len(subLayers) > 0:
         for layer in subLayers:
             tokens = layer.split(':')
