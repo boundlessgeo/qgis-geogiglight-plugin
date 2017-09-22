@@ -93,9 +93,9 @@ pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]
 def icon(f):
     return QIcon(os.path.join(pluginPath, "ui", "resources", f))
 
-repoIcon = icon("repo-downloaded.png")
-branchIcon = icon("branch-active.svg")
-layerIcon = icon('geometry.png')
+repoIcon = icon("repository.svg")
+branchIcon = icon("branch.svg")
+layerIcon = icon('geometry.svg')
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -116,6 +116,10 @@ class NavigatorDialog(BASE, WIDGET):
         self.repoTree.customContextMenuRequested.connect(self.showPopupMenu)
 
         self.comboEndpoint.currentIndexChanged.connect(self.fillTree)
+
+        self.btnAddServer.setIcon(icon("add-server.svg"))
+        self.btnAddRepo.setIcon(icon("add-repository.svg"))
+        self.btnRefresh.setIcon(icon("refresh.svg"))
 
         self.btnAddServer.clicked.connect(self.addGeoGigServer)
         self.btnAddRepo.clicked.connect(self.createRepo)
