@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>343</width>
+    <width>344</width>
     <height>602</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
   </property>
   <property name="windowTitle">
-   <string>GeoGig</string>
+   <string>&amp;GeoGig</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -27,7 +27,16 @@
        <property name="spacing">
         <number>0</number>
        </property>
-       <property name="margin">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item>
@@ -64,25 +73,13 @@
            <widget class="QComboBox" name="comboEndpoint"/>
           </item>
           <item>
-           <widget class="QToolButton" name="btnAddServer">
-            <property name="text">
-             <string>Add server</string>
-            </property>
-           </widget>
+           <widget class="QToolButton" name="btnAddServer"/>
           </item>
           <item>
-           <widget class="QToolButton" name="btnRefresh">
-            <property name="text">
-             <string>Refresh</string>
-            </property>
-           </widget>
+           <widget class="QToolButton" name="btnRefresh"/>
           </item>
           <item>
-           <widget class="QToolButton" name="btnAddRepo">
-            <property name="text">
-             <string>Add repo</string>
-            </property>
-           </widget>
+           <widget class="QToolButton" name="btnAddRepo"/>
           </item>
          </layout>
         </widget>

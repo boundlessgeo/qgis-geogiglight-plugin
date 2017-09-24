@@ -113,7 +113,9 @@ def layersInGpkgFile(f):
 
 def namesFromLayer(layer):
     source = formatSource(layer)
-    filename, layername = source.split("|")
+    tokens = source.split("|")
+    filename = tokens[0]
+    layername = tokens[1]
     layername = layername.split("=")[-1]
     return filename, layername
 
