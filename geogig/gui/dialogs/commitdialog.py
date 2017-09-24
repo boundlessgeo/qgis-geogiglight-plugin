@@ -89,7 +89,7 @@ class CommitDialog(QDialog):
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(bool(self._message) and bool(self.branches))
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(bool(self.branches))
 
         self.setLayout(self.verticalLayout)
         self.buttonBox.accepted.connect(self.okPressed)

@@ -26,6 +26,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
+from datetime import datetime
 
 from qgis.PyQt.QtWidgets import (QDialog,
                                  QVBoxLayout,
@@ -91,13 +92,11 @@ class ImportDialog(QDialog):
         verticalLayout.addWidget(messageLabel)
 
         self.messageBox = QPlainTextEdit()
-        self.messageBox.textChanged.connect(self.messageHasChanged)
         verticalLayout.addWidget(self.messageBox)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.importButton = QPushButton("Add layer")
         self.importButton.clicked.connect(self.importClicked)
-        self.importButton.setEnabled(False)
         self.buttonBox.addButton(self.importButton, QDialogButtonBox.ApplyRole)
         self.buttonBox.rejected.connect(self.cancelPressed)
         verticalLayout.addWidget(self.buttonBox)
@@ -114,10 +113,6 @@ class ImportDialog(QDialog):
         self.branches = repo.branches()
         self.branchCombo.addItems(self.branches)
 
-    def messageHasChanged(self):
-        self.importButton.setEnabled(self.messageBox.toPlainText() != "")
-
-
     def importClicked(self):
         if self.repo is None:
             self.repo = repository.repos[self.repoCombo.currentIndex()]
@@ -129,7 +124,7 @@ class ImportDialog(QDialog):
         if user is None:
             self.close()
             return
-        message = self.messageBox.toPlainText()
+        message = self.messageBox.toPlainText() or str(datetime.now())
 
         branch = self.branchCombo.currentText()
         try:
