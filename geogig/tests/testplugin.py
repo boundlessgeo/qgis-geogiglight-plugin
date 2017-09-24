@@ -98,9 +98,7 @@ def _openNavigator(empty = False, group = "test"):
         iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
     action.trigger()
     action.trigger()
-    navigatorInstance.fillTree()
-    navigatorInstance.updateCurrentRepo(None)
-    navigatorInstance.checkButtons()
+    navigatorInstance.updateNavigator()
 
 
 def _exportAndEditLayer():
