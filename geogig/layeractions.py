@@ -215,8 +215,8 @@ def addLayer(layer):
     spatialLayers = 0
     subLayers = layer.dataProvider().subLayers()
     if len(subLayers) > 0:
-        for layer in subLayers:
-            tokens = layer.split(':')
+        for layerName in subLayers:
+            tokens = layerName.split(':')
             if len(tokens) > 4:
                 tokens[1] += ":{}".format(tokens[2])
                 del tokens[2]
