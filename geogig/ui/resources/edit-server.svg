@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <filter id="icon-editconnections-a" width="150%" height="126.7%" x="-30%" y="-6.7%" filterUnits="objectBoundingBox">
+      <feOffset dy="1" in="SourceAlpha" result="shadowOffsetOuter1"/>
+      <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation=".5"/>
+      <feColorMatrix in="shadowBlurOuter1" result="shadowMatrixOuter1" values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.6 0"/>
+      <feMerge>
+        <feMergeNode in="shadowMatrixOuter1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <rect width="16.348" height="1" x="4.305" y="21.422" fill="#5A9CE0"/>
+    <rect width="3.713" height="1" x="10.46" y="19.872" fill="#5A9CE0" transform="rotate(90 12.316 20.372)"/>
+    <g transform="translate(3.385 2.75)">
+      <g transform="translate(.88)">
+        <path fill="#5A9CE0" d="M1.35800547,11.5462825 C0.611102463,11.5462825 0,12.0372583 0,12.63734 L0,14.819455 C0,15.4195367 0.611102463,15.9105125 1.35800547,15.9105125 L14.9380602,15.9105125 C15.6849632,15.9105125 16.2960657,15.4195367 16.2960657,14.819455 L16.2960657,12.63734 C16.2960657,12.0372583 15.6849632,11.5462825 14.9380602,11.5462825 L1.35800547,11.5462825 Z"/>
+        <path fill="#4684C4" d="M14.9380602,5.71779482 L1.35800547,5.71779482 C0.611102463,5.71779482 0,6.20877071 0,6.80885234 L0,8.99096739 C0,9.59104902 0.611102463,10.0820249 1.35800547,10.0820249 L14.9380602,10.0820249 C15.6849632,10.0820249 16.2960657,9.59104902 16.2960657,8.99096739 L16.2960657,6.80885234 C16.2960657,6.20877071 15.6849632,5.71779482 14.9380602,5.71779482 L14.9380602,5.71779482 Z"/>
+        <path fill="#3D75B1" d="M1.35800547,0 C0.611102463,0 0,0.490975885 0,1.09105752 L0,3.27317256 C0,3.8732542 0.611102463,4.36423009 1.35800547,4.36423009 L14.9380602,4.36423009 C15.6849632,4.36423009 16.2960657,3.8732542 16.2960657,3.27317256 L16.2960657,1.09105752 C16.2960657,0.490975885 15.6849632,0 14.9380602,0 L1.35800547,0 Z"/>
+      </g>
+      <g fill="#FFF" transform="translate(2 1)">
+        <circle cx="1.541" cy="1.15" r="1"/>
+        <polygon points="8.525 1.598 8.525 .702 9.421 .702 9.421 1.598"/>
+        <polygon points="13.429 1.598 12.534 1.598 12.534 .702 13.429 .702"/>
+        <polygon points="11.43 1.598 10.534 1.598 10.534 .702 11.43 .702"/>
+      </g>
+      <g fill="#FFF" transform="translate(2 6.747)">
+        <circle cx="1.541" cy="1.15" r="1"/>
+        <polygon points="8.525 1.598 8.525 .702 9.421 .702 9.421 1.598"/>
+        <polygon points="13.429 1.598 12.534 1.598 12.534 .702 13.429 .702"/>
+        <polygon points="11.43 1.598 10.534 1.598 10.534 .702 11.43 .702"/>
+      </g>
+      <g fill="#FFF" transform="translate(2 12.585)">
+        <circle cx="1.541" cy="1.15" r="1"/>
+        <polygon points="8.525 1.598 8.525 .702 9.421 .702 9.421 1.598"/>
+        <polygon points="13.429 1.598 12.534 1.598 12.534 .702 13.429 .702"/>
+        <polygon points="11.43 1.598 10.534 1.598 10.534 .702 11.43 .702"/>
+      </g>
+    </g>
+    <g transform="translate(10.782 20.398)">
+      <circle cx="1.652" cy="1.352" r="1.335" fill="#3D75B1"/>
+      <circle cx="1.652" cy="1.352" r="1" fill="#FFF"/>
+    </g>
+    <g stroke-linejoin="round" filter="url(#icon-editconnections-a)" transform="translate(12.48 6.922)">
+      <polygon fill="#505050" fill-rule="nonzero" stroke="#505050" stroke-linecap="round" stroke-width=".5" points=".773 10.128 3.96 11.976 .156 14.742"/>
+      <polygon fill="#FCE94F" fill-rule="nonzero" stroke="#635411" stroke-linecap="round" stroke-width=".5" points="9.174 2.908 3.96 11.976 .773 10.128 3.7 5.036 5.986 1.061"/>
+      <path stroke="#FCFFFF" d="M7.00783204,2.3638622 L2.40730824,10.3644376" opacity=".457"/>
+      <path fill="#000" fill-opacity=".706" fill-rule="nonzero" stroke="#000" d="M8.07027837,2.97974607 L3.46975522,10.9803227" opacity=".363"/>
+      <polygon fill="#969696" fill-rule="nonzero" stroke="#969696" stroke-linecap="square" stroke-width=".5" points=".966 13.939 3.543 11.917 2.483 11.302 .966 13.939"/>
+      <polygon fill="#E6E6E6" fill-rule="nonzero" stroke="#969696" stroke-linecap="round" stroke-width=".5" points="5.604 1.3 9.572 1.3 9.572 2.641 5.604 2.641" transform="rotate(29.95 7.588 1.97)"/>
+      <polygon fill="#E6E6E6" fill-rule="nonzero" stroke="#E6E6E6" stroke-linecap="square" stroke-width=".5" points=".528 13.797 1.032 10.461 2.092 11.076"/>
+    </g>
+  </g>
+</svg>

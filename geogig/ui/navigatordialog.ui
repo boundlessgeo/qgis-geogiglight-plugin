@@ -76,6 +76,13 @@
            <widget class="QToolButton" name="btnAddServer"/>
           </item>
           <item>
+           <widget class="QToolButton" name="btnEditServer">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QToolButton" name="btnRefresh"/>
           </item>
           <item>
