@@ -119,11 +119,13 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.btnAddServer.setIcon(icon("add-server.svg"))
         self.btnEditServer.setIcon(icon("edit-server.svg"))
+        self.btnDeleteServer.setIcon(icon("delete-server.svg"))
         self.btnAddRepo.setIcon(icon("add-repository.svg"))
         self.btnRefresh.setIcon(icon("refresh.svg"))
 
         self.btnAddServer.clicked.connect(self.addGeoGigServer)
         self.btnEditServer.clicked.connect(self.editGeoGigServer)
+        self.btnDeleteServer.clicked.connect(self.deleteGeoGigServer)
         self.btnAddRepo.clicked.connect(self.createRepo)
         self.btnRefresh.clicked.connect(self.fillTree)
 
@@ -212,12 +214,6 @@ class NavigatorDialog(BASE, WIDGET):
                 QMessageBox.Ok)
 
 
-    def _removeRepoEndpoint(self, item):
-        parent = item.parent()
-        parent.removeChild(item)
-        removeRepoEndpoint(item.text(0))
-
-
     def selectionChanged(self):
         items = self.repoTree.selectedItems()
         if items:
@@ -262,8 +258,14 @@ class NavigatorDialog(BASE, WIDGET):
         dlg = GeoGigServerDialog(repository.repoEndpoints[group], group)
         dlg.exec_()
         if dlg.title is not None:
-            self._removeRepoEndpoint(item)
+            removeRepoEndpoint(group)
+            self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
             self._addGeoGigServer(dlg.title, dlg.url)
+
+    def deleteGeoGigServer(self):
+        group = self.comboEndpoint.currentText()
+        removeRepoEndpoint(group)
+        self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
 
     def addGeoGigServer(self):
         dlg = GeoGigServerDialog()

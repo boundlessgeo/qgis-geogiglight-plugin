@@ -83,6 +83,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QToolButton" name="btnDeleteServer">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QToolButton" name="btnRefresh"/>
           </item>
           <item>
