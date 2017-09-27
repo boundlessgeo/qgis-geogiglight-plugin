@@ -633,6 +633,8 @@ def functionalTests():
 
     test = GeoGigTest("Revert commit that adds a layer")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Export repo layer", _exportLayer)
+    test.addStep("Open navigator", _openNavigator)
     test.addStep("Right click on 'points' layer and select 'GeoGig/Revert commit...'. Select commit that adds layer and press OK button.")
     test.addStep("Check that warning message is shown and no error is thrown.")
     tests.append(test)
