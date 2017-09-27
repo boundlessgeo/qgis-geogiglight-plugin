@@ -533,7 +533,7 @@ class LayerItem(QTreeWidgetItem):
         return menu
 
     def delete(self):
-        ret = QMessageBox.question(self, 'Delete layer',
+        ret = QMessageBox.question(self.tree, 'Delete layer',
                 'Are you sure you want to delete this layer from this branch?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.No:
