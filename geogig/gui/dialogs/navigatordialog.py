@@ -546,30 +546,30 @@ class LayerItem(QTreeWidgetItem):
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.No:
             return
-        execute(lambda: self._removeLayer(self))
+        execute(lambda: self._removeLayer())
 
-    def _removeLayer(self, layeritem):
+    def _removeLayer(self):
         user, email = config.getUserInfo()
         if user is None:
             return
 
-        self.currentRepo.removetree(layeritem.layer, user, email, layeritem.branch)
+        self.repo.removetree(self.layer, user, email, self.branch)
 
         config.iface.messageBar().pushMessage("Layer correctly removed from repository",
                                                level = QgsMessageBar.INFO, duration = 5)
 
-        layer = getProjectLayerForGeoGigLayer(self.currentRepo.url, layeritem.layer)
+        layer = getProjectLayerForGeoGigLayer(self.repo.url, self.layer)
         if layer:
             branches = self.repo.branches()
             layerInRepo = False
             for branch in branches:
                 layers = self.repo.trees(branch)
-                if layeritem.layer in layers:
+                if self.layer in layers:
                     layerInRepo = True
                     break
             if not layerInRepo:
                 setAsNonRepoLayer(layer)
-                tracking = getTrackingInfoForGeogigLayer(self.repo.url, layeritem.layer)
+                tracking = getTrackingInfoForGeogigLayer(self.repo.url, self.layer)
                 if tracking:
                     removeTrackedLayer(tracking.source)
         #TODO remove triggers from layer
