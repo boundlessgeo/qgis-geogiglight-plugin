@@ -316,7 +316,6 @@ def functionalTests():
 
     tests = []
 
-
     test = GeoGigTest("Connect to endpoint")
     test.addStep("Open navigator", lambda:  _openNavigator(True))
     test.addStep("Add a new geogig server at the repositories server url")
@@ -342,6 +341,13 @@ def functionalTests():
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Add layer 'points' to the 'empty' repository using layer's context menu")
     test.addStep("Check layer has been added to repo", _checkLayerInRepo)
+    tests.append(test)
+
+    test = GeoGigTest("Edit and delete endpoint")
+    test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Change endpoint name by pressing 'Edit' button. Verify that name changed and no error is thrown")
+    test.addStep("Remove endpoint by pressing 'Delete' button. Verify that endpoint removed and buttons desctivated")
     tests.append(test)
 
     test = GeoGigTest("Add geopackage with multiple layers to repository")
