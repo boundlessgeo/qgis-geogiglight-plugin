@@ -129,6 +129,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.btnAddRepo.clicked.connect(self.createRepo)
         self.btnRefresh.clicked.connect(self.fillTree)
 
+        self._enableOrDisableButtons()
+
         if qtVersion < 5:
             self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
             self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
@@ -266,12 +268,14 @@ class NavigatorDialog(BASE, WIDGET):
         group = self.comboEndpoint.currentText()
         removeRepoEndpoint(group)
         self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
+        self._enableOrDisableButtons()
 
     def addGeoGigServer(self):
         dlg = GeoGigServerDialog()
         dlg.exec_()
         if dlg.title is not None:
             self._addGeoGigServer(dlg.title, dlg.url)
+        self._enableOrDisableButtons()
 
     def _addGeoGigServer(self, title, url):
         try:
@@ -292,6 +296,10 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.comboEndpoint.addItem(title)
         self.comboEndpoint.setCurrentIndex(self.comboEndpoint.count() - 1)
+
+    def _enableOrDisableButtons(self):
+        self.btnEditServer.setEnabled(len(repository.availableRepoEndpoints) > 0)
+        self.btnDeleteServer.setEnabled(len(repository.availableRepoEndpoints) > 0)
 
 
 class RepoItem(QTreeWidgetItem):
@@ -566,5 +574,6 @@ class LayerItem(QTreeWidgetItem):
                     removeTrackedLayer(tracking.source)
         #TODO remove triggers from layer
         repoWatcher.repoChanged.emit(self.repo)
+
 
 navigatorInstance = NavigatorDialog()
