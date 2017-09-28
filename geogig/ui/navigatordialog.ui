@@ -73,10 +73,17 @@
            <widget class="QComboBox" name="comboEndpoint"/>
           </item>
           <item>
-           <widget class="QToolButton" name="btnAddServer"/>
+           <widget class="QToolButton" name="btnAddServer">
+            <property name="toolTip">
+             <string>Add GeoGig server</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QToolButton" name="btnEditServer">
+            <property name="toolTip">
+             <string>Edit GeoGig server</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -84,16 +91,27 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnDeleteServer">
+            <property name="toolTip">
+             <string>Delete GeoGig server</string>
+            </property>
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnRefresh"/>
+           <widget class="QToolButton" name="btnRefresh">
+            <property name="toolTip">
+             <string>Refresh</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnAddRepo"/>
+           <widget class="QToolButton" name="btnAddRepo">
+            <property name="toolTip">
+             <string>Add new repository</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
