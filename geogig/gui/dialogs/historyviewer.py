@@ -68,7 +68,7 @@ def icon(f):
                             os.pardir, os.pardir, "ui", "resources", f))
 
 resetIcon = icon("reset.png")
-branchIcon = icon("branch-active.svg")
+branchIcon = icon("branch.svg")
 newBranchIcon = icon("create_branch.png")
 diffIcon = icon("diff-selected.png")
 deleteIcon = QgsApplication.getThemeIcon('/mActionDeleteSelected.svg')
