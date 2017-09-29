@@ -258,6 +258,7 @@ class NavigatorDialog(BASE, WIDGET):
     def editGeoGigServer(self):
         group = self.comboEndpoint.currentText()
         dlg = GeoGigServerDialog(repository.repoEndpoints[group], group)
+        dlg.setWindowTitle("Edit GeoGig server")
         dlg.exec_()
         if dlg.title is not None:
             removeRepoEndpoint(group)
