@@ -114,7 +114,7 @@ def addInfoActions(layer):
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
         layer.infoActions.append(messageAction)
         return False
-    shaAction = QAction("Version ID: %s" % commitId, config.iface.legendInterface())
+    shaAction = QAction("Commit ID: %s" % commitId, config.iface.legendInterface())
     f = shaAction.font();
     f.setBold(True);
     shaAction.setFont(f);
