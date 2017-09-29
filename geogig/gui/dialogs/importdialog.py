@@ -59,7 +59,7 @@ class ImportDialog(QDialog):
         self.initGui()
 
     def initGui(self):
-        self.setWindowTitle('Add layer to GeoGig repository')
+        self.setWindowTitle('Import to GeoGig')
         verticalLayout = QVBoxLayout()
 
         if self.repo is None:
