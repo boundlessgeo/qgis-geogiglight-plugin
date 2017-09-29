@@ -172,16 +172,16 @@ def revertChange(layer):
         applyLayerChanges(repo, layer, dlg.ref.commitid, dlg.ref.parent.commitid, False)
         layer.reload()
         layer.triggerRepaint()
-        config.iface.messageBar().pushMessage("GeoGig", "Version changes have been reverted in local layer",
+        config.iface.messageBar().pushMessage("GeoGig", "Commit changes have been reverted in local layer",
                                                       level=QgsMessageBar.INFO,
                                                       duration=5)
-        commitdialog.suggestedMessage = "Reverted changes from version %s [%s] " % (dlg.ref.commitid, dlg.ref.message)
+        commitdialog.suggestedMessage = "Reverted changes from commit %s [%s] " % (dlg.ref.commitid, dlg.ref.message)
 
 def changeVersion(layer):
     if hasLocalChanges(layer):
-        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot change commit',
                 "There are local changes that would be overwritten.\n"
-                "Revert them before changing version.",
+                "Revert them before changing commit.",
                 QMessageBox.Ok)
     else:
         tracking = getTrackingInfo(layer)
@@ -191,12 +191,12 @@ def changeVersion(layer):
         if dlg.ref is not None:
             layers = repo.trees(dlg.ref)
             if tracking.layername not in layers:
-                QMessageBox.warning(config.iface.mainWindow(), 'Cannot change version',
-                "The selected version does not contain the specified layer.",
+                QMessageBox.warning(config.iface.mainWindow(), 'Cannot change commit',
+                "The selected commit does not contain the specified layer.",
                 QMessageBox.Ok)
             else:
                 repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
-                config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to version %s" % dlg.ref,
+                config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to commit %s" % dlg.ref,
                                                        level=QgsMessageBar.INFO,
                                                        duration=5)
                 layer.reload()
