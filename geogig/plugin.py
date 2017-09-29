@@ -93,8 +93,13 @@ class GeoGigPlugin(object):
             QgsMapLayerRegistry.instance().layerRemoved.disconnect(layerRemoved)
         except:
             pass
+
         self.menu.deleteLater()
         self.toolButton.deleteLater()
+
+        self.iface.removePluginMenu("&GeoGig", self.explorerAction)
+        self.iface.removePluginMenu("&GeoGig", self.toolAction)
+
         layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
         for layer in layers:
             removeLayerActions(layer)
@@ -143,8 +148,8 @@ class GeoGigPlugin(object):
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
         self.toolButton.setDefaultAction(self.explorerAction)
         bar.addWidget(self.toolButton)
-        self.iface.addPluginToMenu(u"&GeoGig", self.explorerAction)
-        self.iface.addPluginToMenu(u"&GeoGig", self.toolAction)
+        self.iface.addPluginToMenu("&GeoGig", self.explorerAction)
+        self.iface.addPluginToMenu("&GeoGig", self.toolAction)
 
         addSettingsMenu("GeoGig")
         addHelpMenu("GeoGig")
@@ -172,4 +177,3 @@ class GeoGigPlugin(object):
     def setTool(self):
         self.toolAction.setChecked(True)
         self.iface.mapCanvas().setMapTool(self.mapTool)
-
