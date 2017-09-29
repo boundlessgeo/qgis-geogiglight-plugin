@@ -192,7 +192,7 @@ class HistoryViewer(QTreeWidget):
     def mergeInto(self, mergeInto, branch):
         conflicts = self.repo.merge(branch, mergeInto)
         if conflicts:
-            ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+            ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
                                       "There are conflicts between local and remote changes.\n"
                                       "Do you want to continue and fix them?",
                                       QMessageBox.Yes | QMessageBox.No)
