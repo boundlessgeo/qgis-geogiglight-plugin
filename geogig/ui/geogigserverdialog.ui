@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>142</height>
+    <height>170</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add repositories</string>
+   <string>Add GeoGig server</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
