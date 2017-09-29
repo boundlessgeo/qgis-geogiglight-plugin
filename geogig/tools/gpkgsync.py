@@ -94,6 +94,7 @@ def syncLayer(layer):
             return
 
         dlg = CommitDialog(repo, layername)
+        dlg.setWindowTitle("Syncronize layer to repository branch")
         dlg.exec_()
         if dlg.branch is None:
             return
