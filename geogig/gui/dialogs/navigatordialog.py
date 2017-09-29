@@ -267,9 +267,16 @@ class NavigatorDialog(BASE, WIDGET):
 
     def deleteGeoGigServer(self):
         group = self.comboEndpoint.currentText()
-        removeRepoEndpoint(group)
-        self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
-        self._enableOrDisableButtons()
+        res = QMessageBox.question(None,
+                                  "Delete server?",
+                                  "Are you sure you want to remove the "
+                                  "'{}' GeoGig server from the list?".format(group),
+                                  QMessageBox.Yes | QMessageBox.No,
+                                  QMessageBox.No)
+        if res == QMessageBox.Yes:
+            removeRepoEndpoint(group)
+            self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
+            self._enableOrDisableButtons()
 
     def addGeoGigServer(self):
         dlg = GeoGigServerDialog()
