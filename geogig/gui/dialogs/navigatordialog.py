@@ -109,7 +109,6 @@ class NavigatorDialog(BASE, WIDGET):
         self.reposItem = None
         self.setupUi(self)
 
-
         self.repoTree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.repoTree.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
@@ -139,6 +138,7 @@ class NavigatorDialog(BASE, WIDGET):
         layout = QVBoxLayout()
         layout.setSpacing(0)
         layout.setMargin(0)
+        layout.addWidget(QLabel("Repository history"))
         layout.addWidget(self.versionsTree)
         self.versionsWidget.setLayout(layout)
 
