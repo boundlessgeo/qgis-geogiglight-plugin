@@ -180,8 +180,9 @@ def revertChange(layer):
 def changeVersion(layer):
     if hasLocalChanges(layer):
         QMessageBox.warning(config.iface.mainWindow(), 'Cannot change commit',
-                "There are local changes that would be overwritten.\n"
-                "Revert them before changing commit.",
+                "The layer has local changes that would be overwritten. "
+                "Either sync layer with branch or revert local changes "
+                "before changing commit.",
                 QMessageBox.Ok)
     else:
         tracking = getTrackingInfo(layer)
