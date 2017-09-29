@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Version Viewer</string>
+   <string>Commit Viewer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -33,7 +33,7 @@
        </size>
       </property>
       <property name="title">
-       <string>List of Versions (click on a version to see details):</string>
+       <string>List of commits (click on a commit to see details):</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
