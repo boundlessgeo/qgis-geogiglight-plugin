@@ -53,7 +53,7 @@
      </widget>
      <widget class="QGroupBox" name="groupBox_3">
       <property name="title">
-       <string>Details of Each Version:</string>
+       <string>Details of each commit:</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
