@@ -306,8 +306,8 @@ class NavigatorDialog(BASE, WIDGET):
         self.comboEndpoint.setCurrentIndex(self.comboEndpoint.count() - 1)
 
     def _enableOrDisableButtons(self):
-        self.btnEditServer.setEnabled(len(repository.availableRepoEndpoints) > 0)
-        self.btnDeleteServer.setEnabled(len(repository.availableRepoEndpoints) > 0)
+        self.btnEditServer.setEnabled(len(repository.repoEndpoints) > 0)
+        self.btnDeleteServer.setEnabled(len(repository.repoEndpoints) > 0)
 
 
 class RepoItem(QTreeWidgetItem):
