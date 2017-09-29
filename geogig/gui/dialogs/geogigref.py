@@ -100,7 +100,7 @@ class RefWidget(QWidget):
         horizontalLayout3 = QHBoxLayout()
         horizontalLayout3.setSpacing(10)
         horizontalLayout3.setMargin(0)
-        self.commitRadio = QRadioButton('Version', self)
+        self.commitRadio = QRadioButton('Commit', self)
         self.commitRadio.toggled.connect(self.commitRadioClicked)
         self.commitRadio.setMaximumWidth(200)
         self.commitRadio.setMinimumWidth(200)
