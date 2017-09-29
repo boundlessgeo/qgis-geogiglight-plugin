@@ -136,8 +136,6 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.versionsTree = HistoryViewer()
         layout = QVBoxLayout()
-        #~ layout.setSpacing(0)
-        layout.setMargin(0)
         layout.addWidget(QLabel("Repository history"))
         layout.addWidget(self.versionsTree)
         self.versionsWidget.setLayout(layout)
