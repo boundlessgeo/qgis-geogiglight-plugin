@@ -100,14 +100,6 @@ class WebApiTests(unittest.TestCase):
         features = list(layer.getFeatures())
         self.assertEqual(1, len(features))
 
-    def testDescription(self):
-        repo = _createSimpleTestRepo()
-        self.assertTrue("<p>LAST VERSION: <b>third" in repo.fullDescription())
-
-    def testDescriptionInEmptyRepo(self):
-        repo = _createEmptyTestRepo()
-        self.assertTrue("<p>LAST VERSION: <b></b></p>" in repo.fullDescription())
-
     def testFeature(self):
         repo = _createSimpleTestRepo()
         expected = {u'geometry': u'POINT (5 5)', u'n': 2}

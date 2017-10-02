@@ -568,56 +568,6 @@ class Repository(object):
         self._checkoutbranch("master", transactionId)
         self.closeTransaction(transactionId)
 
-    def fullDescription(self):
-        def _prepareDescription():
-            try:
-                c = self.log(limit = 1)[0]
-                epoch = time.mktime(c.committerdate.timetuple())
-                offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
-                d = c.committerdate + offset
-                lastDate = d.strftime("%b %d, %Y %I:%M%p")
-                author = c.authorname
-                lastVersion = "%s (%s by %s)" % (c.message.splitlines()[0], lastDate, author)
-            except:
-                lastVersion = ""
-            with open(resourceFile("descriptiontemplate_edit.html")) as f:
-                s = "".join(f.readlines())
-            s = s.replace("[TITLE]", self.title)
-            s = s.replace("[URL]", self.url)
-            s = s.replace("[LAST_VERSION]", lastVersion)
-
-            layers = []
-            for tree in self.trees():
-                trackedlayer = getTrackingInfoForGeogigLayer(self.url, tree)
-                if trackedlayer:
-                    filepath = trackedlayer.geopkg
-                    if os.path.exists(trackedlayer.geopkg):
-                        try:
-                            con = sqlite3.connect(trackedlayer.geopkg)
-                            cursor = con.cursor()
-                            cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % tree)
-                            commitid = cursor.fetchone()[0]
-                            cursor.close()
-                            con.close()
-                            current = commitid
-                        except:
-                            current = "Not available"
-                    else:
-                        filepath = "Not exported"
-                        current = "Not available"
-                else:
-                    filepath = "Not exported"
-                    current = "Not available"
-                layer = ("<li><b>%s <a href='checkout:%s'>[Add to QGIS]</a></b>"
-                        "<p><i>Filepath</i>: <b>%s</b></p><p><i>Current version</i>: <b>%s</b></p></li>") % (tree, tree, filepath, current)
-                layers.append(layer)
-
-            layers = "<ul>%s</ul>" % "".join(layers)
-            s = s.replace("[LAYERS]", layers)
-            s = s.replace("[LAYERNAMES]", ",".join(self.trees()))
-            return s
-        return(execute(_prepareDescription))
-
     def delete(self):
         r = self._apicall("delete")
         params = {"token": r["token"]}

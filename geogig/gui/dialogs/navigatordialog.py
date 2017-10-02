@@ -136,8 +136,6 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.versionsTree = HistoryViewer()
         layout = QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setMargin(0)
         layout.addWidget(QLabel("Repository history"))
         layout.addWidget(self.versionsTree)
         self.versionsWidget.setLayout(layout)
@@ -386,7 +384,7 @@ class RepoItem(QTreeWidgetItem):
         if dlg.remote is not None:
             conflicts = execute(lambda: self.repo.pull(dlg.remote, dlg.branch))
             if conflicts:
-                ret = QMessageBox.warning(iface.mainWindow(), "Error while syncing",
+                ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
                                           "There are conflicts between local repository and connection.\n"
                                           "Do you want to continue and fix them?",
                                           QMessageBox.Yes | QMessageBox.No)
