@@ -470,7 +470,7 @@ class BranchItem(QTreeWidgetItem):
         return menu
 
     def delete(self):
-        ret = QMessageBox.question(self, 'Delete branch',
+        ret = QMessageBox.question(self.tree, 'Delete branch',
                 'Are you sure you want to delete this branch?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.No:
