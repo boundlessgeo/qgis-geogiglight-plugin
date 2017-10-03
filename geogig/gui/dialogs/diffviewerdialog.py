@@ -208,12 +208,13 @@ class DiffViewerDialog(WIDGET, BASE):
                                             FEATURE_MODIFIED:modifiedItem}
             item = FeatureItem(layername, featureid)
             layerSubItems[layername][c.changetype].addChild(item)
-        for item in list(layerItems.values()):
+        for layername, item in layerItems.iteritems():
             for i in [FEATURE_ADDED, FEATURE_REMOVED, FEATURE_MODIFIED]:
-                item.addChild(layerSubItems[layername][i])
-                layerSubItems[layername][i].setText(0, "%s [%i features]" %
-                                                    (layerSubItems[layername][i].text(0),
-                                                     layerSubItems[layername][i].childCount()))
+                subItem = layerSubItems[layername][i]
+                item.addChild(subItem)
+                subItem.setText(0, "%s [%i features]" %
+                                                    (subItem.text(0),
+                                                     subItem.childCount()))
 
             self.featuresTree.addTopLevelItem(item)
         self.attributesTable.clear()
