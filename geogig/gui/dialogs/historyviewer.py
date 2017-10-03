@@ -244,6 +244,8 @@ class HistoryViewer(QTreeWidget):
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot export diffs',
                 "Diffs cannot be exported for commits that add a new layer",
                 QMessageBox.Ok)
+            return
+
         for tree in self.repo.trees(commit.commitid):
             addDiffLayer(self.repo, tree, commit)
 
