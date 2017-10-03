@@ -240,6 +240,10 @@ class HistoryViewer(QTreeWidget):
         showMessageDialog("Commit description", html)
 
     def exportDiffs(self, commit):
+        if commit.addsLayer():
+            QMessageBox.warning(config.iface.mainWindow(), 'Cannot export diffs',
+                "Diffs cannot be exported for commits that add a new layer",
+                QMessageBox.Ok)
         for tree in self.repo.trees(commit.commitid):
             addDiffLayer(self.repo, tree, commit)
 
