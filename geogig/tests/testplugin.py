@@ -359,7 +359,6 @@ def functionalTests():
     tests.append(test)
 
     test = GeoGigTest("Check repository log")
-    test.addStep("Open navigator", _openNavigator)
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Check log is correctly displayed in the history tab of the GeoGig navigator")
