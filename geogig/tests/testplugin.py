@@ -286,7 +286,7 @@ def _checkLayerHasTrackedContextMenus():
     layer = layerFromName("points")
     actions = layer.geogigActions
     assert 1 < len(actions)
-    assert "version id" in actions[-1].text().lower()
+    assert "commit id" in actions[-1].text().lower()
 
 def _checkContextMenuInfo(text):
     layer = layerFromName("points")
@@ -359,7 +359,6 @@ def functionalTests():
     tests.append(test)
 
     test = GeoGigTest("Check repository log")
-    test.addStep("Open navigator", _openNavigator)
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Check log is correctly displayed in the history tab of the GeoGig navigator")

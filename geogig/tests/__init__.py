@@ -15,7 +15,7 @@ def _importLayerToRepo(repo, layer):
     repo.importgeopkg(filepath, "master", layer, "tester", "test@test.test", False)
 
 simpleTestRepo = None
-def _createSimpleTestRepo(modifiesRepo = False, group=None, name=None):
+def _createSimpleTestRepo(modifiesRepo = True, group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:
@@ -63,7 +63,7 @@ def _createSimpleTestRepo(modifiesRepo = False, group=None, name=None):
 
 
 withMergeTestRepo = None
-def _createWithMergeTestRepo(modifiesRepo = False):
+def _createWithMergeTestRepo(modifiesRepo = True):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:
@@ -108,7 +108,7 @@ def _createWithMergeTestRepo(modifiesRepo = False):
 
 
 emptyTestRepo = None
-def _createEmptyTestRepo(modifiesRepo = False, group=None, name=None):
+def _createEmptyTestRepo(modifiesRepo = True, group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:
@@ -128,7 +128,7 @@ def _createEmptyTestRepo(modifiesRepo = False, group=None, name=None):
     return _lastRepo
 
 multilayerTestRepo = None
-def _createMultilayerTestRepo(modifiesRepo = False):
+def _createMultilayerTestRepo(modifiesRepo = True):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     if modifiesRepo:

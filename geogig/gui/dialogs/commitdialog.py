@@ -50,12 +50,9 @@ class CommitDialog(QDialog):
         self.message = None
         self.initGui()
 
-    def timestampMessage(self):
-        return str(datetime.now())
-
     def initGui(self):
         self.resize(600, 250)
-        self.setWindowTitle('GeoGig')
+        self.setWindowTitle("Syncronize layer to repository branch")
 
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(2)
@@ -99,7 +96,5 @@ class CommitDialog(QDialog):
 
     def okPressed(self):
         self.branch = self.branchCombo.currentText()
-        self.message = self.text.toPlainText()
-        if not self.message:
-            self.message = self.timestampMessage()
+        self.message = self.text.toPlainText() or datetime.now().strftime("%Y-%m-%d %H_%M_%S")
         self.close()

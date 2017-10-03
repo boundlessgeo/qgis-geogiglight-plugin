@@ -51,7 +51,7 @@ class RemotesDialog(QDialog):
 
     def setupUi(self):
         self.resize(500, 350)
-        self.setWindowTitle("Connections manager")
+        self.setWindowTitle("Remote connections manager")
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setSpacing(2)
         self.horizontalLayout.setMargin(0)
@@ -67,7 +67,7 @@ class RemotesDialog(QDialog):
         self.editRowButton = QPushButton()
         self.editRowButton.setText("Edit connection")
         self.removeRowButton = QPushButton()
-        self.removeRowButton.setText("Remove remote")
+        self.removeRowButton.setText("Remove connection")
         self.buttonBox.addButton(self.addRowButton, QDialogButtonBox.ActionRole)
         self.buttonBox.addButton(self.editRowButton, QDialogButtonBox.ActionRole)
         self.buttonBox.addButton(self.removeRowButton, QDialogButtonBox.ActionRole)

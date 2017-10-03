@@ -85,6 +85,14 @@ class Commit(Commitish):
         It's similar to the tilde(~) operator
         '''
         return self.parents[0]
+    
+    def addsLayer(self):
+        '''Returns true if this commit adds a new layer'''
+        if self._parents == [NULL_ID]:
+            return True
+        prevLayers = self.repo.trees(self.parent.commitid)
+        layers = self.repo.trees(self.commitid)
+        return len(layers) > len(prevLayers)
 
     def diff(self, path = None):
         '''Returns a list of DiffEntry with all changes introduced by this commitish'''

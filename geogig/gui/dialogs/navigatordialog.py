@@ -342,7 +342,7 @@ class RepoItem(QTreeWidgetItem):
         deleteAction = QAction("Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
-        remotesAction = QAction("Manage connections", menu)
+        remotesAction = QAction("Manage remote connections", menu)
         remotesAction.triggered.connect(self.manageRemotes)
         menu.addAction(remotesAction)
         pullAction = QAction("Pull", menu)
@@ -470,7 +470,7 @@ class BranchItem(QTreeWidgetItem):
         return menu
 
     def delete(self):
-        ret = QMessageBox.question(self, 'Delete branch',
+        ret = QMessageBox.question(self.tree, 'Delete branch',
                 'Are you sure you want to delete this branch?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.No:
@@ -515,7 +515,8 @@ class LayerItem(QTreeWidgetItem):
     def add(self):
         if self.status == self.NOT_IN_SYNC:
             msgBox = QMessageBox()
-            msgBox.setText("This layer was exported already at a different commit.\nWhich one would you like to add to your QGIS project?")
+            msgBox.setText("This layer was exported already at a different commit.\n"
+                           "Which one would you like to add to your QGIS project?")
             msgBox.addButton(QPushButton('Use previously exported commit'), QMessageBox.YesRole)
             msgBox.addButton(QPushButton('Use latest commit from this branch'), QMessageBox.NoRole)
             msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
@@ -529,8 +530,9 @@ class LayerItem(QTreeWidgetItem):
                     repoWatcher.layerUpdated.emit(layer)
                 except HasLocalChangesError:
                     QMessageBox.warning(config.iface.mainWindow(), 'Cannot export this commit',
-                                        "There are local changes that would be overwritten.\n"
-                                        "Revert them before exporting.",QMessageBox.Ok)
+                                        "The layer has local changes that would be overwritten.\n"
+                                        "Either sync layer with branch or revert local changes "
+                                        "before changing commit",QMessageBox.Ok)
         else:
             checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
 
