@@ -150,6 +150,12 @@ def removeLayerActions(layer):
         pass
 
 def revertChange(layer):
+    if hasLocalChanges(layer):
+        QMessageBox.warning(config.iface.mainWindow(), 'Cannot revert commit',
+                "The layer has local changes.\n"
+                "Revert local changes before reverting a previous commit.",
+                QMessageBox.Ok)
+        return
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
     currentCommitId = getCommitId(layer)
