@@ -181,7 +181,7 @@ def addDiffLayer(repo, layername, commit):
         attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
         attrs["changetype"] = MODIFIED_AFTER
         request = QgsFeatureRequest()
-        request.setFilterFid(beforeGpkgfid)
+        request.setFilterFid(afterGpkgfid)
         feature = next(afterLayer.getFeatures(request))
         layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
 
