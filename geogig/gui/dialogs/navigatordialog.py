@@ -515,6 +515,7 @@ class LayerItem(QTreeWidgetItem):
     def add(self):
         if self.status == self.NOT_IN_SYNC:
             msgBox = QMessageBox()
+            msgBox.setWindowTitle("Layer was already exported")
             msgBox.setText("This layer was exported already at a different commit.\n"
                            "Which one would you like to add to your QGIS project?")
             msgBox.addButton(QPushButton('Use previously exported commit'), QMessageBox.YesRole)
