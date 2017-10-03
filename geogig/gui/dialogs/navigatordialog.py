@@ -342,7 +342,7 @@ class RepoItem(QTreeWidgetItem):
         deleteAction = QAction("Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
-        remotesAction = QAction("Manage connections", menu)
+        remotesAction = QAction("Manage remote connections", menu)
         remotesAction.triggered.connect(self.manageRemotes)
         menu.addAction(remotesAction)
         pullAction = QAction("Pull", menu)

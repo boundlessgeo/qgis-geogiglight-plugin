@@ -47,13 +47,13 @@ class RemoteRefDialog(QDialog):
         self.initGui()
 
     def initGui(self):
-        self.setWindowTitle('Remote reference')
+        self.setWindowTitle('Remote connection reference')
         verticalLayout = QVBoxLayout()
 
         horizontalLayout = QHBoxLayout()
         horizontalLayout.setSpacing(30)
         horizontalLayout.setMargin(0)
-        remoteLabel = QLabel('Remote')
+        remoteLabel = QLabel('Remote connection')
         self.remoteCombo = QComboBox()
         self.remotes = self.repo.remotes()
         self.remoteCombo.addItems(list(self.remotes.keys()))
@@ -73,7 +73,7 @@ class RemoteRefDialog(QDialog):
         verticalLayout.addLayout(horizontalLayout)
 
         self.groupBox = QGroupBox()
-        self.groupBox.setTitle("Remote info")
+        self.groupBox.setTitle("Remote connection info")
         self.groupBox.setLayout(verticalLayout)
 
         layout = QVBoxLayout()
@@ -102,7 +102,7 @@ class RemoteRefDialog(QDialog):
         if remote:
             self.remote = remote
         else:
-            QMessageBox.warning(self, "Missing value", "Please select a remote")
+            QMessageBox.warning(self, "Missing value", "Please select a remote connection")
             return
         branch = self.branchCombo.currentText().strip()
         if branch:
