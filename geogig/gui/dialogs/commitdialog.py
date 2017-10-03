@@ -55,7 +55,7 @@ class CommitDialog(QDialog):
 
     def initGui(self):
         self.resize(600, 250)
-        self.setWindowTitle('GeoGig')
+        self.setWindowTitle("Syncronize layer to repository branch")
 
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(2)
