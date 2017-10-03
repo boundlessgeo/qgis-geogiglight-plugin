@@ -124,8 +124,7 @@ class ImportDialog(QDialog):
         if user is None:
             self.close()
             return
-        message = self.messageBox.toPlainText() or str(datetime.now())
-
+        message = self.messageBox.toPlainText() or datetime.now().strftime("%Y-%m-%d %H_%M_%S")
         branch = self.branchCombo.currentText()
         try:
             self.repo.importgeopkg(self.layer, branch, message, user, email, False)
