@@ -166,7 +166,7 @@ def revertChange(layer):
         #TODO check that selected commit is in history line
 
         # check if we are reverting commit which adds layer to the repo
-        commit = Commit(currentCommitId)
+        commit = Commit.fromref(repo, currentCommitId)
         if commit.addsLayer():
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot revert commit',
                     "Commits which add layer to the repository can not "
