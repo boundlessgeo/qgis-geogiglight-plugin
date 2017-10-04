@@ -249,8 +249,9 @@ class HistoryViewer(QTreeWidget):
         for tree in self.repo.trees(commit.commitid):
             addDiffLayer(self.repo, tree, commit)
 
-    def showDiffs(self, commit):
-        dlg = DiffViewerDialog(self, self.repo, commit.parent, commit)
+    def showDiffs(self, commit, commit2 = None):
+        commit2 = commit2 or commit.parent
+        dlg = DiffViewerDialog(self, self.repo, commit2, commit)
         dlg.exec_()
 
     def createTag(self, item):
