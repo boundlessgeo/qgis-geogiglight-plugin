@@ -1,4 +1,5 @@
 qgiscommons
 requests
+requests-toolbelt
 python-dateutil
 # test requirements

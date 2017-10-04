@@ -39,12 +39,14 @@ from collections import defaultdict
 
 import requests
 from requests.exceptions import HTTPError, ConnectionError
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QTimer, QObject, QEventLoop
 from qgis.PyQt.QtGui import QCursor
 from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
+from qgis.utils import iface
 
 from geogig import config
 from geogig.config import LOG_SERVER_CALLS
@@ -211,8 +213,20 @@ class Repository(object):
         r = requests.get(url, stream=True)
         r.raise_for_status()
         with open(filename, 'wb') as f:
-            r.raw.decode_content = True
-            shutil.copyfileobj(r.raw, f)
+            total = r.headers.get('content-length')
+            if total is None:
+                r.raw.decode_content = True
+                shutil.copyfileobj(r.raw, f) 
+            else:
+                dl = 0
+                total = float(total)
+                for data in r.iter_content(chunk_size=4096):
+                    dl += len(data)
+                    f.write(data)
+                    done = int(100 * dl / total)
+                    iface.mainWindow().statusBar().showMessage("Transferring GeoPKG from GeoGig server [{}%]".format(done))
+
+        iface.mainWindow().statusBar().showMessage("")
 
     def exportdiff(self, layername, oldRef, newRef, filename):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -361,6 +375,7 @@ class Repository(object):
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        iface.mainWindow().statusBar().showMessage("Creating geopkg on GeoGig server...")
         taskid = self._preparelayerdownload(layername, bbox, ref)
         checker = TaskChecker(self.rootUrl, taskid)
         loop = QEventLoop()
@@ -411,8 +426,17 @@ class Repository(object):
         if interchange:
             payload["interchange"]= True
             filename = self.saveaudittables(filename, layername)
-        files = {'fileUpload': open(filename, 'rb')}
-        r = requests.post(self.url + "import.json", params = payload, files = files)
+        files = {'fileUpload': (os.path.basename(filename), open(filename, 'rb'))}
+        
+        encoder = MultipartEncoder(files)
+        total = float(encoder.len)
+        def callback(m):
+            done = int(100 * m.bytes_read / total)
+            iface.mainWindow().statusBar().showMessage("Transferring geopkg to GeoGig server [{}%]".format(done))
+        monitor = MultipartEncoderMonitor(encoder, callback)
+        r = requests.post(self.url + "import.json", params = payload, data=monitor,
+                  headers={'Content-Type': monitor.content_type})
+        iface.mainWindow().statusBar().showMessage("")
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         resp = r.json()
