@@ -25,7 +25,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 
 __revision__ = '$Format:%H$'
 
-
+from requests import HTTPError
 from qgis.PyQt.QtCore import Qt, QMetaObject
 from qgis.PyQt.QtWidgets import (QDialog,
                                  QHBoxLayout,
@@ -37,7 +37,8 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QHeaderView,
                                  QTableWidgetItem,
                                  QLineEdit,
-                                 QLabel
+                                 QLabel,
+                                 QMessageBox
                                 )
 
 
@@ -140,10 +141,16 @@ class RemotesDialog(QDialog):
         dlg = NewRemoteDialog(parent = self)
         dlg.exec_()
         if dlg.ok:
-            self.repo.addremote(dlg.name, dlg.url)
-            self.remotes[dlg.name] = dlg.url
-            self.setTableContent()
-            self.changed = True
+            try:
+                self.repo.addremote(dlg.name, dlg.url)                
+                self.remotes[dlg.name] = dlg.url
+                self.setTableContent()
+                self.changed = True
+            except HTTPError:
+                QMessageBox.warning(self, 'Cannot add remote connection',
+                "Remote connection could not be added.\n"
+                "Ensure that the entered data is correct and the geogig server is running.",
+                QMessageBox.Ok)
 
 
 class NewRemoteDialog(QDialog):
