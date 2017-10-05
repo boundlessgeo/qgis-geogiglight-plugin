@@ -259,19 +259,28 @@ class HistoryViewer(QTreeWidget):
                                               'Enter the tag name:')
         if ok:
             self.repo.createtag(item.commit.commitid, tagname)
-            w = self.itemWidget(item, 0)
-            w.tags.append(tagname)
-            w.updateText()
+            self.updateTags(item.commit.commitid, tagname)
 
     def deleteTags(self, item):
-        w = self.itemWidget(item, 0)
         tags = defaultdict(list)
         for k, v in self.repo.tags().items():
             tags[v].append(k)
-        for tag in tags[w.commit.commitid]:
+        for tag in tags[item.commit.commitid]:
             self.repo.deletetag(tag)
-        w.tags = []
-        w.updateText()
+        self.updateTags(item.commit.commitid)
+        
+    def updateTags(self, commitid, tag=None):
+        for i in range(self.topLevelItemCount()):
+            branchItem = self.topLevelItem(i)
+            for j in range(branchItem.childCount()):
+                commitItem = branchItem.child(j)
+                if commitItem.commit.commitid == commitid:
+                    w = self.itemWidget(commitItem, 0)
+                    if tag is None:
+                        w.tags = []
+                    else:
+                        w.tags.append(tag)
+                    w.updateText()
 
     def createBranch(self, ref):
         text, ok = QInputDialog.getText(self, 'Title',
