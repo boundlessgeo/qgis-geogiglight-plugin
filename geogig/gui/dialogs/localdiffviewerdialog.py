@@ -40,7 +40,11 @@ from qgis.PyQt.QtWidgets import (QTableWidgetItem,
                                  QMenu,
                                  QAction,
                                  QTreeWidgetItem,
-                                 QDialog
+                                 QDialog,
+                                 QWidget,
+                                 QPushButton,
+                                 QHBoxLayout,
+                                 QLabel
                                 )
 from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem, QgsFeatureRequest
 
@@ -78,7 +82,6 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.setWindowFlags(self.windowFlags() |
                             Qt.WindowSystemMenuHint)
 
-        self.attributesTable.customContextMenuRequested.connect(self.showContextMenu)
         self.featuresTree.itemClicked.connect(self.treeItemClicked)
 
         self.featuresTree.header().hide()
@@ -110,35 +113,37 @@ class LocalDiffViewerDialog(WIDGET, BASE):
             if changetype == LOCAL_FEATURE_MODIFIED:
                 oldvalue = oldfeature.get(attrib, None)
                 newvalue = newfeature.get(attrib, None)
+                isChangedGeom = False
                 try:# to avoid false change detection due to different precisions
                     oldvalue = QgsGeometry.fromWkt(oldvalue).exportToWkt(7)
                     newvalue = QgsGeometry.fromWkt(newvalue).exportToWkt(7)
+                    if oldvalue != newvalue and None not in [oldvalue, newvalue]:
+                        widget = QWidget()
+                        btn = QPushButton()
+                        btn.setText("View detail")
+                        g1 = QgsGeometry.fromWkt(oldvalue)
+                        g2 = QgsGeometry.fromWkt(newvalue)
+                        btn.clicked.connect(lambda: self.viewGeometryChanges(g1, g2))
+                        label = QLabel()
+                        label.setText(attribChangeType)
+                        layout = QHBoxLayout(widget)
+                        layout.addWidget(label);
+                        layout.addWidget(btn);
+                        layout.setContentsMargins(0, 0, 0, 0)
+                        widget.setLayout(layout)
+                        self.attributesTable.setItem(i, 2, QTableWidgetItem(""))
+                        self.attributesTable.setCellWidget(i, 2, widget)
+                        isChangedGeom = True
                 except:
-                    pass
+                    pass      
                 if oldvalue == newvalue:
                     attribChangeType = "NO_CHANGE"
-            self.attributesTable.setItem(i, 2, QTableWidgetItem(attribChangeType))
+            if not isChangedGeom:
+                self.attributesTable.setItem(i, 2, QTableWidgetItem(attribChangeType))
             for col in range(3):
                 self.attributesTable.item(i, col).setBackgroundColor(color[attribChangeType]);
         self.attributesTable.resizeColumnsToContents()
         self.attributesTable.horizontalHeader().setResizeMode(QHeaderView.Stretch)
-
-    def showContextMenu(self, point):
-        row = self.attributesTable.selectionModel().currentIndex().row()
-        geom1 = self.attributesTable.item(row, 0).value
-        geom2 = self.attributesTable.item(row, 1).value
-        try:
-            qgsgeom1 = QgsGeometry.fromWkt(geom1)
-            qgsgeom2 = QgsGeometry.fromWkt(geom2)
-        except:
-            return
-        if qgsgeom1 is not None and qgsgeom2 is not None:
-            menu = QMenu()
-            viewAction = QAction("View geometry changes...", None)
-            viewAction.triggered.connect(lambda: self.viewGeometryChanges(qgsgeom1, qgsgeom2))
-            menu.addAction(viewAction)
-            globalPoint = self.attributesTable.mapToGlobal(point)
-            menu.exec_(globalPoint)
 
     def viewGeometryChanges(self, g1, g2):
         dlg = GeometryDiffViewerDialog([g1, g2], QgsCoordinateReferenceSystem("EPSG:4326")) #TODO set CRS correctly
