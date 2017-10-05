@@ -540,7 +540,7 @@ class LayerItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
-        status = "[A different commit of the layer has been already exported]" if self.status == self.NOT_IN_SYNC else ""
+        status = "[Not in sync]" if self.status == self.NOT_IN_SYNC else ""
         addAction = QAction("Add to project %s" % status, menu)
         addAction.triggered.connect(self.add)
         menu.addAction(addAction)
