@@ -224,7 +224,7 @@ class Repository(object):
                     dl += len(data)
                     f.write(data)
                     done = int(100 * dl / total)
-                    iface.mainWindow().statusBar().showMessage("Transferring GeoPKG from GeoGig server [{}%]".format(done))
+                    iface.mainWindow().statusBar().showMessage("Transferring geopkg from GeoGig server [{}%]".format(done))
 
         iface.mainWindow().statusBar().showMessage("")
 
@@ -436,7 +436,6 @@ class Repository(object):
         monitor = MultipartEncoderMonitor(encoder, callback)
         r = requests.post(self.url + "import.json", params = payload, data=monitor,
                   headers={'Content-Type': monitor.content_type})
-        iface.mainWindow().statusBar().showMessage("")
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         resp = r.json()
@@ -447,6 +446,7 @@ class Repository(object):
         checker.start()
         loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
         QApplication.restoreOverrideCursor()
+        iface.mainWindow().statusBar().showMessage("")
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
@@ -674,6 +674,12 @@ class TaskChecker(QObject):
             self.ok = False
             self.taskIsFinished.emit()
         else:
+            try:
+                progressTask = self.response["progress"]["task"]
+                progressAmount = self.response["progress"]["amount"]
+                iface.mainWindow().statusBar().showMessage("%s [%s \%]" % (progressTask, progressAmount))
+            except KeyError:
+                pass 
             QTimer.singleShot(500, self.checkTask)
 
 
