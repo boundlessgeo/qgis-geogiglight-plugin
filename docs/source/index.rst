@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 .. meta::
-   :description: Geogig plugin Documentation
+   :description: GeoGig plugin Documentation
    :keywords: geogig plugin documentation, geogig plugin qgis, versioning
 
 Index
