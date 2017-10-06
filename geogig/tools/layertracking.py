@@ -39,6 +39,7 @@ from geogig.tools.layers import formatSource
 
 from qgiscommons2.layers import vectorLayers, loadLayerNoCrsDialog
 
+from qgis.core import QgsVectorLayer 
 
 tracked = []
 
@@ -118,7 +119,10 @@ def readTrackedLayers():
         pass
 
 def isRepoLayer(layer):
-    return getTrackingInfo(layer) is not None
+    if isinstance(layer, QgsVectorLayer):
+        return getTrackingInfo(layer) is not None
+    else:
+        return False
 
 def getTrackingInfo(layer):
     source = formatSource(layer)
