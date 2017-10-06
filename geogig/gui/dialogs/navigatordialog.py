@@ -222,6 +222,8 @@ class NavigatorDialog(BASE, WIDGET):
             self.updateCurrentRepo(None)
 
     def updateCurrentRepo(self, repo):
+        if repo == self.currentRepo:
+            return
         def _update():
             self.currentRepo = repo
             self.versionsTree.updateContent(repo)
