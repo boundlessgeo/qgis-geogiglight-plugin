@@ -182,6 +182,9 @@ class HistoryViewer(QTreeWidget):
                 diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
                 menu.addAction(diffAction)
+                exportDiffAction = QAction(diffIcon, "Export changes between selected commits as new layers", None)
+                exportDiffAction.triggered.connect(lambda: self.exportDiffs(selected[0].commit, selected[1].commit))
+                menu.addAction(exportDiffAction)
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
 
@@ -239,15 +242,18 @@ class HistoryViewer(QTreeWidget):
                    commit.removed))
         showMessageDialog("Commit description", html)
 
-    def exportDiffs(self, commit):
-        if commit.addsLayer():
+    def exportDiffs(self, commit, commit2 = None):
+        commit2 = commit2 or commit.parent
+        layers = self.repo.trees(commit.commitid)
+        layers2 = self.repo.trees(commit2.commitid)        
+        if layers != layers2:
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot export diffs',
-                "Diffs cannot be exported for commits that add a new layer",
+                "Diffs cannot be exported for commits that add/remove layers",
                 QMessageBox.Ok)
             return
 
-        for tree in self.repo.trees(commit.commitid):
-            addDiffLayer(self.repo, tree, commit)
+        for layername in layers:
+            addDiffLayer(self.repo, layername, commit, commit2)
 
     def showDiffs(self, commit, commit2 = None):
         commit2 = commit2 or commit.parent

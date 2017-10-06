@@ -141,15 +141,15 @@ def gpkgfidFromGeogigfid(cursor, layername, geogigfid):
     gpkgfid = int(cursor.fetchone()[0])
     return gpkgfid
 
-def addDiffLayer(repo, layername, commit):
+def addDiffLayer(repo, layername, commit, commit2):
 
     styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
     geomTypes = ["Point","LineString","Polygon"]
     beforeFilename = tempFilename("gpkg")
-    repo.exportdiff(layername, commit.commitid, commit.parent.commitid, beforeFilename)
+    repo.exportdiff(layername, commit.commitid, commit2.commitid, beforeFilename)
     beforeLayer = loadLayerNoCrsDialog(beforeFilename, layername, "ogr")
     afterFilename = tempFilename("gpkg")
-    repo.exportdiff(layername, commit.parent.commitid, commit.commitid, afterFilename)
+    repo.exportdiff(layername, commit2.commitid, commit.commitid, afterFilename)
     afterLayer = loadLayerNoCrsDialog(afterFilename, layername, "ogr")
 
     beforeCon = sqlite3.connect(beforeFilename)
