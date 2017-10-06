@@ -391,7 +391,7 @@ class Repository(object):
         conn = sqlite3.connect(newfilename)
         c = conn.cursor()
         c.execute("ATTACH DATABASE ? AS db2", (filename,))
-        tables = ["%s_audit" % layer, "%s_fids" % layer]
+        tables = ["%s_audit" % layer, "%s_fids" % layer, "geogig_audited_tables"]
         for table in tables:
             c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % table)
             c.execute(c.fetchone()[0])
@@ -410,7 +410,7 @@ class Repository(object):
         conn.commit()
         conn.close()
 
-        return filename
+        return newfilename
 
     def importgeopkg(self, layer, branch, message, authorName, authorEmail, interchange):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
