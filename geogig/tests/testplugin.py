@@ -39,7 +39,7 @@ from qgis.utils import iface
 from geogig import tests
 from geogig.layeractions import updateInfoActions
 from geogig.geogigwebapi import repository
-import geogig.layeractions
+from geogigi import layeractions
 
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
 
@@ -291,7 +291,7 @@ def _checkLayerHasTrackedContextMenus():
 
 def _checkContextMenuInfo(text):
     layer = layerFromName("points")
-    actions = layer.infoActions
+    actions = layeractions._infoActions[layer.id()]
     assert 2 == len(actions)
     assert text in actions[0].text().lower()
 
