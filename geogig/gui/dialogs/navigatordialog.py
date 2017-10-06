@@ -274,6 +274,7 @@ class NavigatorDialog(BASE, WIDGET):
         if res == QMessageBox.Yes:
             removeRepoEndpoint(group)
             self.comboEndpoint.removeItem(self.comboEndpoint.currentIndex())
+            self.fillTree()
             self._enableOrDisableButtons()
 
     def addGeoGigServer(self):
