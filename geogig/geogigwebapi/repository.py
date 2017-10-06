@@ -675,9 +675,9 @@ class TaskChecker(QObject):
             self.taskIsFinished.emit()
         else:
             try:
-                progressTask = self.response["progress"]["task"]
-                progressAmount = self.response["progress"]["amount"]
-                iface.mainWindow().statusBar().showMessage("%s [%s \%]" % (progressTask, progressAmount))
+                progressTask = self.response["task"]["progress"]["task"]
+                progressAmount = self.response["task"]["progress"]["amount"]
+                iface.mainWindow().statusBar().showMessage("%s [%s]" % (progressTask, progressAmount))
             except KeyError:
                 pass 
             QTimer.singleShot(500, self.checkTask)
