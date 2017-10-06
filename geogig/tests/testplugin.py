@@ -39,6 +39,7 @@ from qgis.utils import iface
 from geogig import tests
 from geogig.layeractions import updateInfoActions
 from geogig.geogigwebapi import repository
+import geogig.layeractions
 
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
 
@@ -278,13 +279,13 @@ def _checkLayerInRepo():
 
 def _checkLayerHasUntrackedContextMenus():
     layer = layerFromName("points")
-    actions = layer.geogigActions
+    actions = layeractions._actions[layer.id()]
     assert 1 == len(actions)
     assert "add" in actions[0].text().lower()
 
 def _checkLayerHasTrackedContextMenus():
     layer = layerFromName("points")
-    actions = layer.geogigActions
+    actions = layeractions._actions[layer.id()]
     assert 1 < len(actions)
     assert "commit id" in actions[-1].text().lower()
 

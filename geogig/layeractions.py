@@ -51,6 +51,8 @@ from geogig.tools.gpkgsync import syncLayer, getCommitId, applyLayerChanges
 from geogig.tools.layers import namesFromLayer, hasLocalChanges
 from geogig.tools.layertracking import getTrackingInfo
 
+_actions = {}
+_infoActions = {}
 
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
@@ -79,23 +81,23 @@ def setAsRepoLayer(layer):
     revertAction.triggered.connect(partial(revertLocalChanges, layer))
     config.iface.legendInterface().addLegendLayerAction(revertAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
-    layer.geogigActions = [separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
-    for action in layer.geogigActions:
+    _actions[layer.id()] = [separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
+    for action in _actions[layer.id()]:
         action.setEnabled(canConnect)
     if not canConnect:
         refreshAction = QAction(u"Retry connecting...", config.iface.legendInterface())
         refreshAction.triggered.connect(lambda: setAsRepoLayer(layer))
         config.iface.legendInterface().addLegendLayerAction(refreshAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
         config.iface.legendInterface().addLegendLayerActionForLayer(refreshAction, layer)
-        layer.geogigActions.append(refreshAction)
-    layer.geogigActions.extend(layer.infoActions)
+        _actions[layer.id()].append(refreshAction)
+    _actions[layer.id()].extend(_infoActions[layer.id()])
     repoWatcher.layerUpdated.connect(updateInfoActions)
 
 def addInfoActions(layer):
     commitId = getCommitId(layer)
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
-    layer.infoActions = []
+    _infoActions[layer.id()] = []
     try:
         commit = Commit.fromref(repo, commitId)
         messageAction = QAction("Message: '%s'" % commit.message.splitlines()[0], config.iface.legendInterface())
@@ -104,7 +106,7 @@ def addInfoActions(layer):
         messageAction.setFont(f);
         config.iface.legendInterface().addLegendLayerAction(messageAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
-        layer.infoActions.append(messageAction)
+        _infoActions[layer.id()].append(messageAction)
     except:
         messageAction = QAction("Error: Cannot connect with repository", config.iface.legendInterface())
         f = messageAction.font();
@@ -112,7 +114,7 @@ def addInfoActions(layer):
         messageAction.setFont(f);
         config.iface.legendInterface().addLegendLayerAction(messageAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
-        layer.infoActions.append(messageAction)
+        _infoActions[layer.id()].append(messageAction)
         return False
     shaAction = QAction("Commit ID: %s" % commitId, config.iface.legendInterface())
     f = shaAction.font();
@@ -120,7 +122,7 @@ def addInfoActions(layer):
     shaAction.setFont(f);
     config.iface.legendInterface().addLegendLayerAction(shaAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(shaAction, layer)
-    layer.infoActions.append(shaAction)
+    _infoActions[layer.id()].append(shaAction)
     return True
 
 def updateInfoActions(layer):
@@ -134,19 +136,21 @@ def setAsNonRepoLayer(layer):
         action.setEnabled(False)
     config.iface.legendInterface().addLegendLayerAction(action, u"GeoGig", u"id2", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
-    layer.geogigActions = [action]
+    _actions[layer.id()] = [action]
     try:
         repoWatcher.layerUpdated.disconnect(updateInfoActions)
     except:
         pass #In case it is a layer that was never a repo layer
 
 def removeLayerActions(layer):
+    if layer is None:
+        return
     try:
-        for action in layer.geogigActions:
+        for action in _actions[layer.id()]:
             config.iface.legendInterface().removeLegendLayerAction(action)
-        layer.geogigActions = []
-        layer.infoActions = []
-    except AttributeError:
+        _actions[layer.id()] = []
+        _infoActions[layer.id()] = []
+    except KeyError:
         pass
 
 def revertChange(layer):
