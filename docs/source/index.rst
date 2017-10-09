@@ -7,15 +7,16 @@
    :description: GeoGig plugin Documentation
    :keywords: geogig plugin documentation, geogig plugin qgis, versioning
 
-Index
-=====
+GeoGig Client plugin documentation
+==================================
 
 |current_plugin| is a plugin for QGIS to work with GeoGig repositories using the
 GeoGig Web API.
 
 GeoGig is an open source tool that draws inspiration from Git, but adapts its
-core concepts to handle distributed versioning of geospatial data. GeoGig is
-maintained by Boundless (http://boundlessgeo.com/). For more information about
+core concepts to handle distributed versioning of geospatial data. GeoGig is a
+`Locationtech <https://www.locationtech.org/>`_  project, for which Boundless
+(http://boundlessgeo.com/) contributes actively. For more information about
 GeoGig see http://geogig.org/
 
 
