@@ -110,10 +110,10 @@ class LocalDiffViewerDialog(WIDGET, BASE):
             self.attributesTable.setItem(i, 0, DiffItem(oldfeature.get(attrib, None)))
             self.attributesTable.setItem(i, 1, DiffItem(newfeature.get(attrib, None)))
             attribChangeType = changeTypeName[changetype]
+            isChangedGeom = False
             if changetype == LOCAL_FEATURE_MODIFIED:
                 oldvalue = oldfeature.get(attrib, None)
                 newvalue = newfeature.get(attrib, None)
-                isChangedGeom = False
                 try:# to avoid false change detection due to different precisions
                     oldvalue = QgsGeometry.fromWkt(oldvalue).exportToWkt(7)
                     newvalue = QgsGeometry.fromWkt(newvalue).exportToWkt(7)
