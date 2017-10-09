@@ -182,6 +182,7 @@ htmlhelp_basename = 'QGISGeoGigPlugindoc'
 rst_epilog = """
 .. |BLQGIS| replace:: *Boundless Desktop*
 .. |current_plugin| replace:: *Geogig client*
+.. |path_to_settings| replace:: :menuselection:`Plugins --> GeoGig --> Plugin settings...`
 """
 
 # -- Options for LaTeX output ---------------------------------------------

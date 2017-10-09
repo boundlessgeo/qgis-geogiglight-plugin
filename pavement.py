@@ -1,6 +1,8 @@
 import os
 import fnmatch
 import zipfile
+import json
+from collections import defaultdict
 
 from paver.easy import *
 # this pulls in the sphinx target
@@ -152,10 +154,44 @@ def _make_zip(zipFile, options):
             zipFile.write(path(root) / f, path(relpath) / f)
 
 
+def create_settings_docs(options):
+    settings_file = path(options.plugin.name) / "settings.json"
+    doc_file = options.sphinx.sourcedir / "settingsconf.rst"
+    with open(settings_file) as f:
+        settings = json.load(f)
+
+    grouped = defaultdict(list)
+    for setting in settings:
+        grouped[setting["group"]].append(setting)
+    with open (doc_file, "w") as f:
+        f.write(".. _plugin_settings:\n\n"
+                "Plugin settings\n===============\n\n"
+                "The plugin can be adjusted using the following settings, "
+                "to be found in its settings dialog (|path_to_settings|).\n")
+        for groupName, group in grouped.iteritems():
+            section_marks = "-" * len(groupName)
+            f.write("\n%s\n%s\n\n"
+                    ".. list-table::\n"
+                    "   :header-rows: 1\n"
+                    "   :stub-columns: 1\n"
+                    "   :widths: 20 80\n"
+                    "   :class: non-responsive\n\n"
+                    "   * - Option\n"
+                    "     - Description\n"
+                    % (groupName, section_marks))
+            for setting in group:
+                f.write("   * - %s\n"
+                        "     - %s\n"
+                        % (setting["label"], setting["description"]))
+
 @task
 def builddocs(options):
-    sh("git submodule init")
-    sh("git submodule update")
+    try:
+        sh("git submodule init")
+        sh("git submodule update")
+    except:
+        pass
+    create_settings_docs(options)
     cwd = os.getcwd()
     os.chdir(options.sphinx.docroot)
     sh("make html")
