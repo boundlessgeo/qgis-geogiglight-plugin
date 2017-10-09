@@ -59,7 +59,7 @@ from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
-from geogig.tools.layers import hasLocalChanges, addDiffLayer
+from geogig.tools.layers import hasLocalChanges, addDiffLayers
 from qgiscommons2.layers import loadLayerNoCrsDialog
 from qgiscommons2.gui import showMessageDialog
 
@@ -137,7 +137,7 @@ class HistoryViewer(QTreeWidget):
                 diffAction = QAction(diffIcon, "Show changes introduced by this commit...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
                 menu.addAction(diffAction)
-                exportDiffAction = QAction(diffIcon, "Export changes introduced by this commit as new layer", None)
+                exportDiffAction = QAction(diffIcon, "Export changes introduced by this commit as new layers", None)
                 exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
                 menu.addAction(exportDiffAction)
                 createBranchAction = QAction(newBranchIcon, "Create new branch at this commit...", None)
@@ -252,8 +252,7 @@ class HistoryViewer(QTreeWidget):
                 QMessageBox.Ok)
             return
 
-        for layername in layers:
-            addDiffLayer(self.repo, layername, commit, commit2)
+        addDiffLayers(self.repo, commit, commit2, layers)
 
     def showDiffs(self, commit, commit2 = None):
         commit2 = commit2 or commit.parent

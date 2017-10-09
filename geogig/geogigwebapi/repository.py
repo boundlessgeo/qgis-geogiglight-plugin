@@ -228,7 +228,7 @@ class Repository(object):
 
         iface.mainWindow().statusBar().showMessage("")
 
-    def exportdiff(self, layername, oldRef, newRef, filename):
+    def exportdiff(self, oldRef, newRef, filename):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         params = {"oldRef": oldRef, "newRef": newRef, "format": "gpkg"}
         url  = self.url + "export-diff.json"
@@ -391,7 +391,7 @@ class Repository(object):
         conn = sqlite3.connect(newfilename)
         c = conn.cursor()
         c.execute("ATTACH DATABASE ? AS db2", (filename,))
-        tables = ["%s_audit" % layer, "%s_fids" % layer, "geogig_audited_tables"]
+        tables = ["%s_audit" % layer, "%s_fids" % layer, "geogig_audited_tables", "gpkg_geometry_columns"]
         for table in tables:
             c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % table)
             c.execute(c.fetchone()[0])
