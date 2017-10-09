@@ -712,7 +712,7 @@ existing connections.
 Click :guilabel:`Close` once you are done adding remote connections
 
 Getting data from a remote connection
--------------------------------------
+.....................................
 
 To get data and commit information from one of your remote connections into your
 own repository (for example, to get all the data and commits from the shared
@@ -726,7 +726,7 @@ your own local repository. In case of conflicts, the :guilabel:`Merge conflicts`
 dialog will appear (see the :ref:`solve_conflicts` section).
 
 Push changes to a remote connection
------------------------------------
+...................................
 
 After you edited the data and synchronized it into your repository, you can send
 the changes to other remote repositories. In the :guilabel:`GeoGig Navigator`,
