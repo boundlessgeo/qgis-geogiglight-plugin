@@ -55,7 +55,6 @@ from geogig.repowatcher import repoWatcher
 
 from qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
-from geogig.gui.dialogs.createbranch import CreateBranchDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
