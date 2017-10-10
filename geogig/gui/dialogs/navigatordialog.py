@@ -157,7 +157,7 @@ class NavigatorDialog(BASE, WIDGET):
     def showPopupMenu(self, point):
         item = self.repoTree.currentItem()
         self.menu = item.menu()
-        point = self.mapToGlobal(point)
+        point = self.repoTree.mapToGlobal(point)
         self.menu.popup(point)
 
     def updateNavigator(self):
