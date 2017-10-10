@@ -198,7 +198,7 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
         changesCursor.execute("SELECT * FROM %s WHERE fid='%s';" % (layername, changesGpkgfid))
         featureRow = changesCursor.fetchone()
         attrs = {attr: featureRow[attributes.index(attr)] for attr in attrnames}
-        vals = ",".join(["%s=?" % k for k in list(attrs.keys())])
+        vals = ",".join(['"%s"=?' % k for k in list(attrs.keys())])
         cursor.execute("UPDATE %s SET %s WHERE fid='%s'" % (layername, vals, gpkgfid), list(attrs.values()))
 
     changesCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
