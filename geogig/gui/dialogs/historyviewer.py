@@ -56,6 +56,7 @@ from geogig.repowatcher import repoWatcher
 from qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
+from geogig.geogigwebapi.commit import Commit
 
 from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
 from geogig.tools.layers import hasLocalChanges, addDiffLayers
@@ -176,7 +177,7 @@ class HistoryViewer(QTreeWidget):
                     point = self.mapToGlobal(point)
                     menu.exec_(point)
         elif len(selected) == 2:
-            if isinstance(selected[0], CommitTreeItem) and isinstance(selected[1], CommitTreeItem):
+            if isinstance(selected[0], (CommitTreeItem, BranchTreeItem)) and isinstance(selected[1], (CommitTreeItem, BranchTreeItem)):
                 menu = QMenu()
                 diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
                 diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
@@ -322,6 +323,7 @@ class BranchTreeItem(QTreeWidgetItem):
         QTreeWidgetItem.__init__(self)
         self.branch = branch
         self.ref = branch
+        self.commit = Commit.fromref(repo, branch)
         self.repo = repo
         self.path = path
         self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
