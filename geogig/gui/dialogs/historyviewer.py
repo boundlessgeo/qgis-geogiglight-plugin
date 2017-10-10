@@ -245,7 +245,7 @@ class HistoryViewer(QTreeWidget):
     def exportDiffs(self, commit, commit2 = None):
         commit2 = commit2 or commit.parent
         layers = self.repo.trees(commit.commitid)
-        layers2 = self.repo.trees(commit2.commitid)        
+        layers2 = self.repo.trees(commit2.commitid)
         if layers != layers2:
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot export diffs',
                 "Diffs cannot be exported for commits that add/remove layers",
@@ -273,7 +273,7 @@ class HistoryViewer(QTreeWidget):
         for tag in tags[item.commit.commitid]:
             self.repo.deletetag(tag)
         self.updateTags(item.commit.commitid)
-        
+
     def updateTags(self, commitid, tag=None):
         for i in range(self.topLevelItemCount()):
             branchItem = self.topLevelItem(i)
@@ -291,7 +291,7 @@ class HistoryViewer(QTreeWidget):
         text, ok = QInputDialog.getText(self, 'Title',
                                               'Enter the name for the new branch:')
         if ok:
-            self.repo.createbranch(ref, text)
+            self.repo.createbranch(ref, text.replace(" ", "_"))
             repoWatcher.repoChanged.emit(self.repo)
 
     def deleteBranch(self, branch):
