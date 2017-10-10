@@ -100,7 +100,6 @@ class DiffViewerDialog(WIDGET, BASE):
         self.computeDiffs()
         self.groupBox.adjustSize()
 
-        #self.showMaximized()
 
     def refsHaveChanged(self):
         self.computeDiffs()
@@ -220,6 +219,9 @@ class DiffViewerDialog(WIDGET, BASE):
         self.attributesTable.clear()
         self.attributesTable.verticalHeader().hide()
         self.attributesTable.horizontalHeader().hide()
+        for item in layerItems.values():
+            item.setExpanded(True)
+
 
 
     def reject(self):
