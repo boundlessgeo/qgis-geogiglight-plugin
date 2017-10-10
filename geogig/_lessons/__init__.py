@@ -46,10 +46,11 @@ def restoreConfiguration():
     repository.availableRepoEndpoints = _availableRepoEndpoints
     repository.repos = _repos
     layertracking._tracked = _tracked
+    navigatorInstance.updateNavigator()
 
 
 _lastRepo = None
-def _openNavigator(empty = False, group = "test"):
+def _openNavigator(empty = False, group = "Lesson repos"):
     if empty:
         repository.repos = []
         repository.repoEndpoints = {}
@@ -63,9 +64,9 @@ def _openNavigator(empty = False, group = "test"):
         iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
     action.trigger()
     action.trigger()
+    navigatorInstance.updateNavigator()
     navigatorInstance.fillTree()
-    navigatorInstance.updateCurrentRepo(None)
-    navigatorInstance.checkButtons()
+
 
 
 def openTestProject(name):
@@ -77,7 +78,7 @@ def openTestProject(name):
         iface.addProject(projectFile)
 
 def createEmptyTestRepo(modifiesRepo = True, group=None, name=None):
-    repo = createRepoAtUrl(REPOS_SERVER_URL, group or "test", name or "empty_%s" %  str(time.time()))
+    repo = createRepoAtUrl(REPOS_SERVER_URL, group or "Lesson repos", name or "empty_%s" %  str(time.time()))
     global _lastRepo
     _lastRepo = repo
     return repo
@@ -91,7 +92,7 @@ def _importLayerToRepo(repo, layer):
 
 def createSimpleTestRepo(group=None, name=None):
 
-    repo = createRepoAtUrl(REPOS_SERVER_URL, group or "test", name or "simple_%s" %  str(time.time()))
+    repo = createRepoAtUrl(REPOS_SERVER_URL, group or "Lesson repos", name or "simple_%s" %  str(time.time()))
 
     _importLayerToRepo(repo, "first")
 

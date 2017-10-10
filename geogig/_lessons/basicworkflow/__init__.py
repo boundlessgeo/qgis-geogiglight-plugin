@@ -26,8 +26,8 @@ def checkEdited():
 
 lesson = GeoGigLesson("Basic GeoGig workflow")
 lesson.addStep("Create empty repository", "Create empty repository",
-               function = lambda: createEmptyTestRepo("Lesson repos", "repo"))
-lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator(group = "Lesson repos"))
+               function = lambda: createEmptyTestRepo())
+lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator())
 lesson.addStep("Import layer", "import.html", endcheck=lambda: checkVersions(1), steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "sync.html", endcheck=lambda: checkVersions(2), steptype=Step.MANUALSTEP)

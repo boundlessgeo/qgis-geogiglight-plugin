@@ -40,8 +40,8 @@ def checkLayerInProject():
 
 lesson = GeoGigLesson("Basic GeoGig workflow with an existing repo")
 lesson.addStep("Create repository", "Create repository",
-               function = lambda: createSimpleTestRepo("Lesson repos", "repo"))
-lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator(group = "Lesson repos"))
+               function = lambda: createSimpleTestRepo())
+lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator())
 lesson.addStep("Export layer", "export.html", endcheck=checkLayerInProject, steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "sync.html", endcheck=lambda: checkVersions(2), steptype=Step.MANUALSTEP)
