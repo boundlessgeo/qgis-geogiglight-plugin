@@ -56,3 +56,9 @@ ext-libs
 ext-src
 geogig.zip
 travis_secrets.tar.gz
+geogig/docs/
+geogig/extlibs
+docs/source/settingsconf.rst
+
+# Pycharm project
+.idea/
