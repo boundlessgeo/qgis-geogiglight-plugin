@@ -70,7 +70,7 @@ lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator",
 lesson.addStep("Create new repository", "01_create_new_repository.md",
                steptype=Step.MANUALSTEP, endcheck=checkRepoCreated)
 lesson.addStep("Import layer", "02_import_layer.md",
-               prestep=lambda: unmodalWidget("ImportDialog"),
+               prestep=lambda: unmodalWidget("ImportDialog", 300, 1000),
                endcheck=lambda: checkVersions(1),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "03_edit_layer.md",
@@ -80,6 +80,6 @@ lesson.addStep("Check local changes", "04_check_local_changes.md",
                prestep=lambda: unmodalWidget("DiffViewerDialog", 300, 1000),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "05_sync_layer.md",
-               prestep=lambda: unmodalWidget("CommitDialog"),
+               prestep=lambda: unmodalWidget("CommitDialog", 300, 1000),
                endcheck=lambda: checkVersions(2),
                steptype=Step.MANUALSTEP)

@@ -54,6 +54,7 @@ class ImportDialog(QDialog):
 
     def __init__(self, parent, repo = None, layer = None):
         super(ImportDialog, self).__init__(parent)
+        self.setObjectName("ImportDialog")
         self.repo = repo
         self.layer = layer
         self.ok = False
