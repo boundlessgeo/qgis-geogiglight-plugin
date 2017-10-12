@@ -142,7 +142,7 @@ class NavigatorDialog(BASE, WIDGET):
 
         def _repoChanged(repo):
             if self.currentRepo is not None and repo.url == self.currentRepo.url:
-                self.updateCurrentRepo(repo)
+                self.updateCurrentRepo(repo, True)
             for i in range(self.repoTree.topLevelItemCount()):
                 item = self.repoTree.topLevelItem(i)
                 if item.repo == repo:
@@ -221,8 +221,8 @@ class NavigatorDialog(BASE, WIDGET):
         else:
             self.updateCurrentRepo(None)
 
-    def updateCurrentRepo(self, repo):
-        if repo == self.currentRepo:
+    def updateCurrentRepo(self, repo, force=False):
+        if repo == self.currentRepo and not force:
             return
         def _update():
             self.currentRepo = repo
