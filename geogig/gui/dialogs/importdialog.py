@@ -34,8 +34,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QComboBox,
                                  QPlainTextEdit,
                                  QDialogButtonBox,
-                                 QPushButton,
-                                 QMessageBox
+                                 QPushButton
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
@@ -115,16 +114,6 @@ class ImportDialog(QDialog):
         self.branchCombo.addItems(self.branches)
 
     def importClicked(self):
-
-        ret = QMessageBox.warning(config.iface.mainWindow(), 'Import warning',
-                "Importing a layer will modify the original layer and might cause data loss.\n"
-                "Make sure you have a backup copy of your layer before importing.\n"
-                "Do you want to import the selected layer?",
-                QMessageBox.Yes | QMessageBox.No)
-        if ret == QMessageBox.No:
-            return
-
-
         if self.repo is None:
             self.repo = repository.repos[self.repoCombo.currentIndex()]
         if self.layer is None:
