@@ -6,6 +6,8 @@
 from qgis.core import QgsMapLayerRegistry
 from qgis.utils import iface
 
+from lessons.utils import layerFromName
+
 from lessons.lesson import Step
 
 from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, createSimpleTestRepo
@@ -18,20 +20,12 @@ def checkVersions(n):
     return len(log) == n
 
 
-def checkEdited():
-    layer = iface.activeLayer()
+def checkEdited(layername):
+    layer = layerFromName(layername)
     if layer:
-        return hasLocalChanges(layer)
+        return len(hasLocalChanges(layer)) > 0
     else:
         return False
-
-
-def layerFromName(name):
-    layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
-    for layer in layers:
-        if layer.name() == name:
-            return layer
-
 
 def checkLayerInProject():
     layer = layerFromName("points")
@@ -43,5 +37,7 @@ lesson.addStep("Create repository", "Create repository",
                function = lambda: createSimpleTestRepo())
 lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator())
 lesson.addStep("Export layer", "export.html", endcheck=checkLayerInProject, steptype=Step.MANUALSTEP)
-lesson.addStep("Edit layer", "edit.html", endcheck=checkEdited, steptype=Step.MANUALSTEP)
+lesson.addStep("Edit layer", "edit.html",
+               endcheck= lambda: checkEdited( "points"),
+               steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "sync.html", endcheck=lambda: checkVersions(2), steptype=Step.MANUALSTEP)
