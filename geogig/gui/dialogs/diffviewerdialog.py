@@ -222,8 +222,6 @@ class DiffViewerDialog(WIDGET, BASE):
         for item in layerItems.values():
             item.setExpanded(True)
 
-
-
     def reject(self):
         QDialog.reject(self)
 
