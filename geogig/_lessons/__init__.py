@@ -56,7 +56,7 @@ def _openNavigator(empty = False, group = "Lesson repos"):
         repository.repoEndpoints = {}
         repository.availableRepoEndpoints = {}
     else:
-        repository.repos = [_lastRepo]
+        repository.repos = [_lastRepo] if _lastRepo else []
         repository.availableRepoEndpoints = {group:REPOS_SERVER_URL}
         repository.repoEndpoints = {group:REPOS_SERVER_URL}
     action = navigatorInstance.toggleViewAction()

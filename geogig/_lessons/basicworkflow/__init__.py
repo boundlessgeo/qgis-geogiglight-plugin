@@ -15,7 +15,7 @@ from lessons.utils import layerFromName
 from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, createEmptyTestRepo
 import geogig._lessons as ls
 from geogig.tools.layers import hasLocalChanges
-
+from geogig.geogigwebapi import repository
 
 def checkVersions(n):
     log = ls._lastRepo.log()
@@ -31,7 +31,7 @@ def checkEdited(layername):
 def unmodalWidget(objectName, repeatTimes=10, repeatInterval=500, step=0):
     """Look for a widget in the QGIS hierarchy to set it as
     not modal.
-    If the widget is not found try agail after a "repeatInterval"
+    If the widget is not found try again after a "repeatInterval"
     and repeat no more that "repeatTimes"
     """
 
@@ -57,15 +57,20 @@ def unmodalWidget(objectName, repeatTimes=10, repeatInterval=500, step=0):
                       lambda: unmodalWidget(objectName, repeatTimes, repeatInterval,
                                             step + 1))
 
+def checkRepoCreated():
+    if len(repository.repos) == 1:
+        ls._lastRepo = repository.repos[0]
+        return True
+    else:
+        return False
+
 lesson = GeoGigLesson("01. Basic GeoGig workflow")
-lesson.addStep("Create empty repository", "Create empty repository",
-               function = lambda: createEmptyTestRepo())
 lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator",
                lambda: _openNavigator())
 lesson.addStep("Create new repository", "01_create_new_repository.md",
-               steptype=Step.MANUALSTEP)
+               steptype=Step.MANUALSTEP, endcheck=checkRepoCreated)
 lesson.addStep("Import layer", "02_import_layer.md",
-               prestep=lambda: unmodalWidget("CommitDialog"),
+               prestep=lambda: unmodalWidget("ImportDialog"),
                endcheck=lambda: checkVersions(1),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "03_edit_layer.md",
