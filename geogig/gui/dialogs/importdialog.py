@@ -28,13 +28,16 @@ __revision__ = '$Format:%H$'
 import os
 from datetime import datetime
 
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+
 from qgis.PyQt.QtWidgets import (QDialog,
                                  QVBoxLayout,
                                  QLabel,
                                  QComboBox,
                                  QPlainTextEdit,
                                  QDialogButtonBox,
-                                 QPushButton
+                                 QPushButton,
+                                 QMessageBox
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
@@ -47,6 +50,7 @@ from geogig.tools.gpkgsync import getCommitId
 from geogig.tools.layers import namesFromLayer
 
 from qgiscommons2.layers import layerFromName, vectorLayers
+from qgiscommons2.files import tempFilenameInTempFolder
 
 
 class ImportDialog(QDialog):
@@ -113,6 +117,32 @@ class ImportDialog(QDialog):
         self.branches = repo.branches()
         self.branchCombo.addItems(self.branches)
 
+    def exportToGeopkg(self, layer):
+        if layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
+            filename, layername = namesFromLayer(layer)
+            l = QgsVectorLayer(filename, 'tmp', 'ogr')
+            spatialLayers = 0
+            subLayers = l.dataProvider().subLayers()
+            if len(subLayers) > 0:
+                for lay in subLayers:
+                    tokens = lay.split(':')
+                    if len(tokens) > 4:
+                        tokens[1] += ":{}".format(tokens[2])
+                        del tokens[2]
+                    elif len(tokens) == 4:
+                        if tokens[3] != "None":
+                            spatialLayers += 1
+                    else:
+                        continue
+
+                if spatialLayers == 1:
+                    return layername, filename
+
+        tempFilename = tempFilenameInTempFolder("%s.gpkg" % layer.name())
+        QgsVectorFileWriter.writeAsVectorFormat(layer, tempFilename, "UTF-8", None, "GPKG")
+        return layer.name(), tempFilename
+
+
     def importClicked(self):
         if self.repo is None:
             self.repo = repository.repos[self.repoCombo.currentIndex()]
@@ -127,11 +157,18 @@ class ImportDialog(QDialog):
         message = self.messageBox.toPlainText() or datetime.now().strftime("%Y-%m-%d %H_%M_%S")
         branch = self.branchCombo.currentText()
         try:
-            self.repo.importgeopkg(self.layer, branch, message, user, email, False)
-            filename, layername = namesFromLayer(self.layer)
+            layername, newFilename = self.exportToGeopkg(self.layer)
+            if layername in self.repo.trees():
+                QMessageBox.warning(config.iface.mainWindow(), 'Cannot import',
+                                    "A layer with that name already exists in the selected repository.",
+                                    QMessageBox.Ok)
+                return
+            newLayer = QgsVectorLayer(newFilename, 'tmp', 'ogr')
+            self.repo.importgeopkg(newLayer, branch, message, user, email, False)
+            '''filename, layername = namesFromLayer(self.layer)
             self.repo.checkoutlayer(filename, layername, ref = branch)
             self.layer.reload()
-            self.layer.triggerRepaint()
+            self.layer.triggerRepaint()'''
         except GeoGigException as e:
             iface.messageBar().pushMessage("Error", str(e),
                                            level=QgsMessageBar.CRITICAL,
@@ -139,7 +176,7 @@ class ImportDialog(QDialog):
             self.close()
             return
 
-        addTrackedLayer(self.layer, self.repo.url)
+        #addTrackedLayer(self.layer, self.repo.url)
 
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",
