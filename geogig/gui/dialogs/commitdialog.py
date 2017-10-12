@@ -51,6 +51,7 @@ class CommitDialog(QDialog):
         self.initGui()
 
     def initGui(self):
+        self.setObjectName("CommitDialog")
         self.resize(600, 250)
         self.setWindowTitle("Syncronize layer to repository branch")
 
