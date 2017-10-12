@@ -39,7 +39,7 @@ from qgis.utils import iface
 from geogig import tests
 from geogig.layeractions import updateInfoActions
 from geogig.geogigwebapi import repository
-from geogigi import layeractions
+from geogig import layeractions
 
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
 
