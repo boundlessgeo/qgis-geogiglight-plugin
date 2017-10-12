@@ -392,7 +392,7 @@ class RepoItem(QTreeWidgetItem):
                                           "Do you want to continue and fix them?",
                                           QMessageBox.Yes | QMessageBox.No)
                 if ret == QMessageBox.No:
-                    self.currentRepo.closeTransaction(conflicts[0].transactionId)
+                    self.repo.closeTransaction(conflicts[0].transactionId)
                     return
 
                 dlg = ConflictDialog(conflicts)
