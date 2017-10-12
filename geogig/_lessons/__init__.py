@@ -133,7 +133,9 @@ try:
             folder = os.path.dirname(traceback.extract_stack()[-2][0])
             Lesson.__init__(self, name, "GeoGig lessons", "lesson.html", folder=folder)
             self.addStep("Prepare lesson", "Preparing lesson", backupConfiguration)
-            helpFile= os.path.abspath(os.path.join(os.path.dirname(__file__), "common", "preparegeogig.html"))
+            helpFile= os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                  "common",
+                                                   "preparegeogig.md"))
             self.addStep("Prepare GeoGig environment", helpFile,
                endcheck=checkGeoGig, steptype=Step.MANUALSTEP)
             self.setCleanup(restoreConfiguration)
