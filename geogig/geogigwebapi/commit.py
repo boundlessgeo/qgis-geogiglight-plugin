@@ -69,7 +69,10 @@ class Commit(Commitish):
             cid = repo.revparse(ref)
             if (repo.url, cid) not in Commit._commitcache:
                 log = repo.log(until = cid, limit = 1)
-                Commit._commitcache[(repo.url, cid)] = log[0]
+                if log:
+                    Commit._commitcache[(repo.url, cid)] = log[0]
+                else:
+                    return Commitish(repo, NULL_ID)
             return Commit._commitcache[(repo.url, cid)]
 
     @property
@@ -85,7 +88,7 @@ class Commit(Commitish):
         It's similar to the tilde(~) operator
         '''
         return self.parents[0]
-    
+
     def addsLayer(self):
         '''Returns true if this commit adds a new layer'''
         if self._parents == [NULL_ID]:
