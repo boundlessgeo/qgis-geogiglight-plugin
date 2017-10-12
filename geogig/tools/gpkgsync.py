@@ -332,5 +332,5 @@ def checkoutLayer(repo, layername, bbox, ref = None):
                                               level=QgsMessageBar.INFO,
                                               duration=5)
 
-    repoWatcher.repoChanged.emit(repo)
+    #repoWatcher.repoChanged.emit(repo)
     return layer
