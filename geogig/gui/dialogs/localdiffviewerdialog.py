@@ -135,7 +135,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
                         self.attributesTable.setCellWidget(i, 2, widget)
                         isChangedGeom = True
                 except:
-                    pass      
+                    pass
                 if oldvalue == newvalue:
                     attribChangeType = "NO_CHANGE"
             if not isChangedGeom:
@@ -183,6 +183,8 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.attributesTable.clear()
         self.attributesTable.verticalHeader().hide()
         self.attributesTable.horizontalHeader().hide()
+
+        layerItem.setExpanded(True)
 
 
     def reject(self):
