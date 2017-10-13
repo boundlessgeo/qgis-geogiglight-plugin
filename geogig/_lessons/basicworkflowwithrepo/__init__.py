@@ -19,6 +19,9 @@ def checkVersions(n):
     log = ls._lastRepo.log()
     return len(log) == n
 
+def checkBranches(n):
+    branches = ls._lastRepo.branches()
+    return len(branches) == n
 
 def checkEdited(layername):
     layer = layerFromName(layername)
@@ -39,12 +42,13 @@ lesson.addStep("Open GeoGig navigator",
                "Open GeoGig navigator",
                lambda: _openNavigator())
 lesson.addStep("Export layer", "01_export_layer.md",
-               endcheck=lambda: checkLayerInProject("points"),
+               endcheck=lambda: checkLayerInProject("buildings_2"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Create a branch", "02_create_branch.md",
+               endcheck= lambda: checkBranches(2),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "03_edit_layer.md",
-               endcheck= lambda: checkEdited( "points"),
+               endcheck= lambda: checkEdited( "buildings_2"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "04_sync_layer.md",
                endcheck=lambda: checkVersions(2),
