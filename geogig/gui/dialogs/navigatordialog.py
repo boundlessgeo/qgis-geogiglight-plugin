@@ -197,23 +197,6 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.repoTree.sortItems(0, Qt.AscendingOrder)
 
-    def addLayer(self):
-        layers = [layer for layer in vectorLayers()
-                        if layer.source().lower().split("|")[0].split(".")[-1] in["gpkg", "geopkg"]
-                        and not isRepoLayer(layer)]
-        if layers:
-            dlg = ImportDialog(self, repo = self.currentRepo)
-            dlg.exec_()
-            if dlg.ok:
-                setAsRepoLayer(dlg.layer)
-                repoWatcher.repoChanged.emit(self.currentRepo)
-        else:
-            QMessageBox.warning(self, 'Cannot add layer',
-                "No suitable layers can be found in your current QGIS project.\n"
-                "Only Geopackage layers that do not already belong to a repository can be added.",
-                QMessageBox.Ok)
-
-
     def selectionChanged(self):
         items = self.repoTree.selectedItems()
         if items:
