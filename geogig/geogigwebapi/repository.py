@@ -75,6 +75,8 @@ class MergeConflictsException(GeoGigException):
 class CannotPushException(GeoGigException):
     pass
 
+class NothingToPushException(GeoGigException):
+    pass
 
 def _resolveref(ref):
     '''
@@ -624,6 +626,8 @@ class Repository(object):
             success = r["success"]
             if not success:
                 raise CannotPushException(r["error"])
+            if not r["dataPushed"]:
+                raise NothingToPushException()
         except HTTPError, e:
             raise CannotPushException(e.response.json()["response"]["error"])
 

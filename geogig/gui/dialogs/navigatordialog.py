@@ -80,7 +80,8 @@ from geogig.tools.layertracking import (removeTrackedLayer,
 from geogig.geogigwebapi import repository
 from geogig.geogigwebapi.repository import (GeoGigException, CannotPushException,
                                             readRepos, removeRepo, removeRepoEndpoint,
-                                            createRepoAtUrl, addRepoEndpoint, addRepo)
+                                            createRepoAtUrl, addRepoEndpoint, addRepo,
+                                            NothingToPushException)
 from builtins import zip
 from builtins import str
 from builtins import range
@@ -433,6 +434,9 @@ class RepoItem(QTreeWidgetItem):
             except CannotPushException, e:
                 config.iface.messageBar().pushMessage(str(e),
                                                level = QgsMessageBar.WARNING, duration = 5)
+            except NothingToPushException, e:
+                config.iface.messageBar().pushMessage("Nothing to push. Already up to date",
+                                               level = QgsMessageBar.INFO, duration = 5)
 
 
 
