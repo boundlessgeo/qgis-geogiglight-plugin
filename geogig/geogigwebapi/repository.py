@@ -216,7 +216,7 @@ class Repository(object):
             total = r.headers.get('content-length')
             if total is None:
                 r.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f) 
+                shutil.copyfileobj(r.raw, f)
             else:
                 dl = 0
                 total = float(total)
@@ -427,7 +427,7 @@ class Repository(object):
             payload["interchange"]= True
             filename = self.saveaudittables(filename, layername)
         files = {'fileUpload': (os.path.basename(filename), open(filename, 'rb'))}
-        
+
         encoder = MultipartEncoder(files)
         total = float(encoder.len)
         def callback(m):
@@ -619,10 +619,13 @@ class Repository(object):
 
     def push(self, remote, branch):
         payload = {"ref": branch, "remoteName": remote}
-        r = self._apicall("push", payload)
-        success = r["dataPushed"]
-        if not success:
-            raise CannotPushException()
+        try:
+            r = self._apicall("push", payload)
+            success = r["success"]
+            if not success:
+                raise CannotPushException(r["error"])
+        except HTTPError, e:
+            raise CannotPushException(e.response.json()["response"]["error"])
 
     def pull (self, remote, branch):
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
@@ -679,7 +682,7 @@ class TaskChecker(QObject):
                 progressAmount = self.response["task"]["progress"]["amount"]
                 iface.mainWindow().statusBar().showMessage("%s [%s]" % (progressTask, progressAmount))
             except KeyError:
-                pass 
+                pass
             QTimer.singleShot(500, self.checkTask)
 
 

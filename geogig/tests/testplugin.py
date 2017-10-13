@@ -238,13 +238,7 @@ def _createMergeConflictInSeveralLayers():
 _localRepo = None
 _remoteRepo = None
 def _createConflictedPullScenario():
-    global _localRepo
-    _localRepo = _createSimpleTestRepo(True)
-    global _remoteRepo
-    _remoteRepo = _createEmptyTestRepo(True)
-    _localRepo.addremote("myremote", _remoteRepo.url)
-    _remoteRepo.addremote("myremote", _localRepo.url)
-    _localRepo.push("myremote", "master")
+    _createPullScenario()
     filename = tempFilename("gpkg")
     _localRepo.checkoutlayer(filename, "points")
     layer = loadLayerNoCrsDialog(filename, "points", "ogr")
@@ -252,14 +246,58 @@ def _createConflictedPullScenario():
     idx = layer.dataProvider().fieldNameIndex("n")
     with edit(layer):
         layer.changeAttributeValue(features[0].id(), idx, 1000)
-    filename2 = tempFilename("gpkg")
-    _remoteRepo.checkoutlayer(filename2, "points")
-    layer2 = loadLayerNoCrsDialog(filename2, "points2", "ogr")
-    features2 = list(layer2.getFeatures())
-    with edit(layer2):
-        layer2.changeAttributeValue(features2[0].id(), idx, 1001)
     _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
-    _remoteRepo.importgeopkg(layer2, "master", "message", "me", "me@mysite.com", True)
+
+def _createPullScenario():
+    global _remoteRepo
+    _remoteRepo = _createEmptyTestRepo(True)
+    global _localRepo
+    _localRepo = _createSimpleTestRepo(True)
+    _localRepo.addremote("myremote", _remoteRepo.url)
+    _remoteRepo.addremote("myremote", _localRepo.url)
+    _localRepo.push("myremote", "master")
+    filename = tempFilename("gpkg")
+    _remoteRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    idx = layer.dataProvider().fieldNameIndex("n")
+    features  = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), idx, 1001)
+    _remoteRepo.importgeopkg(layer, "master", "message2", "me", "me@mysite.com", True)
+
+def _createNothingToPushScenario():
+    global _remoteRepo
+    _remoteRepo = _createEmptyTestRepo(True)
+    global _localRepo
+    _localRepo = _createSimpleTestRepo(True)
+    _localRepo.addremote("myremote", _remoteRepo.url)
+    _remoteRepo.addremote("myremote", _localRepo.url)
+    _localRepo.push("myremote", "master")
+
+def _createPushScenario():
+    _createNothingToPushScenario()
+    filename = tempFilename("gpkg")
+    _localRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    idx = layer.dataProvider().fieldNameIndex("n")
+    features  = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), idx, 1001)
+    _localRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+
+def _createCannotPushScenario():
+    _createPushScenario()
+    filename = tempFilename("gpkg")
+    _remoteRepo.checkoutlayer(filename, "points")
+    layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+    idx = layer.dataProvider().fieldNameIndex("n")
+    features  = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[1].id(), idx, 1001)
+    _remoteRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
+
+
+
 
 
 
@@ -545,11 +583,39 @@ def functionalTests():
     test.addStep("Right click on 'points' layer and select 'GeoGig/Sync with repository branch. Verify that only 'master'branch is available")
     tests.append(test)
 
+    test = Test("Pull without conflicts")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createPullScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Select the repository in the repository explorer. Pull from 'myremote' into'master' branch. Verify the pull operation id performed correctly.")
+    tests.append(test)
+
+    test = Test("Push")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createPushScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Select the repository in the repository explorer. Push to 'myremote' repo . Verify the push operation id performed correctly.")
+    tests.append(test)
+
     test = Test("Pull with conflicts")
     test.addStep("New project", iface.newProject)
     test.addStep("Prepare test", _createConflictedPullScenario)
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Select the repository in the repository explorer. Click on the 'Pull from remote' button and pull from 'myremote' into'master' branch. It will warn you of existing conflict. Solve conflicts and verify it finishes the pull operation correctly.")
+    test.addStep("Select the repository in the repository explorer. Pull from 'myremote' into'master' branch. It will warn you of existing conflict. Solve conflicts and verify it finishes the pull operation correctly.")
+    tests.append(test)
+
+    test = Test("Nothing to push")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createNothingToPushScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Select the repository in the repository explorer. Push to 'myremote' repo . Verify the push operation is not performed and the corresponding message is displayed.")
+    tests.append(test)
+
+    test = Test("Cannot push")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createCannotPushScenario)
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Select the repository in the repository explorer. Push to 'myremote' repo . Verify the push operation is performed correctly.")
     tests.append(test)
 
     test = Test("Check diff viewer")

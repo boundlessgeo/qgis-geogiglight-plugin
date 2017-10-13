@@ -430,8 +430,8 @@ class RepoItem(QTreeWidgetItem):
                 self.repo.push(dlg.remote, dlg.branch)
                 config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
                                                level = QgsMessageBar.INFO, duration = 5)
-            except CannotPushException:
-                config.iface.messageBar().pushMessage("Changes could not be pushed to connection. Make sure you have pulled changes from it first.",
+            except CannotPushException, e:
+                config.iface.messageBar().pushMessage(str(e),
                                                level = QgsMessageBar.WARNING, duration = 5)
 
 
