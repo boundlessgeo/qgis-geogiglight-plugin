@@ -303,7 +303,7 @@ class HistoryViewer(QTreeWidget):
 
     def _sortCommits(self, commit, commit2):
         try:
-            if commit2.authordate < commit.authordate:
+            if commit2.authordate > commit.authordate:
                 return commit2, commit
             else:
                 return commit, commit2
