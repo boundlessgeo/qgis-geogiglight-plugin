@@ -189,7 +189,7 @@ class NavigatorDialog(BASE, WIDGET):
         groupRepos = repository.endpointRepos(groupName)
         for repo in groupRepos:
             try:
-                item = RepoItem(self.repoTree, repo)
+                item = RepoItem(self, self.repoTree, repo)
                 self.repoTree.addTopLevelItem(item)
             except:
                 #TODO: inform of failed repos
@@ -249,7 +249,7 @@ class NavigatorDialog(BASE, WIDGET):
                                level=QgsMessageBar.CRITICAL,
                                duration=5)
                 return
-            item = RepoItem(self.repoTree, repo)
+            item = RepoItem(self, self.repoTree, repo)
             addRepo(repo)
             self.repoTree.addTopLevelItem(item)
             config.iface.messageBar().pushMessage("Create repository", "Repository correctly created",
@@ -313,8 +313,9 @@ class NavigatorDialog(BASE, WIDGET):
 
 
 class RepoItem(QTreeWidgetItem):
-    def __init__(self, tree, repo):
+    def __init__(self, navigator, tree, repo):
         QTreeWidgetItem.__init__(self)
+        self.navigator = navigator
         self.repo = repo
         self.tree = tree
         self.setSizeHint(0, QSize(self.sizeHint(0).width(), 25))
@@ -334,6 +335,8 @@ class RepoItem(QTreeWidgetItem):
         self.takeChildren()
         if isPopulated:
             self.populate()
+            self.navigator.updateCurrentRepo(self.repo, True)
+
 
     def menu(self):
         menu = QMenu()

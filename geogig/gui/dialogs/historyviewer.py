@@ -27,6 +27,7 @@ __copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
 __revision__ = '$Format:%H$'
 
 import os
+import sqlite3
 from functools import partial
 from collections import defaultdict
 
@@ -44,7 +45,9 @@ from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QListWidgetItem,
                                  QDialog,
                                  QVBoxLayout,
-                                 QDialogButtonBox
+                                 QDialogButtonBox,
+                                 QApplication,
+                                 QPushButton
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
@@ -57,8 +60,10 @@ from qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.geogigwebapi.commit import Commit
-
-from geogig.tools.layertracking import getProjectLayerForGeoGigLayer, getTrackingInfo
+from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
+from geogig.tools.layertracking import (getProjectLayerForGeoGigLayer,
+                                        getTrackingInfo,
+                                        getTrackingInfoForGeogigLayer)
 from geogig.tools.layers import hasLocalChanges, addDiffLayers
 from qgiscommons2.layers import loadLayerNoCrsDialog
 from qgiscommons2.gui import showMessageDialog
@@ -101,6 +106,45 @@ class HistoryViewer(QTreeWidget):
         if len(selected) == 1:
             return selected[0].ref
 
+    def exportVersion(self, repo, layer, commitId):
+        trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layer)
+        if trackedlayer:
+            if os.path.exists(trackedlayer.geopkg):
+                try:
+                    con = sqlite3.connect(trackedlayer.geopkg)
+                    cursor = con.cursor()
+                    cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
+                    currentCommitId = cursor.fetchone()[0]
+                    cursor.close()
+                    con.close()
+                    if commitId != currentCommitId:
+                        msgBox = QMessageBox()
+                        msgBox.setWindowTitle("Layer was already exported")
+                        msgBox.setText("This layer was exported already at a different commit.\n"
+                                       "Which one would you like to add to your QGIS project?")
+                        msgBox.addButton(QPushButton('Use previously exported commit'), QMessageBox.YesRole)
+                        msgBox.addButton(QPushButton('Use latest commit from this branch'), QMessageBox.NoRole)
+                        msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
+                        QApplication.restoreOverrideCursor()
+                        ret = msgBox.exec_()
+                        if ret == 0:
+                            checkoutLayer(repo, layer, None, currentCommitId)
+                        elif ret == 1:
+                            try:
+                                layer = checkoutLayer(repo, layer, None, commitId)
+                                repoWatcher.layerUpdated.emit(layer)
+                            except HasLocalChangesError:
+                                QMessageBox.warning(config.iface.mainWindow(), 'Cannot export this commit',
+                                                    "The layer has local changes that would be overwritten.\n"
+                                                    "Either sync layer with branch or revert local changes "
+                                                    "before changing commit",QMessageBox.Ok)
+                except:
+                    checkoutLayer(repo, layer, None, currentCommitId)
+
+        else:
+            checkoutLayer(repo, layer, None, commitId)
+
+
     def changeVersion(self, repo, layer, commit):
         if hasLocalChanges(layer):
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot switch to this commit',
@@ -115,7 +159,6 @@ class HistoryViewer(QTreeWidget):
                                                    duration=5)
             layer.reload()
             layer.triggerRepaint()
-            repoWatcher.repoChanged.emit(repo)
             repoWatcher.layerUpdated.emit(layer)
 
     def showPopupMenu(self, point):
@@ -124,12 +167,15 @@ class HistoryViewer(QTreeWidget):
             item = selected[0]
             if isinstance(item, CommitTreeItem):
                 trees = self.repo.trees(item.commit.commitid)
-                changeVersionActions = []
+                exportVersionActions = []
                 for tree in trees:
                     layer = getProjectLayerForGeoGigLayer(self.repo.url, tree)
                     if layer is not None:
-                        changeVersionActions.append(QAction(resetIcon, "Change '%s' layer to this commit" % tree, None))
-                        changeVersionActions[-1].triggered.connect(partial(self.changeVersion, self.repo, layer, item.commit.commitid))
+                        exportVersionActions.append(QAction(resetIcon, "Change '%s' layer to this commit" % tree, None))
+                        exportVersionActions[-1].triggered.connect(partial(self.changeVersion, self.repo, layer, item.commit.commitid))
+                    else:
+                        exportVersionActions.append(QAction(resetIcon, "Add '%s' layer to QGIS from this commit" % tree, None))
+                        exportVersionActions[-1].triggered.connect(partial(self.exportVersion, self.repo, tree, item.commit.commitid))
                 menu = QMenu()
                 describeAction = QAction(infoIcon, "Show detailed description of this commit", None)
                 describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
@@ -149,9 +195,9 @@ class HistoryViewer(QTreeWidget):
                 deleteTagsAction = QAction(tagIcon, "Delete tags at this commit", None)
                 deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
                 menu.addAction(deleteTagsAction)
-                if changeVersionActions:
+                if exportVersionActions:
                     menu.addSeparator()
-                    for action in changeVersionActions:
+                    for action in exportVersionActions:
                         menu.addAction(action)
                 point = self.mapToGlobal(point)
                 menu.exec_(point)
