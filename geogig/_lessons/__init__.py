@@ -125,6 +125,28 @@ def createSimpleTestRepo(group=None, name=None):
     _lastRepo = repo
     return _lastRepo
 
+def createExampleRepo(group=None, name=None):
+
+    repo = createRepoAtUrl(REPOS_SERVER_URL, group or "Lesson repos", name or "simple_%s" %  str(time.time()))
+
+    AUTHOR = "John Snow"
+    EMAIL = "snowj@whitecastle.we"
+
+    repo.importgeopkg(_layerPath("buildings_00_original"), "master",
+                      "Adds 2016 buildings layer",
+                      AUTHOR, EMAIL, False)
+
+    repo.importgeopkg(_layerPath("buildings_01_first_edits"), "master",
+                      "Updates Block 1024 buildings",
+                      AUTHOR, EMAIL, False)
+
+    repo.importgeopkg(_layerPath("buildings_02_second_edits"), "master",
+                      "Updates Block 1025 buildings",
+                      AUTHOR, EMAIL, False)
+
+    global _lastRepo
+    _lastRepo = repo
+    return _lastRepo
 
 try:
     from lessons.lesson import Lesson, Step
