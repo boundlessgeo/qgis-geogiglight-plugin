@@ -160,12 +160,12 @@ def addDiffLayers(repo, commit, commit2, layernames):
         beforeCursor = beforeCon.cursor()
         afterCon = sqlite3.connect(afterFilename)
         afterCursor = afterCon.cursor()
-    
+
         attributes = [v[1] for v in beforeCursor.execute("PRAGMA table_info('%s');" % layername)]
         attrnames = [f.name() for f in beforeLayer.pendingFields()]
-    
+
         layerFeatures = []
-    
+
         beforeCursor.execute("SELECT * FROM %s_changes WHERE audit_op=2;" % layername)
         modified = beforeCursor.fetchall()
         for m in modified:
@@ -188,8 +188,8 @@ def addDiffLayers(repo, commit, commit2, layernames):
             request.setFilterFid(afterGpkgfid)
             feature = next(afterLayer.getFeatures(request))
             layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
-    
-    
+
+
         afterCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
         added = afterCursor.fetchall()
         for a in added:
@@ -203,7 +203,7 @@ def addDiffLayers(repo, commit, commit2, layernames):
             request.setFilterFid(afterGpkgfid)
             feature = next(afterLayer.getFeatures(request))
             layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
-    
+
         beforeCursor.execute("SELECT * FROM %s_changes WHERE audit_op=1;" % layername)
         removed = beforeCursor.fetchall()
         for r in removed:
@@ -217,19 +217,20 @@ def addDiffLayers(repo, commit, commit2, layernames):
             request.setFilterFid(beforeGpkgfid)
             feature = next(beforeLayer.getFeatures(request))
             layerFeatures.append({"attrs":attrs, "geom": QgsGeometry(feature.geometry())})
-    
-        attrnames.append("changetype")
-        uriFields = "&".join(["field=%s" % f for f in attrnames])
-        uri = "%s?crs=%s&%s" % (geomTypes[beforeLayer.geometryType()], beforeLayer.crs().authid(), uriFields)
-        layer = QgsVectorLayer(uri, "%s(diff)" % layername, "memory")
-        featuresList = []
-        for feature in layerFeatures:
-            qgsfeature = QgsFeature()
-            qgsfeature.setGeometry(feature["geom"])
-            qgsfeature.setAttributes([feature["attrs"][attr] for attr in attrnames])
-            featuresList.append(qgsfeature)
-    
-        layer.dataProvider().addFeatures(featuresList)
-        layer.updateExtents()
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
-        layer.loadNamedStyle(styles[layer.geometryType()])
+
+        if layerFeatures:
+            attrnames.append("changetype")
+            uriFields = "&".join(["field=%s" % f for f in attrnames])
+            uri = "%s?crs=%s&%s" % (geomTypes[beforeLayer.geometryType()], beforeLayer.crs().authid(), uriFields)
+            layer = QgsVectorLayer(uri, "%s(diff)" % layername, "memory")
+            featuresList = []
+            for feature in layerFeatures:
+                qgsfeature = QgsFeature()
+                qgsfeature.setGeometry(feature["geom"])
+                qgsfeature.setAttributes([feature["attrs"][attr] for attr in attrnames])
+                featuresList.append(qgsfeature)
+
+            layer.dataProvider().addFeatures(featuresList)
+            layer.updateExtents()
+            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            layer.loadNamedStyle(styles[layer.geometryType()])
