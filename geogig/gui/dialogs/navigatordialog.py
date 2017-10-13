@@ -205,7 +205,6 @@ class NavigatorDialog(BASE, WIDGET):
             dlg = ImportDialog(self, repo = self.currentRepo)
             dlg.exec_()
             if dlg.ok:
-                #self.versionsTree.updateCurrentBranchItem()
                 setAsRepoLayer(dlg.layer)
                 repoWatcher.repoChanged.emit(self.currentRepo)
         else:
