@@ -252,10 +252,22 @@ class HistoryViewer(QTreeWidget):
                 QMessageBox.Ok)
             return
 
+        commit, commit2 = self._sortCommits(commit, commit2)
         addDiffLayers(self.repo, commit, commit2, layers)
+
+    def _sortCommits(self, commit, commit2):
+        try:
+            if commit2.authordate < commit.authordate:
+                return commit2, commit
+            else:
+                return commit, commit2
+        except:
+            return commit, commit2
 
     def showDiffs(self, commit, commit2 = None):
         commit2 = commit2 or commit.parent
+        commit, commit2 = self._sortCommits(commit, commit2)
+
         dlg = DiffViewerDialog(self, self.repo, commit2, commit)
         dlg.exec_()
 
