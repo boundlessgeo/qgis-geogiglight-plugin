@@ -10,7 +10,7 @@ from qgis.PyQt.QtGui import QDialog
 from qgis.PyQt.QtCore import QTimer
 
 from lessons.lesson import Step
-from lessons.utils import layerFromName
+from lessons.utils import layerFromName, unmodalWidget
 
 from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, createEmptyTestRepo
 import geogig._lessons as ls
@@ -27,35 +27,6 @@ def checkEdited(layername):
         return len(hasLocalChanges(layer)) > 0
     else:
         return False
-
-def unmodalWidget(objectName, repeatTimes=10, repeatInterval=500, step=0):
-    """Look for a widget in the QGIS hierarchy to set it as
-    not modal.
-    If the widget is not found try again after a "repeatInterval"
-    and repeat no more that "repeatTimes"
-    """
-
-    if not objectName:
-        return
-
-    l = QgsApplication.instance().topLevelWidgets()
-
-    for d in l:
-        for dd in d.findChildren(QDialog):
-            if dd.objectName() != objectName:
-                continue
-
-            dd.setWindowModality(False)
-            return
-
-    if repeatTimes == step:
-        return
-
-        print step
-        # if here => not found
-    QTimer.singleShot(repeatInterval,
-                      lambda: unmodalWidget(objectName, repeatTimes, repeatInterval,
-                                            step + 1))
 
 def checkRepoCreated():
     if len(repository.repos) == 1:

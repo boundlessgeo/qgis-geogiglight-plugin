@@ -6,8 +6,7 @@
 from qgis.core import QgsMapLayerRegistry
 from qgis.utils import iface
 
-from lessons.utils import layerFromName
-
+from lessons.utils import layerFromName, unmodalWidget
 from lessons.lesson import Step
 
 from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, \
@@ -23,6 +22,10 @@ def checkVersions(n, branch="master"):
 def checkBranches(n):
     branches = ls._lastRepo.branches()
     return len(branches) == n
+
+def checkBranch(name):
+    branches = ls._lastRepo.branches()
+    return name in branches
 
 def checkEdited(layername):
     layer = layerFromName(layername)
@@ -50,13 +53,14 @@ lesson.addStep("Export layer", "01_export_layer.md",
                endcheck=lambda: checkLayerInProject("buildings"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Create a branch", "02_create_branch.md",
-               endcheck=lambda: checkBranches(2),
+               endcheck=lambda: checkBranch("john_edits"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "03_edit_layer.md",
                endcheck=lambda: checkEdited( "buildings"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "04_sync_layer.md",
-               endcheck=lambda: checkVersions(2, "john_edits"),
+               prestep=lambda: unmodalWidget("CommitDialog", 300, 1000),
+               endcheck=lambda: checkVersions(4, "john_edits"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Add more commits", "Add more commits",
                function=lambda: addMoreCommits())
