@@ -148,7 +148,7 @@ def createExampleRepo(group=None, name=None):
     _lastRepo = repo
     return _lastRepo
 
-def add_more_commits():
+def addMoreCommits():
     global _lastRepo
     repo = _lastRepo
 
