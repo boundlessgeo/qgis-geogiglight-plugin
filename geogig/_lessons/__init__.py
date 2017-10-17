@@ -189,3 +189,9 @@ def checkGeoGig():
         return True
     except:
         return False
+
+def cleanLessonRepo():
+    global _lastRepo
+    if _lastRepo is not None:
+        _lastRepo.delete()
+    navigatorInstance.updateNavigator()
