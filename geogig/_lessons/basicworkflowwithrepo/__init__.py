@@ -10,7 +10,8 @@ from lessons.utils import layerFromName
 
 from lessons.lesson import Step
 
-from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, createExampleRepo
+from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, \
+    createExampleRepo, add_more_commits
 import geogig._lessons as ls
 from geogig.tools.layers import hasLocalChanges
 
@@ -37,22 +38,24 @@ def checkLayerInProject(layername):
 
 lesson = GeoGigLesson("02. GeoGig workflow with branching")
 lesson.addStep("Create repository", "Create repository",
-               function = lambda: createExampleRepo())
+               function=lambda: createExampleRepo())
 lesson.addStep("Open GeoGig navigator",
                "Open GeoGig navigator",
                lambda: _openNavigator())
 lesson.addStep("Export layer", "01_export_layer.md",
-               endcheck=lambda: checkLayerInProject("buildings_2"),
+               endcheck=lambda: checkLayerInProject("buildings"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Create a branch", "02_create_branch.md",
-               endcheck= lambda: checkBranches(2),
+               endcheck=lambda: checkBranches(2),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Edit layer", "03_edit_layer.md",
-               endcheck= lambda: checkEdited( "buildings_2"),
+               endcheck=lambda: checkEdited( "buildings"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Sync layer with repository", "04_sync_layer.md",
-               endcheck=lambda: checkVersions(2),
+               #endcheck=lambda: checkVersions(2),
                steptype=Step.MANUALSTEP)
+lesson.addStep("Add more commits", "Add more commits",
+               function=lambda: add_more_commits())
 lesson.addStep("Check changes between commits",
                "05_check_changes_between_commits.md",
                steptype=Step.MANUALSTEP)

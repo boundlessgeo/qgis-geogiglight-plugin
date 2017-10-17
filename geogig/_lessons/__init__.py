@@ -129,24 +129,40 @@ def createExampleRepo(group=None, name=None):
 
     repo = createRepoAtUrl(REPOS_SERVER_URL, group or "Lesson repos", name or "simple_%s" %  str(time.time()))
 
-    AUTHOR = "John Snow"
-    EMAIL = "snowj@whitecastle.we"
+    AUTHOR = "Samuel Tarly"
+    EMAIL = "tarlys@whitecastle.we"
 
-    repo.importgeopkg(_layerPath("buildings_00_original"), "master",
-                      "Adds 2016 buildings layer",
+    repo.importgeopkg(_layerPath("buildings_000_original"), "master",
+                      "Adds 2016 Buildings layer",
                       AUTHOR, EMAIL, False)
 
-    repo.importgeopkg(_layerPath("buildings_01_first_edits"), "master",
+    repo.importgeopkg(_layerPath("buildings_001_edits"), "master",
+                      "Updates Block 1026 buildings",
+                      AUTHOR, EMAIL, False)
+
+    repo.importgeopkg(_layerPath("buildings_002_edits"), "master",
                       "Updates Block 1024 buildings",
-                      AUTHOR, EMAIL, False)
-
-    repo.importgeopkg(_layerPath("buildings_02_second_edits"), "master",
-                      "Updates Block 1025 buildings",
                       AUTHOR, EMAIL, False)
 
     global _lastRepo
     _lastRepo = repo
     return _lastRepo
+
+def add_more_commits():
+    global _lastRepo
+    repo = _lastRepo
+
+    AUTHOR = "John Snow"
+    EMAIL = "snowj@whitecastle.we"
+
+    repo.importgeopkg(_layerPath("buildings_003_edits"), "john_edits",
+                      "Updates Block 1023 buildings",
+                      AUTHOR, EMAIL, False)
+
+    repo.importgeopkg(_layerPath("buildings_004_edits"), "john_edits",
+                      "Updates Block 1055 buildings",
+                      AUTHOR, EMAIL, False)
+
 
 try:
     from lessons.lesson import Lesson, Step

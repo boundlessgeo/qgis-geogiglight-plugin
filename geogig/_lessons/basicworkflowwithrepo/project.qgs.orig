@@ -5,10 +5,20 @@
   <evaluateDefaultValues active="0"/>
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
+<<<<<<< Updated upstream
     <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="Blocks_201020171016120356664" source="/home/alexandre/boundless/repos/plugins/qgis-geogiglight-plugin/geogig/_lessons/basicworkflowwithrepo/data/Blocks_2010.gpkg" name="Blocks_2010">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="Selection20171003123241417" source="/home/alexandre/boundless/repos/plugins/qgis-geogiglight-plugin/geogig/_lessons/basicworkflowwithrepo/data/Raleigh_downtown.gpkg" name="Raleigh downtown">
+=======
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="buildings_00_original20171013164012203" source="E:\boundless\repos\plugins\qgis-geogiglight-plugin\geogig\_lessons\data\layers\buildings_00_original.gpkg" name="Buildings">
+      <customproperties/>
+    </layer-tree-layer>
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="Blocks_201020171013160500126" source="E:/boundless/repos/plugins/qgis-geogiglight-plugin/geogig/_lessons/basicworkflowwithrepo/data/Blocks_2010.gpkg|layername=Blocks_2010" name="Blocks_2010">
+      <customproperties/>
+    </layer-tree-layer>
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="Raleigh_downtown20171013160902829" source="E:/boundless/repos/plugins/qgis-geogiglight-plugin/geogig/_lessons/basicworkflowwithrepo/data/Raleigh_downtown.gpkg" name="Raleigh_downtown">
+>>>>>>> Stashed changes
       <customproperties/>
     </layer-tree-layer>
   </layer-tree-group>
@@ -16,10 +26,17 @@
   <mapcanvas>
     <units>feet</units>
     <extent>
-      <xmin>2107000.5523977167904377</xmin>
-      <ymin>739886.4417892589699477</ymin>
-      <xmax>2107387.0836477167904377</xmax>
-      <ymax>740539.21366425906307995</ymax>
+<<<<<<< Updated upstream
+      <xmin>2106931.30808832449838519</xmin>
+      <ymin>739864.80294257390778512</ymin>
+      <xmax>2107317.83933832449838519</xmax>
+      <ymax>740517.57481757400091738</ymax>
+=======
+      <xmin>2107572.49948612228035927</xmin>
+      <ymin>739925.78322933719027787</ymin>
+      <xmax>2107833.5998608386144042</xmax>
+      <ymax>740366.72812361700925976</ymax>
+>>>>>>> Stashed changes
     </extent>
     <rotation>0</rotation>
     <projections>1</projections>
@@ -38,6 +55,7 @@
     <rendermaptile>0</rendermaptile>
     <layer_coordinate_transform_info>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Selection20171003123241239"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Blocks_201020171013160500126"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Selection20171003123241857"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="Coastal_and_country_boundaries_of_the_world20170321110731505"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100004" srcDatumTransform="-1" destDatumTransform="-1" layerid="Buffer20161228142900020"/>
@@ -48,14 +66,19 @@
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="U_S__15_Minute_Precipitation20170321111755176"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100001" srcDatumTransform="-1" destDatumTransform="-1" layerid="Raleigh_Meters20170320122003519"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="precip_15_U_S__15_Minute_Precipitation20170321111653173"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_blocks_201020171013160308111"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_fire_incidents_201620170320135559591"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_parks20170320123421893"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_buildings20171013161236501"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100001" srcDatumTransform="-1" destDatumTransform="-1" layerid="Raleigh_Buildings_201320170320122003522"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100001" srcDatumTransform="-1" destDatumTransform="-1" layerid="Wake_Wells20170320122003508"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Raleigh_downtown20171013160902829"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_landmarks20170320122528962"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_meters20170320163316104"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_fire_incidents_201620170320135633439"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Selection20171003123241619"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Buildings20171013161428798"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="buildings20171013160722782"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Wake_EMS_Stations20170320122003518"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Wake_Streets_2015_0220161228104837291"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_streets20161228143254740"/>
@@ -68,10 +91,11 @@
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100004" srcDatumTransform="-1" destDatumTransform="-1" layerid="Wake_Streets_2015_0220161228110730622"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_buildings20170320122317569"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="raleigh_downtown_fire_incidents_201620170320135523399"/>
-      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="Blocks_201020171016120356664"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="Selection20171003123241031"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="Blocks_201020171016120356664"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100001" srcDatumTransform="-1" destDatumTransform="-1" layerid="Wake_Blocks_201020170320122003501"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100001" srcDatumTransform="-1" destDatumTransform="-1" layerid="Raleigh_Historic_Landmarks20170320122003521"/>
+      <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:2264" srcDatumTransform="-1" destDatumTransform="-1" layerid="buildings_00_original20171013164012203"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100004" srcDatumTransform="-1" destDatumTransform="-1" layerid="Clipped20161228143014872"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="USER:100004" srcDatumTransform="-1" destDatumTransform="-1" layerid="Raleigh_Downtown20161228142415396"/>
       <layer_coordinate_transform destAuthId="EPSG:2264" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="NASA_Fires___Past_48_hours20170320181414233"/>
@@ -80,6 +104,7 @@
   </mapcanvas>
   <layer-tree-canvas>
     <custom-order enabled="0">
+<<<<<<< Updated upstream
       <item>Selection20171003123241417</item>
       <item>Blocks_201020171016120356664</item>
     </custom-order>
@@ -93,6 +118,27 @@
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Raleigh downtown" showFeatureCount="0">
       <filegroup open="true" hidden="false">
         <legendlayerfile isInOverview="0" layerid="Selection20171003123241417" visible="1"/>
+=======
+      <item>Blocks_201020171013160500126</item>
+      <item>Raleigh_downtown20171013160902829</item>
+      <item>buildings_00_original20171013164012203</item>
+    </custom-order>
+  </layer-tree-canvas>
+  <legend updateDrawingOrder="true">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Buildings" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="buildings_00_original20171013164012203" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Blocks_2010" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="Blocks_201020171013160500126" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Raleigh_downtown" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="Raleigh_downtown20171013160902829" visible="1"/>
+>>>>>>> Stashed changes
       </filegroup>
     </legendlayer>
   </legend>
@@ -199,7 +245,7 @@
       <customproperties/>
     </Composition>
   </Composer>
-  <Composer title="A4 portrait" visible="1">
+  <Composer title="A4 portrait" visible="0">
     <Composition resizeToContentsMarginLeft="0" snapping="0" showPages="1" guidesVisible="1" resizeToContentsMarginTop="0" worldFileMap="" alignmentSnap="1" printResolution="300" paperWidth="210" gridVisible="0" snapGridOffsetX="0" smartGuides="1" snapGridOffsetY="0" resizeToContentsMarginRight="0" snapTolerancePixels="5" printAsRaster="0" generateWorldFile="0" paperHeight="297" numPages="1" snapGridResolution="10" resizeToContentsMarginBottom="0">
       <symbol alpha="1" clip_to_extent="1" type="fill" name="">
         <layer pass="0" class="SimpleFill" locked="0">
@@ -252,7 +298,7 @@
             <styleFont description="Ubuntu,12,-1,5,50,0,0,0,0,0" style=""/>
           </style>
         </styles>
-        <ComposerItem pagey="222.915" page="1" id="" lastValidViewScaleFactor="-1" positionMode="0" positionLock="false" x="16.1386" y="222.915" visibility="1" zValue="2" background="true" transparency="0" frameJoinStyle="miter" blendMode="0" width="177.723" outlineWidth="0.3" excludeFromExports="0" uuid="{5aa84e88-5af7-4adf-a9e4-2f84832130bc}" height="61.1" itemRotation="0" frame="false" pagex="16.1386">
+        <ComposerItem pagey="222.915" page="1" id="" lastValidViewScaleFactor="-1" positionMode="0" positionLock="false" x="16.1386" y="222.915" visibility="1" zValue="2" background="true" transparency="0" frameJoinStyle="miter" blendMode="0" width="138.9" outlineWidth="0.3" excludeFromExports="0" uuid="{5aa84e88-5af7-4adf-a9e4-2f84832130bc}" height="18.2" itemRotation="0" frame="false" pagex="16.1386">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
           <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
           <customproperties/>
@@ -311,7 +357,7 @@
           <annotationFontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
         </ComposerMapGrid>
         <AtlasMap scalingMode="2" atlasDriven="0" margin="0.10000000000000001"/>
-        <ComposerItem pagey="21.0793" page="1" id="" lastValidViewScaleFactor="1.82979" positionMode="0" positionLock="false" x="16.2886" y="21.0793" visibility="1" zValue="1" background="true" transparency="0" frameJoinStyle="miter" blendMode="0" width="177.423" outlineWidth="0.3" excludeFromExports="0" uuid="{6f50d521-9f0f-48c1-859f-ffd55c041a73}" height="196.057" itemRotation="0" frame="true" pagex="16.2886">
+        <ComposerItem pagey="21.0793" page="1" id="" lastValidViewScaleFactor="1.34468" positionMode="0" positionLock="false" x="16.2886" y="21.0793" visibility="1" zValue="1" background="true" transparency="0" frameJoinStyle="miter" blendMode="0" width="177.423" outlineWidth="0.3" excludeFromExports="0" uuid="{6f50d521-9f0f-48c1-859f-ffd55c041a73}" height="196.057" itemRotation="0" frame="true" pagex="16.2886">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
           <BackgroundColor alpha="255" red="255" blue="255" green="255"/>
           <customproperties/>
@@ -322,14 +368,13 @@
   </Composer>
   <projectlayers>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-        <xmin>2100810</xmin>
-        <ymin>731415</ymin>
-        <xmax>2111180</xmax>
-        <ymax>746928</ymax>
-      </extent>
+<<<<<<< Updated upstream
       <id>Blocks_201020171016120356664</id>
       <datasource>./data/Blocks_2010.gpkg</datasource>
+=======
+      <id>Blocks_201020171013160500126</id>
+      <datasource>./data/Blocks_2010.gpkg|layername=Blocks_2010</datasource>
+>>>>>>> Stashed changes
       <keywordList>
         <value></value>
       </keywordList>
@@ -358,6 +403,41 @@
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="STATEFP10">
+<<<<<<< Updated upstream
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="COUNTYFP10">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="TRACTCE10">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="BLOCKCE10">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="GEOID10">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="NAME10">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="Shape_Leng">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="Shape_Area">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="TOTAL_POP">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="TOTAL_HU">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="OCCUPIED">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="VACANT">
+=======
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="COUNTYFP10">
@@ -394,6 +474,7 @@
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="pop_dens">
+>>>>>>> Stashed changes
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
       </edittypes>
@@ -402,14 +483,24 @@
           <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
             <layer pass="0" class="SimpleLine" locked="0">
               <prop k="capstyle" v="square"/>
+<<<<<<< Updated upstream
               <prop k="customdash" v="1;5"/>
+=======
+              <prop k="customdash" v="2;5"/>
+>>>>>>> Stashed changes
               <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="customdash_unit" v="MM"/>
               <prop k="draw_inside_polygon" v="0"/>
               <prop k="joinstyle" v="bevel"/>
+<<<<<<< Updated upstream
               <prop k="line_color" v="124,124,124,255"/>
               <prop k="line_style" v="dot"/>
               <prop k="line_width" v="0.46"/>
+=======
+              <prop k="line_color" v="83,83,83,255"/>
+              <prop k="line_style" v="dot"/>
+              <prop k="line_width" v="0.26"/>
+>>>>>>> Stashed changes
               <prop k="line_width_unit" v="MM"/>
               <prop k="offset" v="0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -424,6 +515,7 @@
       </renderer-v2>
       <labeling type="simple"/>
       <customproperties>
+        <property key="embeddedWidgets/count" value="0"/>
         <property key="labeling" value="pal"/>
         <property key="labeling/addDirectionSymbol" value="false"/>
         <property key="labeling/angleOffset" value="0"/>
@@ -458,7 +550,7 @@
         <property key="labeling/fontLimitPixelSize" value="false"/>
         <property key="labeling/fontMaxPixelSize" value="10000"/>
         <property key="labeling/fontMinPixelSize" value="3"/>
-        <property key="labeling/fontSize" value="11"/>
+        <property key="labeling/fontSize" value="8.25"/>
         <property key="labeling/fontSizeInMapUnits" value="false"/>
         <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
         <property key="labeling/fontStrikeout" value="false"/>
@@ -572,7 +664,7 @@
       <label>0</label>
       <labelattributes>
         <label fieldname="" text="Label"/>
-        <family fieldname="" name="Ubuntu"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
         <size fieldname="" units="pt" value="12"/>
         <bold fieldname="" on="0"/>
         <italic fieldname="" on="0"/>
@@ -592,7 +684,7 @@
       </labelattributes>
       <SingleCategoryDiagramRenderer diagramType="Histogram" sizeLegend="0" attributeLegend="1">
         <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" sizeScale="0,0,0,0,0,0" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" lineSizeScale="0,0,0,0,0,0" sizeType="MM" lineSizeType="MM" minScaleDenominator="inf">
-          <fontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           <attribute field="" color="#000000" label=""/>
         </DiagramCategory>
         <symbol alpha="1" clip_to_extent="1" type="marker" name="sizeSymbol">
@@ -634,18 +726,29 @@
         <alias field="TOTAL_HU" index="10" name=""/>
         <alias field="OCCUPIED" index="11" name=""/>
         <alias field="VACANT" index="12" name=""/>
+<<<<<<< Updated upstream
+=======
         <alias field="pop_dens" index="13" name=""/>
+>>>>>>> Stashed changes
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
       <attributeactions default="-1"/>
       <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
         <columns>
+<<<<<<< Updated upstream
+=======
+          <column width="-1" hidden="0" type="field" name="fid"/>
+>>>>>>> Stashed changes
           <column width="-1" hidden="0" type="field" name="STATEFP10"/>
           <column width="-1" hidden="0" type="field" name="COUNTYFP10"/>
           <column width="-1" hidden="0" type="field" name="TRACTCE10"/>
           <column width="-1" hidden="0" type="field" name="BLOCKCE10"/>
+<<<<<<< Updated upstream
           <column width="154" hidden="0" type="field" name="GEOID10"/>
+=======
+          <column width="-1" hidden="0" type="field" name="GEOID10"/>
+>>>>>>> Stashed changes
           <column width="-1" hidden="0" type="field" name="NAME10"/>
           <column width="-1" hidden="0" type="field" name="Shape_Leng"/>
           <column width="-1" hidden="0" type="field" name="Shape_Area"/>
@@ -653,6 +756,10 @@
           <column width="-1" hidden="0" type="field" name="TOTAL_HU"/>
           <column width="-1" hidden="0" type="field" name="OCCUPIED"/>
           <column width="-1" hidden="0" type="field" name="VACANT"/>
+<<<<<<< Updated upstream
+=======
+          <column width="-1" hidden="0" type="field" name="pop_dens"/>
+>>>>>>> Stashed changes
           <column width="-1" hidden="1" type="actions"/>
           <column width="-1" hidden="0" type="field" name="fid"/>
         </columns>
@@ -699,11 +806,15 @@ def my_form_open(dialog, layer, feature):
         <default field="TOTAL_HU" expression=""/>
         <default field="OCCUPIED" expression=""/>
         <default field="VACANT" expression=""/>
+<<<<<<< Updated upstream
+=======
         <default field="pop_dens" expression=""/>
+>>>>>>> Stashed changes
       </defaults>
       <previewExpression>COALESCE( "NAME10", '&lt;NULL>' )</previewExpression>
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+<<<<<<< Updated upstream
       <extent>
         <xmin>2102980</xmin>
         <ymin>734293</ymin>
@@ -711,11 +822,14 @@ def my_form_open(dialog, layer, feature):
         <ymax>744886</ymax>
       </extent>
       <id>Selection20171003123241417</id>
+=======
+      <id>Raleigh_downtown20171013160902829</id>
+>>>>>>> Stashed changes
       <datasource>./data/Raleigh_downtown.gpkg</datasource>
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>Raleigh downtown</layername>
+      <layername>Raleigh_downtown</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.2192024384 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs</proj4>
@@ -807,7 +921,6 @@ def my_form_open(dialog, layer, feature):
       </renderer-v2>
       <labeling type="simple"/>
       <customproperties>
-        <property key="embeddedWidgets/count" value="0"/>
         <property key="labeling" value="pal"/>
         <property key="labeling/addDirectionSymbol" value="false"/>
         <property key="labeling/angleOffset" value="0"/>
@@ -1076,6 +1189,150 @@ def my_form_open(dialog, layer, feature):
       </defaults>
       <previewExpression></previewExpression>
     </maplayer>
+<<<<<<< Updated upstream
+=======
+    <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <id>buildings_00_original20171013164012203</id>
+      <datasource>../data/layers/buildings_00_original.gpkg</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>Buildings</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.2192024384 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs</proj4>
+          <srsid>246</srsid>
+          <srid>2264</srid>
+          <authid>EPSG:2264</authid>
+          <description>NAD83 / North Carolina (ftUS)</description>
+          <projectionacronym>lcc</projectionacronym>
+          <ellipsoidacronym>GRS80</ellipsoidacronym>
+          <geographicflag>false</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes>
+        <edittype widgetv2type="TextEdit" name="fid">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="FTR_CODE">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="DESCRIPTIO">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="SUBTYPE">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="IMPERVIOUS">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="UPDATE_DAT">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="SHAPE_2_AR">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="SHAPE_2_LE">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+      </edittypes>
+      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
+            <layer pass="0" class="SimpleFill" locked="0">
+              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="color" v="48,36,129,255"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_style" v="solid"/>
+              <prop k="outline_width" v="0.26"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="style" v="solid"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties/>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>DESCRIPTIO</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <annotationform></annotationform>
+      <aliases>
+        <alias field="fid" index="0" name=""/>
+        <alias field="FTR_CODE" index="1" name=""/>
+        <alias field="DESCRIPTIO" index="2" name=""/>
+        <alias field="SUBTYPE" index="3" name=""/>
+        <alias field="IMPERVIOUS" index="4" name=""/>
+        <alias field="UPDATE_DAT" index="5" name=""/>
+        <alias field="SHAPE_2_AR" index="6" name=""/>
+        <alias field="SHAPE_2_LE" index="7" name=""/>
+      </aliases>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions default="-1"/>
+      <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="685130680">
+        <columns/>
+      </attributetableconfig>
+      <editform></editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath></editforminitfilepath>
+      <editforminitcode><![CDATA[]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+      <defaults>
+        <default field="fid" expression=""/>
+        <default field="FTR_CODE" expression=""/>
+        <default field="DESCRIPTIO" expression=""/>
+        <default field="SUBTYPE" expression=""/>
+        <default field="IMPERVIOUS" expression=""/>
+        <default field="UPDATE_DAT" expression=""/>
+        <default field="SHAPE_2_AR" expression=""/>
+        <default field="SHAPE_2_LE" expression=""/>
+      </defaults>
+      <previewExpression></previewExpression>
+    </maplayer>
+>>>>>>> Stashed changes
   </projectlayers>
   <properties>
     <Variables>
@@ -1131,12 +1388,10 @@ def my_form_open(dialog, layer, feature):
     <Digitizing>
       <DefaultSnapToleranceUnit type="int">1</DefaultSnapToleranceUnit>
       <LayerSnappingList type="QStringList">
-        <value>Selection20171003123241031</value>
-        <value>Selection20171003123241417</value>
-        <value>Selection20171003123241857</value>
+        <value>Blocks_201020171013160500126</value>
+        <value>Raleigh_downtown20171013160902829</value>
       </LayerSnappingList>
       <LayerSnappingEnabledList type="QStringList">
-        <value>disabled</value>
         <value>disabled</value>
         <value>disabled</value>
       </LayerSnappingEnabledList>
@@ -1145,17 +1400,14 @@ def my_form_open(dialog, layer, feature):
       <LayerSnappingToleranceUnitList type="QStringList">
         <value>2</value>
         <value>2</value>
-        <value>2</value>
       </LayerSnappingToleranceUnitList>
       <LayerSnapToList type="QStringList">
-        <value>to_vertex_and_segment</value>
         <value>to_vertex_and_segment</value>
         <value>to_vertex_and_segment</value>
       </LayerSnapToList>
       <DefaultSnapType type="QString">off</DefaultSnapType>
       <DefaultSnapTolerance type="double">0</DefaultSnapTolerance>
       <LayerSnappingToleranceList type="QStringList">
-        <value>0.000000</value>
         <value>0.000000</value>
         <value>0.000000</value>
       </LayerSnappingToleranceList>
