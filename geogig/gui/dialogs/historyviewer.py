@@ -381,12 +381,19 @@ class BranchTreeItem(QTreeWidgetItem):
         QTreeWidgetItem.__init__(self)
         self.branch = branch
         self.ref = branch
-        self.commit = Commit.fromref(repo, branch)
         self.repo = repo
         self.path = path
         self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
         self.setText(0, branch)
         self.setIcon(0, branchIcon)
+        self._commit = None
+
+    @property
+    def commit(self):
+        if self._commit is None:
+            self._commit = Commit.fromref(self.repo, self.branch)
+        return self._commit
+
 
     def populate(self):
         if not self.childCount():
@@ -394,6 +401,8 @@ class BranchTreeItem(QTreeWidgetItem):
             for k, v in self.repo.tags().items():
                 tags[v].append(k)
             commits = self.repo.log(until = self.branch, limit = 100, path = self.path)
+            if commits:
+                self._commit = commits[0]
             for commit in commits:
                 item = CommitTreeItem(commit)
                 self.addChild(item)
