@@ -163,9 +163,11 @@ class GeoGigPlugin(object):
         self.iface.addDockWidget(Qt.RightDockWidgetArea, navigatorInstance)
 
         try:
-            from lessons import addLessonsFolder
+            from lessons import addLessonsFolder, addGroup
             folder = os.path.join(os.path.dirname(__file__), "_lessons")
             addLessonsFolder(folder, "geogig")
+            group_description = os.path.join(folder, "group.md")
+            addGroup("GeoGig lessons", group_description)
         except Exception as e:
             pass
 
