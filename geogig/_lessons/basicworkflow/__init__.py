@@ -12,7 +12,7 @@ from qgis.PyQt.QtCore import QTimer
 from lessons.lesson import Step
 from lessons.utils import layerFromName, unmodalWidget
 
-from geogig._lessons import GeoGigLesson, _openNavigator, cleanLessonRepo
+from geogig._lessons import GeoGigLesson, _openNavigator
 import geogig._lessons as ls
 from geogig.tools.layers import hasLocalChanges
 from geogig.geogigwebapi import repository
@@ -54,4 +54,3 @@ lesson.addStep("Sync layer with repository", "05_sync_layer.md",
                prestep=lambda: unmodalWidget("CommitDialog", 300, 1000),
                endcheck=lambda: checkVersions(2),
                steptype=Step.MANUALSTEP)
-lesson.setCleanup(cleanLessonRepo)

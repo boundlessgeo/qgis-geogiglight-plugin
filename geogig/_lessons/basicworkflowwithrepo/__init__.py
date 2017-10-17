@@ -10,7 +10,7 @@ from lessons.utils import layerFromName, unmodalWidget
 from lessons.lesson import Step
 
 from geogig._lessons import GeoGigLesson, openTestProject, _openNavigator, \
-    createExampleRepo, addMoreCommits, cleanLessonRepo
+    createExampleRepo, addMoreCommits
 import geogig._lessons as ls
 from geogig.tools.layers import hasLocalChanges
 from geogig.geogigwebapi.commit import Commit
@@ -69,4 +69,3 @@ lesson.addStep("Check changes between commits",
 lesson.addStep("Merge branch", "06_merge_edits_branch.md",
                steptype=Step.MANUALSTEP,
                endcheck=checkHasMerged)
-lesson.setCleanup(cleanLessonRepo)

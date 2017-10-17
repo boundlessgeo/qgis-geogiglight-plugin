@@ -16,10 +16,12 @@ from qgis.core import *
 from qgis.utils import iface
 from qgis.PyQt.QtCore import Qt
 
-from geogig.geogigwebapi.repository import createRepoAtUrl, GeoGigException, Repository
+from geogig.geogigwebapi.repository import createRepoAtUrl, GeoGigException, Repository, readRepos
 from geogig.geogigwebapi import repository
 from geogig.tools import layertracking
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
+
+_lastRepo = None
 
 _repos = []
 _repoEndpoints = {}
@@ -28,28 +30,13 @@ _tracked = []
 
 REPOS_SERVER_URL = "http://localhost:8182/"
 
-def backupConfiguration():
-    global _repos
-    global _repoEndpoints
-    global _availableRepoEndpoints
-    _repos = repository.repos
-    _repoEndpoints = repository.repoEndpoints
-    _availableRepoEndpoints = repository.availableRepoEndpoints
-    _tracked = layertracking.tracked
-
-def restoreConfiguration():
-    global _repos
-    global _tracked
-    global _repoEndpoints
-    global _availableRepoEndpoints
-    repository.repoEndpoints = _repoEndpoints
-    repository.availableRepoEndpoints = _availableRepoEndpoints
-    repository.repos = _repos
-    layertracking._tracked = _tracked
+def cleanup():
+    global _lastRepo
+    if _lastRepo is not None:
+        _lastRepo.delete()
+    readRepos()
     navigatorInstance.updateNavigator()
 
-
-_lastRepo = None
 def _openNavigator(empty = False, group = "Lesson repos"):
     if empty:
         repository.repos = []
@@ -170,13 +157,12 @@ try:
         def __init__(self, name):
             folder = os.path.dirname(traceback.extract_stack()[-2][0])
             Lesson.__init__(self, name, "GeoGig lessons", "lesson.html", folder=folder)
-            self.addStep("Prepare lesson", "Preparing lesson", backupConfiguration)
             helpFile= os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                   "common",
                                                    "preparegeogig.md"))
             self.addStep("Prepare GeoGig environment", helpFile,
                endcheck=checkGeoGig, steptype=Step.MANUALSTEP)
-            self.setCleanup(restoreConfiguration)
+            self.setCleanup(cleanup)
 except:
     pass
 
@@ -189,9 +175,3 @@ def checkGeoGig():
         return True
     except:
         return False
-
-def cleanLessonRepo():
-    global _lastRepo
-    if _lastRepo is not None:
-        _lastRepo.delete()
-    navigatorInstance.updateNavigator()
