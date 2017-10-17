@@ -5,8 +5,7 @@ edits, where you will be able to work and sync your changes without
 affecting the master branch.
 
 * In the **GeoGig Navigator**, if you haven't done it already, click any
-  of the *Buildings2017_update* repo items to populate the **Repository
-  History**.
+  of the repo items to populate the **Repository History**.
 
 * In the **Repository history**, expand the *master* branch contents to
   see all the branch previous commits.
@@ -19,7 +18,7 @@ affecting the master branch.
 * In the **Create New Branch** dialog, enter the name for the new
   branch as `john_edits`, and click **OK**.
 
-Now, in the **GeoGig Navigator, if you expand the *Buildings2017_update*
+Now, in the **GeoGig Navigator, if you expand the
 repository, you should be able to see the newly created branch.
 
 ![new_branch_added](new_branch_added.png)
