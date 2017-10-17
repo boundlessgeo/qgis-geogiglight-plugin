@@ -346,7 +346,7 @@ class HistoryViewer(QTreeWidget):
                     w.updateText()
 
     def createBranch(self, ref):
-        text, ok = QInputDialog.getText(self, 'Title',
+        text, ok = QInputDialog.getText(self, 'Create New Branch',
                                               'Enter the name for the new branch:')
         if ok:
             self.repo.createbranch(ref, text.replace(" ", "_"))
