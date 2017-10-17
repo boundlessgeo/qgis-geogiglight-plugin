@@ -787,8 +787,17 @@ def readRepos():
                 pass
 
 def refreshEndpoint(name):
-    #TODO: optimize this
-    readRepos()
+    global repos
+    global repoEndpoints
+    global availableRepoEndpoints
+    if name in availableRepoEndpoints:
+        del availableRepoEndpoints[name]
+    for repo in repos[::-1]:
+        if repo.group == name:
+            repos.remove(repo)
+    if name in repoEndpoints:
+        _repos = execute(lambda: repositoriesFromUrl(repoEndpoints[name], name))
+        repos.extend(_repos)
 
 def endpointRepos(name):
     groupRepos = [r for r in repos if r.group == name]
