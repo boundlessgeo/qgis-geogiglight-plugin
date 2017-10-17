@@ -44,7 +44,7 @@ def checkLayerInProject(layername):
 
 lesson = GeoGigLesson("02. GeoGig workflow with branching")
 lesson.addStep("Create repository", "Create repository",
-               function=lambda: createExampleRepo()
+               function=lambda: createExampleRepo())
 lesson.addStep("Open GeoGig navigator",
                "Open GeoGig navigator",
                lambda: _openNavigator())

@@ -18,7 +18,7 @@ affecting the master branch.
 * In the **Create New Branch** dialog, enter the name for the new
   branch as `john_edits`, and click **OK**.
 
-Now, in the **GeoGig Navigator, if you expand the
+Now, in the **GeoGig Navigator**, if you expand the
 repository, you should be able to see the newly created branch.
 
 ![new_branch_added](new_branch_added.png)
