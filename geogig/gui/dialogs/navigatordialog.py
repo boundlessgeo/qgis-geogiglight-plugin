@@ -455,11 +455,21 @@ class BranchItem(QTreeWidgetItem):
         refreshAction = QAction("Refresh", menu)
         refreshAction.triggered.connect(self.refreshContent)
         menu.addAction(refreshAction)
+        createBranchAction = QAction("Create branch", menu)
+        createBranchAction.triggered.connect(self.createBranch)
+        menu.addAction(createBranchAction)
         deleteAction = QAction("Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
         deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
         return menu
+
+    def createBranch(self):
+        text, ok = QInputDialog.getText(self.tree, 'Create New Branch',
+                                              'Enter the name for the new branch:')
+        if ok:
+            self.repo.createbranch(self.branch, text.replace(" ", "_"))
+            repoWatcher.repoChanged.emit(self.repo)
 
     def delete(self):
         ret = QMessageBox.question(self.tree, 'Delete branch',
