@@ -42,10 +42,9 @@ def checkLayerInProject(layername):
     layer = layerFromName(layername)
     return layer is not None
 
-
 lesson = GeoGigLesson("02. GeoGig workflow with branching")
 lesson.addStep("Create repository", "Create repository",
-               function=lambda: createExampleRepo())
+               function=lambda: createExampleRepo(name="2017_update_buildings"))
 lesson.addStep("Open GeoGig navigator",
                "Open GeoGig navigator",
                lambda: _openNavigator())
