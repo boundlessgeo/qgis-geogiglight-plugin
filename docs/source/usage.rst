@@ -98,6 +98,8 @@ menu with the following options:
 * :guilabel:`Create new branch from this commit`
 * :guilabel:`Create new tag at this commit`
 * :guilabel:`Delete tags at this commit`
+* :guilabel:`Add 'X' layer to QGIS from this commit`
+* :guilabel:`Change 'X' layer to this commit`
 
 GeoGig Feature Info Tool
 ........................
@@ -300,6 +302,17 @@ the selected branch.
 
 .. figure:: img/layer_was_already_exported.png
 
+It's also possible to add repository layers to the QGIS project at a particular
+point in the history of the repository. In the :guilabel:`Repository history`,
+in a branch, right-click a commit. Then, from the context menu, select the
+:guilabel:`Add 'X' layer to QGIS from this commit` item.
+
+.. figure:: img/add_layer_from_commit.png
+
+If the repository layer has been loaded in QGIS already, in the context menu, you
+will find a different option: :guilabel:`Change 'X' layer to this
+commit`. See :ref:`recover_layer_version` for more details.
+
 Creating and deleting branches
 ..............................
 
@@ -343,9 +356,9 @@ deleted, as well as all the layers and commit information it contains.
 Editing, committing changes to a GeoGig layer
 .............................................
 
-To edit a layer under GeoGig versioning, use any of
-the available QGIS editing tools as usual. Once you are done editing and have saved them
-locally, you can transfer your changes to a GeoGig server repository.
+To edit a layer under GeoGig versioning, use any of the available QGIS editing
+tools as usual. Once you are done editing and have saved them locally, you can
+transfer your changes to a GeoGig server repository.
 
 To transfer the layer's local changes to the repository, right-click the edited
 layer in the :guilabel:`Layers panel` and
@@ -399,6 +412,8 @@ all the layer local changes. To discard all the local changes, right-click the
 edited layer in the :guilabel:`Layers panel` and selecting
 :menuselection:`GeoGig --> Revert local changes` from the context menu.
 
+.. _recover_layer_version:
+
 Recovering a given version of a layer
 .....................................
 
@@ -413,6 +428,13 @@ commit you want to update the layer to. Then, click :guilabel:`OK` to recover
 that layer's version.
 
 .. figure:: img/recover_layer_state.png
+
+It's also possible to recover a layer version from the :guilabel:`Repository
+history`. In the :guilabel:`Repository history`, in a branch, right-click a
+commit that has changed the layer. Then, from the context menu, select
+:guilabel:`Change 'X' layer to this commit`.
+
+.. figure:: img/change_layer_to_a_commit.png
 
 If you have local changes that haven't been added to the repository yet, you
 will have to :guilabel:`Sync layer to branch` or :guilabel:`Discard local
