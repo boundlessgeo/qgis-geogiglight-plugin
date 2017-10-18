@@ -179,7 +179,7 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
     filename, layername = namesFromLayer(layer)
     changesFilename = tempFilename("gpkg")
     beforeCommitId, afterCommitId = repo.revparse(beforeCommitId), repo.revparse(afterCommitId)
-    repo.exportdiff(layername, beforeCommitId, afterCommitId, changesFilename)
+    repo.exportdiff(beforeCommitId, afterCommitId, changesFilename)
 
     con = sqlite3.connect(filename)
     cursor = con.cursor()

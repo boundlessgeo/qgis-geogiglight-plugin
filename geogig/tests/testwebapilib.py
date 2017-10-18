@@ -195,7 +195,7 @@ class WebApiTests(unittest.TestCase):
     def testExportDiff(self):
         repo = _createSimpleTestRepo()
         filename = tempFilename("gpkg")
-        repo.exportdiff("points", "HEAD", "HEAD~1", filename)
+        repo.exportdiff("HEAD", "HEAD~1", filename)
         self.assertTrue(os.path.exists(filename))
         #Check exported gpkg is correct
 
