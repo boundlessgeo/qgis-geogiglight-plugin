@@ -407,7 +407,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use context menu of the layer node in the repository tree")
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.")
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
@@ -415,7 +415,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("New project", iface.newProject)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use context menu of the layer node in the repository tree")
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.")
     test.addStep("Check layer has been added to project", _checkLayerInProject)
     tests.append(test)
 
@@ -424,7 +424,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color). "
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry. "
                  "Verify that is asks you for confirmation. Select 'Use branch version'", isVerifyStep = True)
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
@@ -434,7 +434,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndEditLayer)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree. "
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry."
                  "Verify it show a message in the message bar saying that the layer was already loaded", isVerifyStep = True)
     tests.append(test)
 
@@ -443,8 +443,19 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportChangetoFirstVersionAndEditLayer)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. Use the links in the layer items of the repository tree (which should be in orange color).  "
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.  "
                  "Verify that is asks you for confirmation. Select 'Use branch version'. Check it is not permitted due to local changes in the layer",
+                 isVerifyStep = True)
+    tests.append(test)
+
+    test = GeoGigTest("Open layers in QGIS from history tree", "Export layers tests")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the last commit of the 'master' branch in the history tree and use the corresponding context menu entry."
+                 "Check a layer is correctly added",
+                 isVerifyStep = True)
+    test.addStep("Update layer from the 'simple' repository into QGIS. To do it, right-click in the last commit of the 'mybranch' branch in the history tree and use the corresponding context menu entry."
+                 "Check that a warning message is shown. Select to overwrite the layer and verify it is updated",
                  isVerifyStep = True)
     tests.append(test)
 
@@ -622,7 +633,9 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Click on latest version and select 'View changes'. Check that diff viewer works correctly")
+    test.addStep("Click on latest commit and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
+    test.addStep("Select two commits, right-click and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
+    test.addStep("Select the two branch items in the history tree, right-click and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
     tests.append(test)
 
     test = Test("Check local diff viewer")
@@ -637,7 +650,7 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Add commit", _addNewCommit)
     test.addStep("Open navigator",  _openNavigator)
-    test.addStep("Click on latest version in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
+    test.addStep("Click on latest commit in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
     tests.append(test)
 
     test = GeoGigTest("Add layer to repository from context menu")
@@ -665,7 +678,21 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
     test.addStep("Verify that 'master' branch cannot be deleted from history tree", isVerifyStep = True)
-    test.addStep("Delete 'mybranch' using repo history panel and verify the versions tree is updated")
+    test.addStep("Delete 'mybranch' using repo history panel and verify the history tree is updated")
+    tests.append(test)
+
+
+    test = GeoGigTest("Create new branch from repo tree", "Branch and tag tests")
+    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Create new branch at master branch using the repos tree context menu. Verify it is added to history tree")
+    tests.append(test)
+
+    test = GeoGigTest("Delete branch", "Branch and tag tests")
+    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
+    test.addStep("Open navigator", _openNavigator)
+    test.addStep("Verify that 'master' branch cannot be deleted from repos tree", isVerifyStep = True)
+    test.addStep("Delete 'mybranch' using repos tree context menu panel and verify that also the history tree is updated")
     tests.append(test)
 
     test = GeoGigTest("Delete branch in repositories tree", "Branch and tag tests")
