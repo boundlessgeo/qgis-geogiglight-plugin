@@ -505,7 +505,7 @@ class Repository(object):
                 cursor.close()
                 con.close()
             else:
-                self._checkoutbranch("master", transactionId)
+                #self._checkoutbranch("master", transactionId)
                 self.closeTransaction(transactionId)
                 mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
                 importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
