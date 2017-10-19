@@ -97,6 +97,7 @@ def icon(f):
 repoIcon = icon("repository.svg")
 branchIcon = icon("branch.svg")
 layerIcon = icon('geometry.svg')
+copyIcon  = icon('copy.png')
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -322,22 +323,22 @@ class RepoItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
-        copyUrlAction = QAction("Copy repository URL", menu)
+        copyUrlAction = QAction(icon("copy.png"), "Copy repository URL", menu)
         copyUrlAction.triggered.connect(self.copyUrl)
         menu.addAction(copyUrlAction)
-        refreshAction = QAction("Refresh", menu)
+        refreshAction = QAction(icon("refresh.svg"), "Refresh", menu)
         refreshAction.triggered.connect(self.refreshContent)
         menu.addAction(refreshAction)
-        deleteAction = QAction("Delete", menu)
+        deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
         remotesAction = QAction("Manage remote connections", menu)
         remotesAction.triggered.connect(self.manageRemotes)
         menu.addAction(remotesAction)
-        pullAction = QAction("Pull", menu)
+        pullAction = QAction(icon("pull.svg"), "Pull", menu)
         pullAction.triggered.connect(self.pull)
         menu.addAction(pullAction)
-        pushAction = QAction("Push", menu)
+        pushAction = QAction(icon("push.svg"), "Push", menu)
         pushAction.triggered.connect(self.push)
         menu.addAction(pushAction)
         return menu
@@ -452,13 +453,13 @@ class BranchItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
-        refreshAction = QAction("Refresh", menu)
+        refreshAction = QAction(icon("refresh.svg"), "Refresh", menu)
         refreshAction.triggered.connect(self.refreshContent)
         menu.addAction(refreshAction)
-        createBranchAction = QAction("Create branch", menu)
+        createBranchAction = QAction(icon("create_branch.png"), "Create branch", menu)
         createBranchAction.triggered.connect(self.createBranch)
         menu.addAction(createBranchAction)
-        deleteAction = QAction("Delete", menu)
+        deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
         deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
@@ -543,10 +544,10 @@ class LayerItem(QTreeWidgetItem):
     def menu(self):
         menu = QMenu()
         status = "[Not in sync]" if self.status == self.NOT_IN_SYNC else ""
-        addAction = QAction("Add to project %s" % status, menu)
+        addAction = QAction(icon("reset.png"), "Add to project %s" % status, menu)
         addAction.triggered.connect(self.add)
         menu.addAction(addAction)
-        deleteAction = QAction("Delete", menu)
+        deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
         return menu
