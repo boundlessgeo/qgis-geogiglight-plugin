@@ -20,6 +20,7 @@ from geogig.geogigwebapi.repository import createRepoAtUrl, GeoGigException, Rep
 from geogig.geogigwebapi import repository
 from geogig.tools import layertracking
 from geogig.gui.dialogs.navigatordialog import navigatorInstance
+from geogig.tools.gpkgsync import checkoutLayer
 
 _lastRepo = None
 
@@ -150,6 +151,13 @@ def addMoreCommits():
                       "Updates Block 1055 buildings",
                       AUTHOR, EMAIL, False)
 
+def _exportAndEditLayer():
+    layer = checkoutLayer(_lastRepo, "buildings", None)
+    idx = layer.dataProvider().fieldNameIndex("DESCRIPTIO")
+    features = list(layer.getFeatures())
+    with edit(layer):
+        layer.changeAttributeValue(features[0].id(), idx, "COMMERCIAL")
+        layer.deleteFeatures([features[1].id()])
 
 try:
     from lessons.lesson import Lesson, Step
