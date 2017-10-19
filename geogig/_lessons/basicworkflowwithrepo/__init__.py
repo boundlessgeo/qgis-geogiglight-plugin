@@ -44,7 +44,7 @@ def checkLayerInProject(layername):
 
 lesson = GeoGigLesson("02. GeoGig workflow with branching")
 lesson.addStep("Create repository", "Create repository",
-               function=lambda: createExampleRepo())
+               function=createExampleRepo)
 lesson.addStep("Open GeoGig navigator",
                "Open GeoGig navigator",
                lambda: _openNavigator())
@@ -62,7 +62,7 @@ lesson.addStep("Sync layer with repository", "04_sync_layer.md",
                endcheck=lambda: checkVersions(4, "john_edits"),
                steptype=Step.MANUALSTEP)
 lesson.addStep("Add more commits", "Add more commits",
-               function=lambda: addMoreCommits())
+               function=addMoreCommits)
 lesson.addStep("Check changes between commits",
                "05_check_changes_between_commits.md",
                steptype=Step.MANUALSTEP)
