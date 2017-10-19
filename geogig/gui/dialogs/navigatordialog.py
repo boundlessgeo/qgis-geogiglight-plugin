@@ -318,7 +318,8 @@ class RepoItem(QTreeWidgetItem):
         self.takeChildren()
         if isPopulated:
             self.populate()
-            self.navigator.updateCurrentRepo(self.repo, True)
+            if self.navigator.currentRepo == self.repo:
+                self.navigator.updateCurrentRepo(self.repo, True)
 
 
     def menu(self):
