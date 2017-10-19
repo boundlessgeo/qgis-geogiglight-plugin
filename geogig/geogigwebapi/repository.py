@@ -230,9 +230,11 @@ class Repository(object):
 
         iface.mainWindow().statusBar().showMessage("")
 
-    def exportdiff(self, oldRef, newRef, filename):
+    def exportdiff(self, oldRef, newRef, filename, layername = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         params = {"oldRef": oldRef, "newRef": newRef, "format": "gpkg"}
+        if layername is not None:
+            params["path"] = layername
         url  = self.url + "export-diff.json"
         r = requests.get(url, params=params)
         r.raise_for_status()

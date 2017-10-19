@@ -152,9 +152,7 @@ def addDiffLayers(repo, commit, commit2, layernames):
     for layername in layernames:
         styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
         geomTypes = ["Point","LineString","Polygon"]
-        repo.exportdiff(commit.commitid, commit2.commitid, beforeFilename)
         beforeLayer = loadLayerNoCrsDialog("%s|layername=%s" % (beforeFilename, layername), layername, "ogr")
-        repo.exportdiff(commit2.commitid, commit.commitid, afterFilename)
         afterLayer = loadLayerNoCrsDialog("%s|layername=%s" % (afterFilename, layername), layername, "ogr")
         beforeCon = sqlite3.connect(beforeFilename)
         beforeCursor = beforeCon.cursor()
