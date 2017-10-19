@@ -36,7 +36,7 @@ options(
 
 @task
 @cmdopts([
-    ('clean', 'c', 'clean out dependencies first')
+    ('clean', 'c', 'clean out dependencies first'),
 ])
 def setup(options):
     '''install dependencies'''
@@ -186,7 +186,8 @@ def create_settings_docs(options):
 
 @task
 @cmdopts([
-    ('sphinx_theme=', 's', 'Sphinx theme to use in documentation')
+    ('clean', 'c', 'clean out built artifacts first'),
+    ('sphinx_theme=', 's', 'Sphinx theme to use in documentation'),
 ])
 def builddocs(options):
     try:
@@ -195,6 +196,9 @@ def builddocs(options):
     except:
         pass
     create_settings_docs(options)
+
+    if getattr(options, 'clean', False):
+        sh("make clean")
     if getattr(options, 'sphinx_theme', False):
         # overrides default theme by the one provided in command line
         set_theme = "-D html_theme='{}'".format(options.sphinx_theme)
