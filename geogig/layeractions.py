@@ -43,7 +43,6 @@ from .geogigwebapi.commit import Commit
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
 from geogig.gui.dialogs.localdiffviewerdialog import LocalDiffViewerDialog
-from geogig.gui.dialogs.geogigref import CommitSelectDialog
 from geogig.gui.dialogs import commitdialog
 from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
 
@@ -162,15 +161,15 @@ def revertChange(layer):
         return
     tracking = getTrackingInfo(layer)
     repo = Repository(tracking.repoUrl)
-    currentCommitId = getCommitId(layer)
     filename, layername = namesFromLayer(layer)
-    dlg = CommitSelectDialog(repo, currentCommitId, layername)
+    from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
+    dlg = HistoryViewerDialog(repo, layername)
     dlg.exec_()
     if dlg.ref is not None:
         #TODO check that selected commit is in history line
 
+        commit = Commit.fromref(repo, dlg.ref)
         # check if we are reverting commit which adds layer to the repo
-        commit = Commit.fromref(repo, currentCommitId)
         if commit.addsLayer():
             QMessageBox.warning(config.iface.mainWindow(), 'Cannot revert commit',
                     "Commits which add layer to the repository can not "
@@ -178,13 +177,13 @@ def revertChange(layer):
                     "from branch.")
             return
 
-        applyLayerChanges(repo, layer, dlg.ref.commitid, dlg.ref.parent.commitid, False)
+        applyLayerChanges(repo, layer, commit.commitid, commit.parent.commitid, False)
         layer.reload()
         layer.triggerRepaint()
         config.iface.messageBar().pushMessage("GeoGig", "Commit changes have been reverted in local layer",
                                                       level=QgsMessageBar.INFO,
                                                       duration=5)
-        commitdialog.suggestedMessage = "Reverted changes from commit %s [%s] " % (dlg.ref.commitid, dlg.ref.message)
+        commitdialog.suggestedMessage = "Reverted changes from commit %s [%s] " % (commit.commitid, commit.message)
 
 def changeVersion(layer):
     if hasLocalChanges(layer):

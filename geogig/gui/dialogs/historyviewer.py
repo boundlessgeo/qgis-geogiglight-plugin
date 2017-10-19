@@ -444,7 +444,7 @@ class CommitTreeItem(QTreeWidgetItem):
 
 class HistoryViewerDialog(QDialog):
 
-    def __init__(self, repo, layer):
+    def __init__(self, repo, layer=None):
         self.repo = repo
         self.layer = layer
         self.ref = None
