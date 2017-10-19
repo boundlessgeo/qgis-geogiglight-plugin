@@ -36,7 +36,7 @@ options(
 
 @task
 @cmdopts([
-    ('clean', 'c', 'clean out dependencies first'),
+    ('clean', 'c', 'clean out dependencies first')
 ])
 def setup(options):
     '''install dependencies'''
@@ -185,6 +185,9 @@ def create_settings_docs(options):
                         % (setting["label"], setting["description"]))
 
 @task
+@cmdopts([
+    ('sphinx_theme=', 's', 'Sphinx theme to use in documentation')
+])
 def builddocs(options):
     try:
         sh("git submodule init")
@@ -192,10 +195,14 @@ def builddocs(options):
     except:
         pass
     create_settings_docs(options)
-    cwd = os.getcwd()
-    os.chdir(options.sphinx.docroot)
-    sh("make html")
-    os.chdir(cwd)
+    if getattr(options, 'sphinx_theme', False):
+        # overrides default theme by the one provided in command line
+        set_theme = "-D html_theme='{}'".format(options.sphinx_theme)
+    else:
+        # Uses default theme defined in conf.py
+        set_theme = ""
+    sh("sphinx-build -a {} {} {}".format(set_theme, options.sphinx.sourcedir,
+                                         options.sphinx.builddir))
 
 @task
 def install_devtools():
