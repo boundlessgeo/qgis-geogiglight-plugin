@@ -23,8 +23,9 @@ GeoGig see http://geogig.org/
 Documentation contents:
 
 .. toctree::
+   :glob:
    :maxdepth: 2
 
    installation
    usage
-   settingsconf
+   *
