@@ -29,7 +29,7 @@ from functools import partial
 
 from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
-from qgis.core import QgsMapLayer, QgsVectorLayer
+from qgis.core import QgsMapLayer, QgsVectorLayer ,QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -106,7 +106,8 @@ def addInfoActions(layer):
         config.iface.legendInterface().addLegendLayerAction(messageAction, u"GeoGig", u"id1", QgsMapLayer.VectorLayer, False)
         config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
         _infoActions[layer.id()].append(messageAction)
-    except:
+    except Exception, e:
+        QgsMessageLog.logMessage("Cannot connect to server when creating GeoGig layer context:\n %s" % str(e), level=QgsMessageLog.WARNING)
         messageAction = QAction("Error: Cannot connect with repository", config.iface.legendInterface())
         f = messageAction.font();
         f.setBold(True);
