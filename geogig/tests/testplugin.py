@@ -85,13 +85,15 @@ def restoreConfiguration():
     repository.repos = _repos
     layertracking._tracked = _tracked
 
-def _openNavigator(empty = False, group = "test"):
+def _openNavigator(empty = False, group = "test", repos = None):
     if empty:
         repository.repos = []
         repository.repoEndpoints = {}
         repository.availableRepoEndpoints = {}
     else:
-        repository.repos = [tests._lastRepo]
+        if repos is None:
+            repos = [tests._lastRepo]
+        repository.repos = repos
         repository.availableRepoEndpoints = {group:conf['REPOS_SERVER_URL']}
         repository.repoEndpoints = {group:conf['REPOS_SERVER_URL']}
     action = navigatorInstance.toggleViewAction()
@@ -620,6 +622,13 @@ def functionalTests():
     test.addStep("Prepare test", _createNothingToPushScenario)
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Select the repository in the repository explorer. Push to 'myremote' repo . Verify the push operation is not performed and the corresponding message is displayed.")
+    tests.append(test)
+
+    test = Test("TEST SCENARIO: Two cloned repos")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createNothingToPushScenario)
+    test.addStep("Open navigator", lambda: _openNavigator(repos = [_remoteRepo, _localRepo]))
+    test.addStep("TEST ON THE LOCAL AND REMOTE REPOS")
     tests.append(test)
 
     test = Test("Cannot push")
