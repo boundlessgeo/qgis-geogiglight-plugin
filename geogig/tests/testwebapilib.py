@@ -7,6 +7,8 @@ from builtins import str
 import os
 import uuid
 import unittest
+import time
+
 
 from qgis.core import QgsFeatureRequest, edit, QgsGeometry, QgsPoint
 
@@ -43,8 +45,9 @@ class WebApiTests(unittest.TestCase):
         self.assertTrue(name in [r.title for r in repos])
 
     def testCreateRepoWithNameThatAlreadyExists(self):
-        repo = _createSimpleTestRepo()
-        self.assertRaises(GeoGigException, lambda: createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", "original_simple"))
+        repo_name =  "test-repo-same-name-%s" %  str(time.time())
+        repo = _createSimpleTestRepo(group="test",name=repo_name)
+        self.assertRaises(GeoGigException, lambda: createRepoAtUrl(conf['REPOS_SERVER_URL'], "test", repo_name))
 
     def testLog(self):
         repo = _createSimpleTestRepo()
