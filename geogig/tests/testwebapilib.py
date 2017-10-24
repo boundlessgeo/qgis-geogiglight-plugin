@@ -16,7 +16,8 @@ from geogig.geogigwebapi.repository import (Repository,
                                             createRepoAtUrl,
                                             repositoriesFromUrl,
                                             GeoGigException,
-                                            CannotPushException
+                                            CannotPushException,
+                                            NothingToPushException
                                            )
 
 from geogig.tools.gpkgsync import getCommitId
@@ -412,7 +413,7 @@ class WebApiTests(unittest.TestCase):
         log2 = repo2.log()
         self.assertEqual(log[0].message, log2[0].message)
         self.assertEqual(len(log), len(log2))
-        self.assertRaises(CannotPushException, lambda: repo2.push("myremote", "master"))
+        self.assertRaises(NothingToPushException, lambda: repo2.push("myremote", "master"))
 
     def testPullWithoutConflicts(self):
         repo = _createSimpleTestRepo(True)
