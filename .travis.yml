@@ -24,7 +24,7 @@ before_install:
 - docker-compose exec qgis-testing-environment sh -c "$PIP_EXECUTABLE install paver"
 script:
 - docker-compose exec qgis-testing-environment sh -c "cd /tests_directory && paver setup && paver package --tests"
-- docker-compose exec qgis-testing-environment sh -c "qgis_testrunner.sh geogig.tests.testplugin.run_tests" || true
+- docker-compose exec qgis-testing-environment sh -c "qgis_testrunner.sh geogig.tests.testplugin.run_tests"
 after_success:
 - |
     if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
