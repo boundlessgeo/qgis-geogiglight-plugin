@@ -94,8 +94,8 @@ class RemoteRefDialog(QDialog):
         repo = Repository(self.remotes[remote])
         #TODO handle case of remote not being available
         branches = repo.branches()
-        self.branchesCombo.clear()
-        self.branchesCombo.addItems(branches)
+        self.branchCombo.clear()
+        self.branchCombo.addItems(branches)
 
     def okPressed(self):
         remote = self.remoteCombo.currentText().strip()
