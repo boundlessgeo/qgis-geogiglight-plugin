@@ -39,7 +39,7 @@ from qgis.utils import iface
 
 def askForRemoteRef(repo):
     remotes = list(repo.remotes().keys())
-    if remotes:
+    if not remotes:
         QMessageBox.warning(iface.mainWindow(), "Error selecting remote reference", "No remotes are defined for this repository.")
         return None, None
     else:
