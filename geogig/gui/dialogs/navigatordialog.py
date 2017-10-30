@@ -129,6 +129,7 @@ class NavigatorDialog(BASE, WIDGET):
         self.btnDeleteServer.clicked.connect(self.deleteGeoGigServer)
         self.btnAddRepo.clicked.connect(self.createRepo)
         self.btnRefresh.clicked.connect(self.fillTree)
+        self.btnRefresh.clicked.connect(self.refreshTree)
 
         self._enableOrDisableButtons()
 
@@ -180,6 +181,11 @@ class NavigatorDialog(BASE, WIDGET):
         #groups.insert(0, "Select a GeoGig server")
         self.comboEndpoint.addItems(groups)
 
+    def refreshTree(self):
+        groupName = self.comboEndpoint.currentText()
+        repository.refreshEndpoint(groupName)
+        self.fillTree()
+        
     def fillTree(self):
         groupName = self.comboEndpoint.currentText()
         #repository.refreshEndpoint(groupName)

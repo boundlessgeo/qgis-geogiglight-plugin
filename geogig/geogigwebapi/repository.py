@@ -798,8 +798,12 @@ def refreshEndpoint(name):
         if repo.group == name:
             repos.remove(repo)
     if name in repoEndpoints:
-        _repos = execute(lambda: repositoriesFromUrl(repoEndpoints[name], name))
-        repos.extend(_repos)
+        try:
+            _repos = execute(lambda: repositoriesFromUrl(repoEndpoints[name], name))
+            repos.extend(_repos)
+            availableRepoEndpoints[name] = repoEndpoints[name]
+        except:
+            pass
 
 def endpointRepos(name):
     groupRepos = [r for r in repos if r.group == name]
