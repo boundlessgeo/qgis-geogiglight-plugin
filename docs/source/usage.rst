@@ -447,8 +447,9 @@ Reverting a commit
 At any point in time, you can also revert all changes created in a particular
 commit. To do so, right-click the affected layer in the :guilabel:`Layers panel`
 and select :menuselection:`GeoGig --> Revert commit` from the context menu. The
-:guilabel:`Select commit` dialog opens showing all the repository commit since
-the layer was added. Select the commit to revert, and click :guilabel:`Ok`
+:guilabel:`repository history` dialog opens showing all the repository commit
+affecting the layer since it was added. Select the commit to revert, and
+click :guilabel:`Ok`
 
 .. figure:: img/select_commit.png
 
@@ -630,22 +631,19 @@ The compared versions are listed in the :guilabel:`commits to Compare` section
 at the top of the dialog. When the dialog is opened, it compares the selected
 commits as :guilabel:`new` and :guilabel:`old`.
 
-The rest of the dialog works as described in the :ref:`previous section <view_changes_commit>`.
+The rest of the dialog works as described in the
+:ref:`previous section <view_changes_commit>`.
 
-Please notice that changes introduced by the commit set in :guilabel:`Old` will
-not be visible in the :guilabel:`Comparison viewer`, as it is considered to be
-the starting point. If needed, select its parent commit instead.
+.. note::
 
-You can change any of the commits to be compared by clicking the
-:guilabel:`...` button next to each text box, which will open the
-:guilabel:`Reference` dialog.
+   Please notice that changes introduced by the commit set in :guilabel:`Old`
+   will not be visible in the :guilabel:`Comparison viewer`, as it is considered
+   to be the starting point. If needed, select its parent commit instead.
 
-.. figure:: img/referenceselector.png
-
-In the :guilabel:`Reference` dialog, you can select either a :guilabel:`Branch`
-head (the most recent commit in a branch), a :guilabel:`tag` (a name given to a
-particular commit) or a :guilabel:`commit` directly. Click :guilabel:`OK`. The
-selected commit will be set in the :guilabel:`Comparison Viewer`.
+Without closing the :guilabel:`Comparison view`, you can change any of the
+commits to be compared by clicking the :guilabel:`...` button next to each text
+box, which will open the :guilabel:`Repository history` dialog. Click the branch
+and commit you want to use for comparison, and click :guilabel:`OK`.
 
 Exporting changes introduced by a commit
 ........................................
