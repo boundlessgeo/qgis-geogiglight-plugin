@@ -120,12 +120,12 @@
           </column>
           <column>
            <property name="text">
-            <string>Local</string>
+            <string>Remote</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Remote</string>
+            <string>Local</string>
            </property>
           </column>
           <column>
