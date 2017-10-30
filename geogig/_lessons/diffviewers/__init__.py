@@ -16,9 +16,12 @@ lesson.addStep("New Project", "New Project", iface.newProject)
 lesson.addStep("Create repository", "Create repository",
                function = createExampleRepo)
 lesson.addStep("Open GeoGig navigator", "Open GeoGig navigator", lambda: _openNavigator(group = "Lesson repos"))
-lesson.addStep("Visualize changes between versions", "repodiff.md", steptype=Step.MANUALSTEP)
-lesson.addStep("Export changes between versions as layers", "difflayers.md", steptype=Step.MANUALSTEP)
+lesson.addStep("Visualize changes between versions", "01_repodiff.md",
+               steptype=Step.MANUALSTEP)
+lesson.addStep("Export changes between versions as layers", "02_difflayers.md",
+               steptype=Step.MANUALSTEP)
 lesson.addStep("Create local changes", "Create local changes", _exportAndEditLayer)
-lesson.addStep("Visualize local changes", "localdiff.md", steptype=Step.MANUALSTEP)
+lesson.addStep("Visualize local changes", "03_localdiff.md",
+               steptype=Step.MANUALSTEP)
 
 
