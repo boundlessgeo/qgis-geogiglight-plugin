@@ -90,12 +90,16 @@ class RemoteRefDialog(QDialog):
         self.resize(400, 200)
 
     def currentRemoteChanged(self):
-        remote = self.remoteCombo.currentText()
-        repo = Repository(self.remotes[remote])
-        #TODO handle case of remote not being available
-        branches = repo.branches()
         self.branchCombo.clear()
-        self.branchCombo.addItems(branches)
+        remote = self.remoteCombo.currentText()
+        try:
+            repo = Repository(self.remotes[remote])
+            branches = repo.branches()
+            self.branchCombo.addItems(branches)
+        except:
+            QMessageBox.warning(self, "Wrong connection", "The selected remote connection is not available or not supported.\n"
+                                    "Only http-based connections are supported")
+            return
 
     def okPressed(self):
         remote = self.remoteCombo.currentText().strip()
