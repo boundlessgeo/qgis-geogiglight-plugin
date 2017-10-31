@@ -183,8 +183,7 @@ class LocalDiffViewerDialog(WIDGET, BASE):
         self.attributesTable.verticalHeader().hide()
         self.attributesTable.horizontalHeader().hide()
 
-        layerItem.setExpanded(True)
-
+        self.featuresTree.expandAll()
 
     def reject(self):
         QDialog.reject(self)

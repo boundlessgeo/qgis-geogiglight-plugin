@@ -219,8 +219,8 @@ class DiffViewerDialog(WIDGET, BASE):
         self.attributesTable.clear()
         self.attributesTable.verticalHeader().hide()
         self.attributesTable.horizontalHeader().hide()
-        for item in layerItems.values():
-            item.setExpanded(True)
+        
+        self.featuresTree.expandAll()
 
     def reject(self):
         QDialog.reject(self)
