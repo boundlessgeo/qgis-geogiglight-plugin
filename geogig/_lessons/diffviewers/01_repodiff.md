@@ -8,7 +8,7 @@ You can see the differences between two commits by using the **Repository histor
 
     ![open_diff_viewer](open_diff_viewer.png)
 
-  In the **Comparison viewer**, in **Changes**, you will see a list of
+* In the **Comparison viewer**, in **Changes**, you will see a list of
   all features that have been added, deleted or modified.
 
     ![changes](changes.png)
