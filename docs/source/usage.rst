@@ -59,7 +59,7 @@ Right-clicking a **Repository** name will provide the following options:
 
 * :guilabel:`Copy repository URL` copy the repository URL to the clipboard.
 * :guilabel:`Refresh` updates the content of the repository.
-* :guilabel:`Delete` erases the repository, all its branches, layers a
+* :guilabel:`Delete` erases the repository, all its branches, layers and
   commit information from the GeoGig server.
 * :guilabel:`Manage connections` allows to add, edit and delete remote
   connections to the repository
@@ -70,10 +70,12 @@ Right-clicking a **Branch** name will provide the following options:
 
 * :guilabel:`Refresh` updates the content of the branch. :guilabel:`Delete`
   removes all the layers and commit information from the GeoGig Server.
+* :guilabel:`Delete` erases the branch from the repository.
+* :guilabel:`Delete` creates a new branch at the last commit of the selected branch.
 
 Right-clicking a **Layer** name will provide the following options:
 
-* :guilabel:`Add to project` loads the layer in QGIS.
+* :guilabel:`Add to project` loads the layer in QGIS. If the layer has already been exported from the repository at a different commit, you will see *[Not in sync]* after the menu entry name.
 * :guilabel:`Delete` removes the layer from GeoGig tracking.
 
 At the bottom of the panel, there is the :guilabel:`Repository history` **(3)**,
@@ -283,7 +285,7 @@ Loading repository layers to the QGIS project
 To add a layer from a repository to the current project, in the
 :guilabel:`Geogig Navigator` tree, expand a repository item to see the list of
 branches. Then, expand a branch items to list all available layers. Right-click
-the wanted layer and choose :guilabel:`Add to project`.
+the wanted layer and choose :guilabel:`Add to project`. You can also add the layer from the history tree, selecting a commit, richt-clicking on it, and then using the corresponding menu entry to add the layer to the project.
 
 .. figure:: img/add_layer_to_project.png
 
@@ -292,11 +294,11 @@ exported from the GeoGig server and stored locally as a geopackage file before
 loading it in QGIS. The most recent version of the layer in the selected branch
 of the repository will be used.
 
-If the layer had been previously exported, but it is not currently loaded into
-your QGIS project, the locally stored file will be loaded.
+If the layer had been previously exported and the locally stored file is at the same version as the one you have selected in the tree (the last commit in the selected branch in the repo tree, but it is not currently loaded into
+your QGIS project, the file will be loaded.
 
 If a layer has already been exported (even if it is not in the current QGIS
-project), when you try to add that layer to your project, you will be asked
+project), but the locally store file corresponds to a different version, when you try to add that layer to your project, you will be asked
 whether you want to use that the previously exported version, or the one from
 the selected branch.
 
@@ -454,7 +456,7 @@ click :guilabel:`Ok`
 .. figure:: img/select_commit.png
 
 The layer will be changed locally to revert all changes introduced by the
-selected commit. To transfer this reversion changes, you need to use
+selected commit. To transfer this reverted changes to the repo, you need to use
 :menuselection:`GeoGig --> Sync layer to branch` from the layer context menu in
 Layer Panel. A :guilabel:`Syncronize layer to repository branch` dialog shows up
 having the message already set. Click :guilabel:`OK` to proceed.
