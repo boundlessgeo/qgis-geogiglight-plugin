@@ -212,7 +212,7 @@ def changeVersion(layer):
                 layer.reload()
                 layer.triggerRepaint()
                 repoWatcher.layerUpdated.emit(layer)
-                repoWatcher.repoChanged.emit(repo)
+                #repoWatcher.repoChanged.emit(repo)
 
 def addLayer(layer):
     if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:

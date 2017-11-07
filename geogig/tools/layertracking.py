@@ -17,6 +17,7 @@
 """
 from builtins import range
 from builtins import object
+import sqlite3
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -39,7 +40,7 @@ from geogig.tools.layers import formatSource
 
 from qgiscommons2.layers import vectorLayers, loadLayerNoCrsDialog
 
-from qgis.core import QgsVectorLayer 
+from qgis.core import QgsVectorLayer
 
 tracked = []
 
@@ -132,18 +133,36 @@ def getTrackingInfo(layer):
     return None
 
 
-def getTrackingInfoForGeogigLayer(repoUrl, layername):
+def getTrackingInfoForGeogigLayer(repoUrl, layername, commitId = None):
+    ret = []
     for t in tracked:
         if (t.repoUrl == repoUrl and t.layername == layername):
-            return t
+            if os.path.exists(t.geopkg):
+                if commitId:
+                    try:
+                        con = sqlite3.connect(t.geopkg)
+                        cursor = con.cursor()
+                        cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layername)
+                        currentCommitId = cursor.fetchone()[0]
+                        cursor.close()
+                        con.close()
+                        if commitId == currentCommitId:
+                            return t
+                    except:
+                        pass
+                else:
+                    ret.append(t)
+    return ret
 
 def getProjectLayerForGeoGigLayer(repoUrl, layername):
-    tracking = getTrackingInfoForGeogigLayer(repoUrl, layername)
-    if tracking:
-        layers = vectorLayers()
+    tracked = getTrackingInfoForGeogigLayer(repoUrl, layername)
+    ret = []
+    layers = vectorLayers()
+    for t in tracked:
         for layer in layers:
-            if formatSource(layer) == tracking.source:
-                return layer
+            if formatSource(layer) == t.source:
+                ret.append(t)
+    return ret
 
 def getTrackedPathsForRepo(repo):
     repoLayers = repo.trees()

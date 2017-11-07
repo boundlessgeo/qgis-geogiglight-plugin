@@ -59,7 +59,7 @@ from qgiscommons2.gui import execute
 
 from geogig.tools.layers import formatSource, namesFromLayer
 from geogig.tools.utils import userFolder, resourceFile
-from geogig.tools.layertracking import isRepoLayer, getTrackingInfoForGeogigLayer
+from geogig.tools.layertracking import isRepoLayer
 
 from qgiscommons2.settings import pluginSetting
 from qgiscommons2.files import tempFilenameInTempFolder

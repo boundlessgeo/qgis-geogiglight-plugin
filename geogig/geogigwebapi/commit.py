@@ -98,7 +98,7 @@ class Commit(Commitish):
         return len(layers) > len(prevLayers)
 
     def diff(self, path = None):
-        '''Returns a list of DiffEntry with all changes introduced by this commitish'''
+        '''Returns a list of DiffEntry with all changes introduced by this commit'''
         if self._diff is None:
             self._diff = self.repo.diff(self.parent.ref, self.ref, path)
         return self._diff

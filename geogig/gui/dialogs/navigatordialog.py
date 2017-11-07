@@ -172,9 +172,6 @@ class NavigatorDialog(BASE, WIDGET):
         if item is not None and isinstance(item, (RepoItem, BranchItem)):
             item.populate()
 
-    def _checkoutLayer(self, layername, bbox):
-        checkoutLayer(self.currentRepo, layername, bbox)
-
     def fillCombo(self):
         self.comboEndpoint.clear()
         groups = repository.repoEndpoints.keys()
@@ -185,7 +182,7 @@ class NavigatorDialog(BASE, WIDGET):
         groupName = self.comboEndpoint.currentText()
         repository.refreshEndpoint(groupName)
         self.fillTree()
-        
+
     def fillTree(self):
         groupName = self.comboEndpoint.currentText()
         #repository.refreshEndpoint(groupName)
@@ -490,8 +487,6 @@ class BranchItem(QTreeWidgetItem):
 
 class LayerItem(QTreeWidgetItem):
 
-    NOT_EXPORTED, NOT_IN_SYNC, IN_SYNC = list(range(3))
-
     def __init__(self, tree, parent, repo, layer, branch, branchCommitId):
         QTreeWidgetItem.__init__(self, parent)
         self.repo = repo
@@ -503,55 +498,12 @@ class LayerItem(QTreeWidgetItem):
         self.setIcon(0, layerIcon)
         self.setText(0, self.layer)
 
-        self.status = self.NOT_EXPORTED
-        trackedlayer = getTrackingInfoForGeogigLayer(self.repo.url, layer)
-        if trackedlayer:
-            if os.path.exists(trackedlayer.geopkg):
-                try:
-                    con = sqlite3.connect(trackedlayer.geopkg)
-                    cursor = con.cursor()
-                    cursor.execute("SELECT commit_id FROM geogig_audited_tables WHERE table_name='%s';" % layer)
-                    self.currentCommitId = cursor.fetchone()[0]
-                    cursor.close()
-                    con.close()
-                    if branchCommitId == self.currentCommitId:
-                        self.status = self.IN_SYNC
-                    else:
-                        self.status = self.NOT_IN_SYNC
-                except:
-                    pass
-
-
     def add(self):
-        if self.status == self.NOT_IN_SYNC:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("Layer was already exported")
-            msgBox.setText("This layer was exported already at a different commit.\n"
-                           "Which one would you like to add to your QGIS project?")
-            msgBox.addButton(QPushButton('Use previously exported commit'), QMessageBox.YesRole)
-            msgBox.addButton(QPushButton('Use latest commit from this branch'), QMessageBox.NoRole)
-            msgBox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
-            QApplication.restoreOverrideCursor()
-            ret = msgBox.exec_()
-            if ret == 0:
-                checkoutLayer(self.repo, self.layer, None, self.currentCommitId)
-            elif ret == 1:
-                try:
-                    layer = checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
-                    repoWatcher.layerUpdated.emit(layer)
-                except HasLocalChangesError:
-                    QMessageBox.warning(config.iface.mainWindow(), 'Cannot export this commit',
-                                        "The layer has local changes that would be overwritten.\n"
-                                        "Either sync layer with branch or revert local changes "
-                                        "before changing commit",QMessageBox.Ok)
-        else:
-            checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
-
+        checkoutLayer(self.repo, self.layer, None, self.branchCommitId)
 
     def menu(self):
         menu = QMenu()
-        status = "[Not in sync]" if self.status == self.NOT_IN_SYNC else ""
-        addAction = QAction(icon("reset.png"), "Add to project %s" % status, menu)
+        addAction = QAction(icon("reset.png"), "Add to project", menu)
         addAction.triggered.connect(self.add)
         menu.addAction(addAction)
         deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)

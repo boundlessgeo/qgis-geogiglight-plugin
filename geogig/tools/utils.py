@@ -74,7 +74,8 @@ def repoFolder(repogroup, reponame):
     return folder
 
 def layerGeopackageFilename(layername, reponame, repogroup):
-    return os.path.join(repoFolder(repogroup, reponame), layername + ".gpkg")
+    return os.path.join(repoFolder(repogroup, reponame), 
+                        layername + str(uuid.uuid4()).replace("-","") + ".gpkg")
 
 def relativeDate(d):
     try:
