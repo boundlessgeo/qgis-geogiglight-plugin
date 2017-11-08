@@ -132,7 +132,7 @@ def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
     action = QAction("Import to GeoGig...", config.iface.legendInterface())
     action.triggered.connect(partial(addLayer, layer))
-    if layer.type() == QgsMapLayer.RasterLayer or layer.storageType() != 'GPKG':
+    if layer.type() != QgsMapLayer.VectorLayer:
         action.setEnabled(False)
     config.iface.legendInterface().addLegendLayerAction(action, u"GeoGig", u"id2", QgsMapLayer.VectorLayer, False)
     config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
@@ -215,41 +215,18 @@ def changeVersion(layer):
                 #repoWatcher.repoChanged.emit(repo)
 
 def addLayer(layer):
-    if not layer.source().lower().split("|")[0].split(".")[-1] in ["geopkg", "gpkg"]:
+    if not isinstance(layer, QgsVectorLayer):
         QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
-                "Only geopackage layers are supported at the moment",
+                "Only vector layers are supported",
                 QMessageBox.Ok)
         return
-
-    filename, layername = namesFromLayer(layer)
-    l = QgsVectorLayer(filename, 'tmp', 'ogr')
-    # only single-layer per file are supported
-    spatialLayers = 0
-    subLayers = l.dataProvider().subLayers()
-    if len(subLayers) > 0:
-        for lay in subLayers:
-            tokens = lay.split(':')
-            if len(tokens) > 4:
-                tokens[1] += ":{}".format(tokens[2])
-                del tokens[2]
-            elif len(tokens) == 4:
-                if tokens[3] != "None":
-                    spatialLayers += 1
-            else:
-                continue
-
-        if spatialLayers > 1:
-            QMessageBox.warning(config.iface.mainWindow(), 'Cannot import layer',
-                    "Only geopackage layers with single sublayer are supported at the moment",
-                    QMessageBox.Ok)
-            return
 
     repos = repository.repos
     if repos:
         dlg = ImportDialog(config.iface.mainWindow(), layer = layer)
         dlg.exec_()
         if dlg.ok:
-            setAsRepoLayer(layer)
+            #setAsRepoLayer(layer)
             repoWatcher.repoChanged.emit(dlg.repo)
 
     else:
