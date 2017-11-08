@@ -80,7 +80,7 @@ class RefPanel(QWidget):
 
     def showSelectionDialog(self):
         from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
-        dialog = HistoryViewerDialog(self.repo)
+        dialog = HistoryViewerDialog(self.repo, showButtons = True)
         dialog.exec_()
         ref = dialog.ref
         if ref:

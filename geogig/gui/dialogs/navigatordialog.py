@@ -58,7 +58,7 @@ from geogig import config
 from geogig.repowatcher import repoWatcher
 
 from qgiscommons2.gui import execute
-from geogig.gui.dialogs.historyviewer import HistoryViewer
+from geogig.gui.dialogs.historyviewer import HistoryViewer, HistoryViewerDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
 from geogig.gui.dialogs.remotesdialog import RemotesDialog
@@ -106,16 +106,11 @@ class NavigatorDialog(BASE, WIDGET):
 
     def __init__(self):
         super(NavigatorDialog, self).__init__(None)
-
-        self.currentRepo = None
-        self.currentBranch = None
-        self.currentLayer = None
         self.reposItem = None
         self.setupUi(self)
 
         self.repoTree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.repoTree.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
         self.repoTree.customContextMenuRequested.connect(self.showPopupMenu)
 
         self.comboEndpoint.currentIndexChanged.connect(self.fillTree)
@@ -139,22 +134,11 @@ class NavigatorDialog(BASE, WIDGET):
             self.repoTree.header().setResizeMode(0, QHeaderView.Stretch)
             self.repoTree.header().setResizeMode(1, QHeaderView.ResizeToContents)
 
-        self.versionsTree = HistoryViewer()
-        layout = QVBoxLayout()
-        self.historyLabel = QLabel("Repository history")
-        layout.addWidget(self.historyLabel)
-        layout.addWidget(self.versionsTree)
-        self.versionsWidget.setLayout(layout)
-
         def _repoChanged(repo):
-            self.repoTree.itemSelectionChanged.disconnect(self.selectionChanged)
-            if self.currentRepo is not None and repo.url == self.currentRepo.url:
-                self.updateCurrentRepo(repo, True, self.currentBranch, self.currentLayer)
             for i in range(self.repoTree.topLevelItemCount()):
                 item = self.repoTree.topLevelItem(i)
                 if item.repo == repo:
-                    item.refreshContent(False)
-            self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
+                    item.refreshContent()
         repoWatcher.repoChanged.connect(_repoChanged)
 
         self.updateNavigator()
@@ -170,8 +154,6 @@ class NavigatorDialog(BASE, WIDGET):
 
     def updateNavigator(self):
         self.fillCombo()
-        self.updateCurrentRepo(None)
-        #self.checkButtons()
 
     def _itemExpanded(self, item):
         if item is not None and isinstance(item, (RepoItem, BranchItem)):
@@ -192,7 +174,6 @@ class NavigatorDialog(BASE, WIDGET):
         groupName = self.comboEndpoint.currentText()
         #repository.refreshEndpoint(groupName)
         self.btnAddRepo.setEnabled(groupName in repository.availableRepoEndpoints)
-        self.updateCurrentRepo(None)
         self.repoTree.clear()
 
         groupRepos = repository.endpointRepos(groupName)
@@ -205,48 +186,6 @@ class NavigatorDialog(BASE, WIDGET):
                 pass
 
         self.repoTree.sortItems(0, Qt.AscendingOrder)
-
-    def selectionChanged(self):
-        items = self.repoTree.selectedItems()
-        if items:
-            item = items[0]
-            try:
-                branch = item.branch
-            except:
-                branch = None
-            try:
-                layer = item.layer
-            except:
-                layer = None
-            self.updateCurrentRepo(items[0].repo, branch=branch, layer=layer)
-        else:
-            self.updateCurrentRepo(None)
-
-    def updateCurrentRepo(self, repo, force=False, branch=None, layer=None):
-        if (repo == self.currentRepo and branch == self.currentBranch
-                and layer==self.currentLayer and not force):
-            return
-        def _update():
-            self.currentRepo = repo
-            self.currentBranch = branch
-            self.currentLayer = layer
-            labelText = "Repository history"
-            if repo is not None and (branch or layer):
-                    labelText += " ["
-                    if branch is not None:
-                        labelText += "Branch:" + branch
-                    if layer is not None:
-                        labelText += ", Layer:" + layer
-                    labelText += "]"
-            self.historyLabel.setText(labelText)
-            self.versionsTree.updateContent(repo, layer, branch)
-        try:
-            self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
-            self.repoTree.blockSignals(True)
-            execute(_update)
-        finally:
-            self.repoTree.setSelectionMode(QAbstractItemView.SingleSelection)
-            self.repoTree.blockSignals(False)
 
     def createRepo(self):
         name, ok = QInputDialog.getText(self, 'Create repository',
@@ -342,10 +281,7 @@ class RepoItem(QTreeWidgetItem):
                 item = BranchItem(self.navigator, self.tree, self.repo, branch)
                 self.addChild(item)
 
-    def refreshContent(self, updateHistory):
-        if self.navigator.currentRepo == self.repo and updateHistory:
-            self.navigator.updateCurrentRepo(self.repo, True, self.navigator.currentBranch,
-                                             self.navigator.currentLayer)
+    def refreshContent(self):
         isPopulated = self.childCount()
         self.takeChildren()
         if isPopulated:
@@ -354,6 +290,9 @@ class RepoItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
+        showHistoryAction = QAction(icon("history.png"), "Show history", menu)
+        showHistoryAction.triggered.connect(self.showHistory)
+        menu.addAction(showHistoryAction)
         copyUrlAction = QAction(icon("copy.png"), "Copy repository URL", menu)
         copyUrlAction.triggered.connect(self.copyUrl)
         menu.addAction(copyUrlAction)
@@ -373,6 +312,10 @@ class RepoItem(QTreeWidgetItem):
         pushAction.triggered.connect(self.push)
         menu.addAction(pushAction)
         return menu
+
+    def showHistory(self):
+        dlg = HistoryViewerDialog(self.repo)
+        dlg.exec_()
 
     def copyUrl(self):
         QApplication.clipboard().setText(self.repo.url)
@@ -456,7 +399,6 @@ class RepoItem(QTreeWidgetItem):
                                                level = QgsMessageBar.INFO, duration = 5)
 
 
-
 class BranchItem(QTreeWidgetItem):
     def __init__(self, navigator, tree, repo, branch):
         QTreeWidgetItem.__init__(self)
@@ -478,9 +420,6 @@ class BranchItem(QTreeWidgetItem):
                 self.addChild(item)
 
     def refreshContent(self):
-        if (self.navigator.currentRepo == self.repo
-            and self.navigator.currentBranch == self.branch):
-                self.navigator.updateCurrentRepo(self.repo, True, self.branch)
         isPopulated = self.childCount()
         self.takeChildren()
         if isPopulated:
@@ -489,6 +428,9 @@ class BranchItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
+        showHistoryAction = QAction(icon("history.png"), "Show history", menu)
+        showHistoryAction.triggered.connect(self.showHistory)
+        menu.addAction(showHistoryAction)
         refreshAction = QAction(icon("refresh.svg"), "Refresh", menu)
         refreshAction.triggered.connect(self.refreshContent)
         menu.addAction(refreshAction)
@@ -500,6 +442,11 @@ class BranchItem(QTreeWidgetItem):
         menu.addAction(deleteAction)
         deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
         return menu
+
+    def showHistory(self):
+        dlg = HistoryViewerDialog(self.repo, branch = self.branch)
+        dlg.exec_()
+
 
     def createBranch(self):
         text, ok = QInputDialog.getText(self.tree, 'Create New Branch',
@@ -535,6 +482,9 @@ class LayerItem(QTreeWidgetItem):
 
     def menu(self):
         menu = QMenu()
+        showHistoryAction = QAction(icon("history.png"), "Show history", menu)
+        showHistoryAction.triggered.connect(self.showHistory)
+        menu.addAction(showHistoryAction)
         addAction = QAction(icon("reset.png"), "Add to project", menu)
         addAction.triggered.connect(self.add)
         menu.addAction(addAction)
@@ -542,6 +492,10 @@ class LayerItem(QTreeWidgetItem):
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
         return menu
+
+    def showHistory(self):
+        dlg = HistoryViewerDialog(self.repo, layer = self.layer, branch = self.branch)
+        dlg.exec_()
 
     def delete(self):
         ret = QMessageBox.question(self.tree, 'Delete layer',

@@ -311,7 +311,7 @@ class HistoryViewer(QTreeWidget):
         if repo is not None:
             branches = repo.branches()
             for b in branches:
-                if branch is None or b == branch:  
+                if branch is None or b == branch:
                     item = BranchTreeItem(b, repo, layername)
                     self.addTopLevelItem(item)
                     item.populate()
@@ -388,23 +388,26 @@ class CommitTreeItem(QTreeWidgetItem):
 
 class HistoryViewerDialog(QDialog):
 
-    def __init__(self, repo, layer=None):
+    def __init__(self, repo, layer = None, branch = None, showButtons = False):
         self.repo = repo
         self.layer = layer
+        self.branch = branch
         self.ref = None
+        self.showButtons = showButtons
         QDialog.__init__(self, config.iface.mainWindow(),
                                Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         execute(self.initGui)
 
     def initGui(self):
         layout = QVBoxLayout()
-        self.history = HistoryViewer(False)
-        self.history.updateContent(self.repo, self.layer)
+        self.history = HistoryViewer()
+        self.history.updateContent(self.repo, layername = self.layer, branch = self.branch)
         layout.addWidget(self.history)
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
-        buttonBox.accepted.connect(self.okPressed)
-        buttonBox.rejected.connect(self.cancelPressed)
-        layout.addWidget(buttonBox)
+        if self.showButtons:
+            buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
+            buttonBox.accepted.connect(self.okPressed)
+            buttonBox.rejected.connect(self.cancelPressed)
+            layout.addWidget(buttonBox)
         self.setLayout(layout)
 
         self.resize(400, 500)
