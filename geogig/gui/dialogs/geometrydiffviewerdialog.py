@@ -30,9 +30,9 @@ import os
 import difflib
 
 from qgis.PyQt.QtCore import Qt, QSettings, QAbstractTableModel
-from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QTableView, QDialog
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QTableView, QDialog, QHBoxLayout, QCheckBox
 from qgis.PyQt.QtGui import QBrush
-from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint
+from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 
 from qgiscommons2.layers import loadLayerNoCrsDialog
@@ -71,6 +71,22 @@ class GeometryDiffViewerDialog(QDialog):
         self.panTool = QgsMapToolPan(self.canvas)
         self.canvas.setMapTool(self.panTool)
 
+        hlayout = QHBoxLayout()
+        self.beforeLayerCheck = QCheckBox("Before layer")
+        self.beforeLayerCheck.setChecked(True)
+        self.beforeLayerCheck.stateChanged.connect(self.refreshLayers)
+        self.afterLayerCheck = QCheckBox("After layer")
+        self.afterLayerCheck.setChecked(True)
+        self.afterLayerCheck.stateChanged.connect(self.refreshLayers)
+        self.baseLayersCheck = QCheckBox("Project layers")
+        self.baseLayersCheck.setChecked(True)
+        self.baseLayersCheck.stateChanged.connect(self.refreshLayers)
+
+        hlayout.addWidget(self.beforeLayerCheck)
+        hlayout.addWidget(self.afterLayerCheck)
+        hlayout.addWidget(self.baseLayersCheck)
+        layout.addLayout(hlayout)
+
         execute(self.createLayers)
 
         model = GeomDiffTableModel(self.data)
@@ -84,6 +100,21 @@ class GeometryDiffViewerDialog(QDialog):
         self.resize(600, 500)
         self.setWindowTitle("Geometry comparison")
 
+
+    def refreshLayers(self):
+        layers = []
+        if self.beforeLayerCheck.isChecked():
+            layers.append(self.diffLayers[0])
+        if self.afterLayerCheck.isChecked():
+            layers.append(self.diffLayers[1])
+        if len(layers) == 2:
+            layers.append(self.nodesLayer)
+        if self.baseLayersCheck.isChecked():
+            layers.extend(self.baseLayers)
+
+        self.mapLayers = [QgsMapCanvasLayer(lay) for lay in layers]
+        self.canvas.setLayerSet(self.mapLayers)
+        self.canvas.refresh()
 
     def createLayers(self):
         textGeometries = []
@@ -103,7 +134,7 @@ class GeometryDiffViewerDialog(QDialog):
                 self.data.append([line[2:], line[2:]])
         types = [("LineString", lineBeforeStyle, lineAfterStyle),
                   ("Polygon", polygonBeforeStyle, polygonAfterStyle)]
-        layers = []
+        self.diffLayers = []
         extent = self.geoms[0].boundingBox()
         for i, geom in enumerate(self.geoms):
             geomtype = types[int(geom.type() - 1)][0]
@@ -115,12 +146,12 @@ class GeometryDiffViewerDialog(QDialog):
             pr.addFeatures([feat])
             layer.loadNamedStyle(style)
             layer.updateExtents()
-            layers.append(layer)
+            self.diffLayers.append(layer)
             QgsMapLayerRegistry.instance().addMapLayer(layer, False)
             extent.combineExtentWith(geom.boundingBox())
 
-        layer = loadLayerNoCrsDialog("Point?crs=%s&field=changetype:string" % self.crs.authid(), "points", "memory")
-        pr = layer.dataProvider()
+        self.nodesLayer = loadLayerNoCrsDialog("Point?crs=%s&field=changetype:string" % self.crs.authid(), "points", "memory")
+        pr = self.nodesLayer.dataProvider()
         feats = []
         for coords in self.data:
             coord = coords[0] or coords[1]
@@ -139,12 +170,20 @@ class GeometryDiffViewerDialog(QDialog):
             feats.append(feat)
 
         pr.addFeatures(feats)
-        layer.loadNamedStyle(pointsStyle)
-        QgsMapLayerRegistry.instance().addMapLayer(layer, False)
-        layers.append(layer)
+        self.nodesLayer.loadNamedStyle(pointsStyle)
+        QgsMapLayerRegistry.instance().addMapLayer(self.nodesLayer, False)
 
-        self.mapLayers = [QgsMapCanvasLayer(lay) for lay in layers]
-        self.canvas.setLayerSet(self.mapLayers)
+        self.baseLayers = []
+        root = QgsProject.instance().layerTreeRoot()
+        for child in root.children():
+            if isinstance(child, QgsLayerTreeGroup):
+                for subchild in child.children():
+                    if isinstance(subchild, QgsLayerTreeLayer):
+                        self.baseLayers.append(subchild.layer())
+            elif isinstance(child, QgsLayerTreeLayer):
+                self.baseLayers.append(child.layer())
+
+        self.refreshLayers()
         self.canvas.setExtent(extent)
         self.canvas.refresh()
 
