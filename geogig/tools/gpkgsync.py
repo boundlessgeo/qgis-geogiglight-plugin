@@ -267,8 +267,9 @@ class HasLocalChangesError(Exception):
 def checkoutLayer(repo, layername, bbox, ref = None):
     ref = ref or repo.HEAD
     newCommitId = repo.revparse(ref)
-    trackedlayer = getTrackingInfoForGeogigLayer(repo.url, layername, newCommitId)
-    if trackedlayer is not None:
+    trackedlayers = getTrackingInfoForGeogigLayer(repo.url, layername, newCommitId)
+    if trackedlayers:
+        trackedlayer = trackedlayers[0]
         try:
             source = trackedlayer.source
             layer = QgsVectorLayer(source, layername, "ogr")
@@ -282,16 +283,8 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         filename = layerGeopackageFilename(layername, repo.title, repo.group)
         source = "%s|layername=%s" % (filename, layername)
 
-    if trackedlayer is None:
-        repo.checkoutlayer(filename, layername, bbox, ref)
-        addTrackedLayer(source, repo.url)
-        layer = loadLayerNoCrsDialog(source, layername, "ogr")
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
-        iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
-                                      level=QgsMessageBar.INFO,
-                                      duration=5)
-    else:
-        #currentCommitId = getCommitId(source)
+    if trackedlayers:
+        trackedlayer = trackedlayers[0]
         try:
             layer = layerFromSource(source)
             ret = QMessageBox.warning(iface.mainWindow(), "Layer already exist",
@@ -312,5 +305,14 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
                           level=QgsMessageBar.INFO,
                           duration=5)
+    else:
+        repo.checkoutlayer(filename, layername, bbox, ref)
+        addTrackedLayer(source, repo.url)
+        layer = loadLayerNoCrsDialog(source, layername, "ogr")
+        QgsMapLayerRegistry.instance().addMapLayers([layer])
+        iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
+                                      level=QgsMessageBar.INFO,
+                                      duration=5)
+        #currentCommitId = getCommitId(source)
 
     return layer

@@ -147,7 +147,7 @@ def getTrackingInfoForGeogigLayer(repoUrl, layername, commitId = None):
                         cursor.close()
                         con.close()
                         if commitId == currentCommitId:
-                            return t
+                            return [t]
                     except:
                         pass
                 else:
