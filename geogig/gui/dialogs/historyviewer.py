@@ -304,17 +304,20 @@ class HistoryViewer(QTreeWidget):
         self.repo.deletebranch(branch)
         repoWatcher.repoChanged.emit(self.repo)
 
-    def updateContent(self, repo, layername = None):
+    def updateContent(self, repo, layername = None, branch = None):
         self.repo = repo
         self.layername = layername
         self.clear()
         if repo is not None:
             branches = repo.branches()
-            for branch in branches:
-                item = BranchTreeItem(branch, repo, self.layername)
-                self.addTopLevelItem(item)
+            for b in branches:
+                if branch is None or b == branch:  
+                    item = BranchTreeItem(b, repo, layername)
+                    self.addTopLevelItem(item)
+                    item.populate()
             self.resizeColumnToContents(0)
-
+        if (branch or layername):
+            self.expandAll()
 
 class BranchTreeItem(QTreeWidgetItem):
 

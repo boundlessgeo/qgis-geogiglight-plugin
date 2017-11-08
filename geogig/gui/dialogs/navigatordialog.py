@@ -108,6 +108,8 @@ class NavigatorDialog(BASE, WIDGET):
         super(NavigatorDialog, self).__init__(None)
 
         self.currentRepo = None
+        self.currentBranch = None
+        self.currentLayer = None
         self.reposItem = None
         self.setupUi(self)
 
@@ -139,17 +141,20 @@ class NavigatorDialog(BASE, WIDGET):
 
         self.versionsTree = HistoryViewer()
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Repository history"))
+        self.historyLabel = QLabel("Repository history")
+        layout.addWidget(self.historyLabel)
         layout.addWidget(self.versionsTree)
         self.versionsWidget.setLayout(layout)
 
         def _repoChanged(repo):
+            self.repoTree.itemSelectionChanged.disconnect(self.selectionChanged)
             if self.currentRepo is not None and repo.url == self.currentRepo.url:
-                self.updateCurrentRepo(repo, True)
+                self.updateCurrentRepo(repo, True, self.currentBranch, self.currentLayer)
             for i in range(self.repoTree.topLevelItemCount()):
                 item = self.repoTree.topLevelItem(i)
                 if item.repo == repo:
-                    item.refreshContent()
+                    item.refreshContent(False)
+            self.repoTree.itemSelectionChanged.connect(self.selectionChanged)
         repoWatcher.repoChanged.connect(_repoChanged)
 
         self.updateNavigator()
@@ -204,16 +209,37 @@ class NavigatorDialog(BASE, WIDGET):
     def selectionChanged(self):
         items = self.repoTree.selectedItems()
         if items:
-            self.updateCurrentRepo(items[0].repo)
+            item = items[0]
+            try:
+                branch = item.branch
+            except:
+                branch = None
+            try:
+                layer = item.layer
+            except:
+                layer = None
+            self.updateCurrentRepo(items[0].repo, branch=branch, layer=layer)
         else:
             self.updateCurrentRepo(None)
 
-    def updateCurrentRepo(self, repo, force=False):
-        if repo == self.currentRepo and not force:
+    def updateCurrentRepo(self, repo, force=False, branch=None, layer=None):
+        if (repo == self.currentRepo and branch == self.currentBranch 
+                and layer==self.currentLayer and not force):
             return
         def _update():
             self.currentRepo = repo
-            self.versionsTree.updateContent(repo)
+            self.currentBranch = branch
+            self.currentLayer = layer
+            labelText = "Repository history"
+            if repo is not None and (branch or layer):
+                    labelText += " ["
+                    if branch is not None:
+                        labelText += "Branch:" + branch
+                    if layer is not None:
+                        labelText += ", Layer:" + layer
+                    labelText += "]"
+            self.historyLabel.setText(labelText)
+            self.versionsTree.updateContent(repo, layer, branch)
         try:
             self.repoTree.setSelectionMode(QAbstractItemView.NoSelection)
             self.repoTree.blockSignals(True)
@@ -313,16 +339,17 @@ class RepoItem(QTreeWidgetItem):
         if not self.childCount():
             branches = self.repo.branches()
             for branch in branches:
-                item = BranchItem(self.tree, self.repo, branch)
+                item = BranchItem(self.navigator, self.tree, self.repo, branch)
                 self.addChild(item)
 
-    def refreshContent(self):
+    def refreshContent(self, updateHistory):
+        if self.navigator.currentRepo == self.repo and updateHistory:
+            self.navigator.updateCurrentRepo(self.repo, True, self.navigator.currentBranch,
+                                             self.navigator.currentLayer)
         isPopulated = self.childCount()
         self.takeChildren()
         if isPopulated:
-            self.populate()
-            if self.navigator.currentRepo == self.repo:
-                self.navigator.updateCurrentRepo(self.repo, True)
+            self.populate()            
 
 
     def menu(self):
@@ -331,7 +358,7 @@ class RepoItem(QTreeWidgetItem):
         copyUrlAction.triggered.connect(self.copyUrl)
         menu.addAction(copyUrlAction)
         refreshAction = QAction(icon("refresh.svg"), "Refresh", menu)
-        refreshAction.triggered.connect(self.refreshContent)
+        refreshAction.triggered.connect(lambda: self.refreshContent(True))
         menu.addAction(refreshAction)
         deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)
         deleteAction.triggered.connect(self.delete)
@@ -431,8 +458,9 @@ class RepoItem(QTreeWidgetItem):
 
 
 class BranchItem(QTreeWidgetItem):
-    def __init__(self, tree, repo, branch):
+    def __init__(self, navigator, tree, repo, branch):
         QTreeWidgetItem.__init__(self)
+        self.navigator = navigator
         self.repo = repo
         self.tree = tree
         self.branch = branch
@@ -450,10 +478,14 @@ class BranchItem(QTreeWidgetItem):
                 self.addChild(item)
 
     def refreshContent(self):
+        if (self.navigator.currentRepo == self.repo 
+            and self.navigator.currentBranch == self.branch):
+                self.navigator.updateCurrentRepo(self.repo, True, self.branch)
         isPopulated = self.childCount()
         self.takeChildren()
         if isPopulated:
             self.populate()
+
 
     def menu(self):
         menu = QMenu()
