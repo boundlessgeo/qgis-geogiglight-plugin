@@ -223,7 +223,7 @@ class NavigatorDialog(BASE, WIDGET):
             self.updateCurrentRepo(None)
 
     def updateCurrentRepo(self, repo, force=False, branch=None, layer=None):
-        if (repo == self.currentRepo and branch == self.currentBranch 
+        if (repo == self.currentRepo and branch == self.currentBranch
                 and layer==self.currentLayer and not force):
             return
         def _update():
@@ -349,7 +349,7 @@ class RepoItem(QTreeWidgetItem):
         isPopulated = self.childCount()
         self.takeChildren()
         if isPopulated:
-            self.populate()            
+            self.populate()
 
 
     def menu(self):
@@ -478,7 +478,7 @@ class BranchItem(QTreeWidgetItem):
                 self.addChild(item)
 
     def refreshContent(self):
-        if (self.navigator.currentRepo == self.repo 
+        if (self.navigator.currentRepo == self.repo
             and self.navigator.currentBranch == self.branch):
                 self.navigator.updateCurrentRepo(self.repo, True, self.branch)
         isPopulated = self.childCount()
@@ -558,11 +558,8 @@ class LayerItem(QTreeWidgetItem):
 
         self.repo.removetree(self.layer, user, email, self.branch)
 
-        config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                               level = QgsMessageBar.INFO, duration = 5)
-
-        layer = getProjectLayerForGeoGigLayer(self.repo.url, self.layer)
-        if layer:
+        projectLayers = getProjectLayerForGeoGigLayer(self.repo.url, self.layer)
+        if projectLayers:
             branches = self.repo.branches()
             layerInRepo = False
             for branch in branches:
@@ -571,11 +568,16 @@ class LayerItem(QTreeWidgetItem):
                     layerInRepo = True
                     break
             if not layerInRepo:
-                setAsNonRepoLayer(layer)
+                for projectLayer in projectLayers:
+                    setAsNonRepoLayer(projectLayer)
                 tracking = getTrackingInfoForGeogigLayer(self.repo.url, self.layer)
-                if tracking:
-                    removeTrackedLayer(tracking.source)
+                for t in tracking:
+                    removeTrackedLayer(t.source)
         #TODO remove triggers from layer
+
+        config.iface.messageBar().pushMessage("Layer correctly removed from repository",
+                                               level = QgsMessageBar.INFO, duration = 5)
+
         repoWatcher.repoChanged.emit(self.repo)
 
 
