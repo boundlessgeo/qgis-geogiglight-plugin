@@ -290,7 +290,11 @@ class HistoryViewer(QTreeWidget):
         text, ok = QInputDialog.getText(self, 'Create New Branch',
                                               'Enter the name for the new branch:')
         if ok:
-            self.repo.createbranch(ref, text.replace(" ", "_"))
+            branchName =  text.replace(" ", "_")
+            self.repo.createbranch(ref, branchName)
+            item = BranchTreeItem(branchName, self.repo, self.layername)
+            self.addTopLevelItem(item)
+            item.populate()
             repoWatcher.repoChanged.emit(self.repo)
 
     def deleteBranch(self, branch):
@@ -302,6 +306,11 @@ class HistoryViewer(QTreeWidget):
             return
 
         self.repo.deletebranch(branch)
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            if item.branch == branch:
+                self.takeTopLevelItem(i)
+                break
         repoWatcher.repoChanged.emit(self.repo)
 
     def updateContent(self, repo, layername = None, branch = None):
