@@ -298,11 +298,6 @@ def _createCannotPushScenario():
         layer.changeAttributeValue(features[1].id(), idx, 1001)
     _remoteRepo.importgeopkg(layer, "master", "message", "me", "me@mysite.com", True)
 
-
-
-
-
-
 def _exportLayer():
     checkoutLayer(tests._lastRepo, "points", None)
 
@@ -376,8 +371,16 @@ def functionalTests():
                  "Verify that it shows a warning because there are no repositories defined.")
     tests.append(test)
 
-    test = GeoGigTest("Add layer to repository")
+    test = GeoGigTest("Add gpkg layer to repository")
     test.addStep("Open test data", lambda: openTestProject("points"))
+    test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
+    test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Add layer 'points' to the 'empty' repository using layer's context menu")
+    test.addStep("Check layer has been added to repo", _checkLayerInRepo)
+    tests.append(test)
+
+    test = GeoGigTest("Add shapefile layer to repository")
+    test.addStep("Open test data", lambda: openTestProject("shapefile"))
     test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
     test.addStep("Open navigator",  _openNavigator)
     test.addStep("Add layer 'points' to the 'empty' repository using layer's context menu")
@@ -411,14 +414,7 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.")
     test.addStep("Check layer has been added to project", _checkLayerInProject)
-    tests.append(test)
-
-    test = GeoGigTest("Open repository layers in QGIS from tree", "Export layers tests")
-    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
-    test.addStep("Open navigator", _openNavigator)
-    test.addStep("New project", iface.newProject)
-    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.")
-    test.addStep("Check layer has been added to project", _checkLayerInProject)
+    test.addStep("Try to add the same layer again. Verify it asks you if you want to create a new layer. Select the option to add a new layer and verify it is added to the project.")
     tests.append(test)
 
     test = GeoGigTest("Open already exported layers in QGIS from tree", "Export layers tests")
@@ -426,47 +422,18 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry. "
-                 "Verify that is asks you for confirmation. Select 'Use branch version'", isVerifyStep = True)
+    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry. ",
+                  isVerifyStep = True)
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
 
-    test = GeoGigTest("Open already exported layers in QGIS when there are local changes", "Export layers tests")
-    test.addStep("New project", iface.newProject)
-    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
-    test.addStep("Export repo layer", _exportAndEditLayer)
-    test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry."
-                 "Verify it show a message in the message bar saying that the layer was already loaded", isVerifyStep = True)
-    tests.append(test)
-
-    test = GeoGigTest("Open already exported layers in QGIS to an older version, with local changes", "Export layers tests")
-    test.addStep("New project", iface.newProject)
-    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
-    test.addStep("Export repo layer", _exportChangetoFirstVersionAndEditLayer)
-    test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the layer item of the repository tree and use the corresponding context menu entry.  "
-                 "Verify that is asks you for confirmation. Select 'Use branch version'. Check it is not permitted due to local changes in the layer",
-                 isVerifyStep = True)
-    tests.append(test)
-
-    test = GeoGigTest("Open layers in QGIS from history tree", "Export layers tests")
-    test.addStep("New project", iface.newProject)
-    test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
-    test.addStep("Add layer from the 'simple' repository into QGIS. To do it, right-click in the last commit of the 'master' branch in the history tree and use the corresponding context menu entry."
-                 "Check a layer is correctly added",
-                 isVerifyStep = True)
-    test.addStep("Update layer from the 'simple' repository into QGIS. To do it, right-click in the last commit of the 'mybranch' branch in the history tree and use the corresponding context menu entry."
-                 "Check that a warning message is shown. Select to overwrite the layer and verify it is updated",
-                 isVerifyStep = True)
-    tests.append(test)
 
     test = GeoGigTest("Change layer version", "Export layers tests")
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Export repo layer", _exportAndChangeToFirstVersion)
-    test.addStep("Change version to 'third' using the 'Change version' menu entry in the layer context menu")
-    test.addStep("Check layer has been added to project", _checkLayerInProject)
+    test.addStep("Change version to commit 'third' using the layer context menu menu entry in the layer context menu")
+    test.addStep("Check layer has been correctly updated", _checkLayerInProject)
     test.addStep("Check context menu info", lambda: _checkContextMenuInfo("third"))
     tests.append(test)
 
@@ -642,6 +609,7 @@ def functionalTests():
     test.addStep("New project", iface.newProject)
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
     test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Open the repo history")
     test.addStep("Click on latest commit and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
     test.addStep("Select two commits, right-click and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
     test.addStep("Select the two branch items in the history tree, right-click and select 'View changes'. Check that diff viewer works correctly", isVerifyStep = True)
@@ -659,17 +627,10 @@ def functionalTests():
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Add commit", _addNewCommit)
     test.addStep("Open navigator",  _openNavigator)
+    test.addStep("Open the repo history")
     test.addStep("Click on latest commit in master branch and select 'Export diff as layer'. Check that layer is exported correctly")
     tests.append(test)
 
-    test = GeoGigTest("Add layer to repository from context menu")
-    test.addStep("Open test data", lambda: openTestProject("points"))
-    test.addStep("Create repository", lambda: _createEmptyTestRepo(True))
-    test.addStep("Open navigator", _openNavigator)
-    test.addStep("Add layer using context menu")
-    test.addStep("Check layer has been added to repo", _checkLayerInRepo)
-    test.addStep("Check layer context menus", _checkLayerHasTrackedContextMenus)
-    tests.append(test)
 
     test = GeoGigTest("Show version characteristics")
     test.addStep("Create repository", lambda: _createSimpleTestRepo())
@@ -677,10 +638,11 @@ def functionalTests():
     test.addStep("Right click on repo's last commit and select 'Show detailed description'\nVerify description is correctly shown")
     tests.append(test)
 
-    test = GeoGigTest("Create new branch", "Branch and tag tests")
+    test = GeoGigTest("Create new branch from history", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Create new branch at master branch's last commit and verify it is added to history tree")
+    test.addStep("Open the repo history")
+    test.addStep("Create new branch at master branch's last commit and verify it is added to repo tree")
     tests.append(test)
 
     test = GeoGigTest("Delete branch", "Branch and tag tests")
@@ -694,7 +656,7 @@ def functionalTests():
     test = GeoGigTest("Create new branch from repo tree", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
-    test.addStep("Create new branch at master branch using the repos tree context menu. Verify it is added to history tree")
+    test.addStep("Create new branch at master branch using the repos tree context menu.")
     tests.append(test)
 
     test = GeoGigTest("Delete branch", "Branch and tag tests")
@@ -744,12 +706,14 @@ def functionalTests():
     test = GeoGigTest("Create new tag", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
+    test.addStep("Open the repo history")
     test.addStep("Create new tag at current branch's last commit and verify it is added to history tree")
     tests.append(test)
 
     test = GeoGigTest("Delete tag", "Branch and tag tests")
     test.addStep("Create repository", lambda: _createSimpleTestRepo(True))
     test.addStep("Open navigator", _openNavigator)
+    test.addStep("Open the repo history")
     test.addStep("Delete 'mytag' tag and verify the versions tree is updated")
     tests.append(test)
 
