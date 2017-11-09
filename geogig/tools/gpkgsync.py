@@ -288,7 +288,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         try:
             layer = layerFromSource(source)
             ret = QMessageBox.warning(iface.mainWindow(), "Layer already exist",
-                                      "A layer at this commit is already loaded.\nYou want to create a new one corresponding to this commit.",
+                                      "A layer at this commit is already loaded.\nYou want to create a new one corresponding to this commit?",
                                       QMessageBox.Yes | QMessageBox.No)
             if ret == QMessageBox.No:
                 return
