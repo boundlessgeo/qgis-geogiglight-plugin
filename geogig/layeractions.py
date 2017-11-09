@@ -164,7 +164,7 @@ def revertChange(layer):
     repo = Repository(tracking.repoUrl)
     filename, layername = namesFromLayer(layer)
     from geogig.gui.dialogs.historyviewer import HistoryViewerDialog
-    dlg = HistoryViewerDialog(repo, layername)
+    dlg = HistoryViewerDialog(repo, layername, showButtons = True)
     dlg.exec_()
     if dlg.ref is not None:
         #TODO check that selected commit is in history line
@@ -196,7 +196,7 @@ def changeVersion(layer):
     else:
         tracking = getTrackingInfo(layer)
         repo = Repository(tracking.repoUrl)
-        dlg = HistoryViewerDialog(repo, tracking.layername)
+        dlg = HistoryViewerDialog(repo, tracking.layername, showButtons = True)
         dlg.exec_()
         if dlg.ref is not None:
             layers = repo.trees(dlg.ref)
