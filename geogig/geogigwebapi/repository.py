@@ -621,8 +621,10 @@ class Repository(object):
         else:
             return {}
 
-    def push(self, remote, branch):
-        payload = {"ref": branch, "remoteName": remote}
+    def push(self, remote, branch, remotebranch=None):
+        remotebranch = remotebranch or branch
+        ref = "%s:%s" % (branch, remotebranch)
+        payload = {"ref": ref, "remoteName": remote}
         try:
             r = self._apicall("push", payload)
             success = r["success"]
@@ -633,13 +635,15 @@ class Repository(object):
         except HTTPError, e:
             raise CannotPushException(e.response.json()["response"]["error"])
 
-    def pull (self, remote, branch):
+    def pull (self, remote, branch, localbranch=None):
+        localbranch = localbranch or branch
+        ref = "%s:%s" % (branch, localbranch)
         r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
         r.raise_for_status()
         transactionId = r.json()["response"]["Transaction"]["ID"]
         self.__log(r.url, r.json(), params = {"output_format":"json"})
         self._checkoutbranch(branch, transactionId)
-        payload = {"ref": branch, "remoteName": remote, "transactionId": transactionId, "output_format":"json"}
+        payload = {"ref": ref, "remoteName": remote, "transactionId": transactionId, "output_format":"json"}
         r = requests.get(self.url + "pull", params=payload)
         r.raise_for_status()
         self.__log(r.url, r.json(), payload)
