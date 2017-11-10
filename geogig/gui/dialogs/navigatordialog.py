@@ -62,7 +62,7 @@ from geogig.gui.dialogs.historyviewer import HistoryViewer, HistoryViewerDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
 from geogig.gui.dialogs.remotesdialog import RemotesDialog
-from geogig.gui.dialogs.remoterefdialog import RemoteRefDialog
+from geogig.gui.dialogs.remoterefdialog import askForRemoteRef
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 
 from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, updateInfoActions
@@ -125,7 +125,6 @@ class NavigatorDialog(BASE, WIDGET):
         self.btnEditServer.clicked.connect(self.editGeoGigServer)
         self.btnDeleteServer.clicked.connect(self.deleteGeoGigServer)
         self.btnAddRepo.clicked.connect(self.createRepo)
-        self.btnRefresh.clicked.connect(self.fillTree)
         self.btnRefresh.clicked.connect(self.refreshTree)
 
         self._enableOrDisableButtons()
@@ -305,12 +304,6 @@ class RepoItem(QTreeWidgetItem):
         remotesAction = QAction("Manage remote connections", menu)
         remotesAction.triggered.connect(self.manageRemotes)
         menu.addAction(remotesAction)
-        pullAction = QAction(icon("pull.svg"), "Pull", menu)
-        pullAction.triggered.connect(self.pull)
-        menu.addAction(pullAction)
-        pushAction = QAction(icon("push.svg"), "Push", menu)
-        pushAction.triggered.connect(self.push)
-        menu.addAction(pushAction)
         return menu
 
     def showHistory(self):
@@ -341,63 +334,6 @@ class RepoItem(QTreeWidgetItem):
     def manageRemotes(self):
         dlg = RemotesDialog(iface.mainWindow(), self.repo)
         dlg.exec_()
-
-    def pull(self):
-        dlg = RemoteRefDialog(self.repo)
-        dlg.exec_()
-        if dlg.remote is not None:
-            conflicts = execute(lambda: self.repo.pull(dlg.remote, dlg.branch))
-            if conflicts:
-                ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
-                                          "There are conflicts between local repository and connection.\n"
-                                          "Do you want to continue and fix them?",
-                                          QMessageBox.Yes | QMessageBox.No)
-                if ret == QMessageBox.No:
-                    self.repo.closeTransaction(conflicts[0].transactionId)
-                    return
-
-                dlg = ConflictDialog(conflicts)
-                dlg.exec_()
-                solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
-                if not solved:
-                    self.repo.closeTransaction(conflicts[0].transactionId)
-                    return
-                for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
-                    if resolution == ConflictDialog.LOCAL:
-                        conflict.resolveWithLocalVersion()
-                    elif resolution == ConflictDialog.REMOTE:
-                        conflict.resolveWithRemoteVersion()
-                    elif resolution == ConflictDialog.DELETE:
-                        conflict.resolveDeletingFeature()
-                    else:
-                        conflict.resolveWithNewFeature(resolution)
-                user, email = config.getUserInfo()
-                if user is None:
-                    return
-                self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
-                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
-                repoWatcher.repoChanged.emit(self.repo)
-            else:
-                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
-                repoWatcher.repoChanged.emit(self.repo)
-
-    def push(self):
-        dlg = RemoteRefDialog(self.repo)
-        dlg.exec_()
-        if dlg.remote is not None:
-            try:
-                self.repo.push(dlg.remote, dlg.branch)
-                config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
-            except CannotPushException, e:
-                config.iface.messageBar().pushMessage(str(e),
-                                               level = QgsMessageBar.WARNING, duration = 5)
-            except NothingToPushException, e:
-                config.iface.messageBar().pushMessage("Nothing to push. Already up to date",
-                                               level = QgsMessageBar.INFO, duration = 5)
-
 
 class BranchItem(QTreeWidgetItem):
     def __init__(self, navigator, tree, repo, branch):
@@ -440,6 +376,12 @@ class BranchItem(QTreeWidgetItem):
         deleteAction = QAction(QgsApplication.getThemeIcon('/mActionDeleteSelected.svg'), "Delete", menu)
         deleteAction.triggered.connect(self.delete)
         menu.addAction(deleteAction)
+        pullAction = QAction(icon("pull.svg"), "Pull", menu)
+        pullAction.triggered.connect(self.pull)
+        menu.addAction(pullAction)
+        pushAction = QAction(icon("push.svg"), "Push", menu)
+        pushAction.triggered.connect(self.push)
+        menu.addAction(pushAction)
         deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
         return menu
 
@@ -463,6 +405,62 @@ class BranchItem(QTreeWidgetItem):
             return
         self.repo.deletebranch(self.branch)
         repoWatcher.repoChanged.emit(self.repo)
+        
+
+    def pull(self):
+        remote, branch = askForRemoteRef(self.repo)
+        if remote is not None:
+            conflicts = execute(lambda: self.repo.pull(remote, branch, self.branch))
+            if conflicts:
+                ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
+                                          "There are conflicts between local repository and connection.\n"
+                                          "Do you want to continue and fix them?",
+                                          QMessageBox.Yes | QMessageBox.No)
+                if ret == QMessageBox.No:
+                    self.repo.closeTransaction(conflicts[0].transactionId)
+                    return
+
+                dlg = ConflictDialog(conflicts)
+                dlg.exec_()
+                solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
+                if not solved:
+                    self.repo.closeTransaction(conflicts[0].transactionId)
+                    return
+                for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
+                    if resolution == ConflictDialog.LOCAL:
+                        conflict.resolveWithLocalVersion()
+                    elif resolution == ConflictDialog.REMOTE:
+                        conflict.resolveWithRemoteVersion()
+                    elif resolution == ConflictDialog.DELETE:
+                        conflict.resolveDeletingFeature()
+                    else:
+                        conflict.resolveWithNewFeature(resolution)
+                user, email = config.getUserInfo()
+                if user is None:
+                    return
+                self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.repo)
+            else:
+                config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+                repoWatcher.repoChanged.emit(self.repo)
+
+    def push(self):
+        remote, branch = askForRemoteRef(self.repo)
+        if remote is not None:
+            try:
+                self.repo.push(remote, branch, self.branch)
+                config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
+                                               level = QgsMessageBar.INFO, duration = 5)
+            except CannotPushException, e:
+                config.iface.messageBar().pushMessage(str(e),
+                                               level = QgsMessageBar.WARNING, duration = 5)
+            except NothingToPushException, e:
+                config.iface.messageBar().pushMessage("Nothing to push. Already up to date",
+                                               level = QgsMessageBar.INFO, duration = 5)
+
 
 class LayerItem(QTreeWidgetItem):
 
