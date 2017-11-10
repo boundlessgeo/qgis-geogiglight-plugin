@@ -2,16 +2,12 @@ Usage
 =====
 
 The GeoGig QGIS plugin allows you to manage/view GeoGig (http://geogig.org/)
-repositories and layers as well as editing GeoGig layers using QGIS editing
+repositories and layers as well as edit GeoGig layers using QGIS's editing
 capabilities.
 
-This document describes GeoGig plugin interface and tools, and a typical
-workflow with the GeoGig plugin, going through its main features.
+This document describes the GeoGig plugin's interface and tools.  It also describes a typical
+workflow with the GeoGig plugin which goes through the plugin's main features.
 
-.. warning::
-
-    You need GeoGig 1.1.1 version to use the QGIS plugin; version 1.2 may not
-    work due to API changes. You can download it `here <geogig download_>`_.
 
 GeoGig plugin Interface and tools
 ---------------------------------
@@ -20,8 +16,8 @@ GeoGig Navigator panel
 ......................
 
 The :guilabel:`GeoGig navigator` panel is the plugin's primary tool to interact
-with the GeoGig repositories. If :guilabel:`GeoGig navigator` panel is not
-visible, you can open it from the menus clicking :menuselection:`Plugins -->
+with the GeoGig repositories. If the :guilabel:`GeoGig navigator` panel is not
+visible, you can open it from the menu by clicking :menuselection:`Plugins -->
 Geogig --> GeoGig Navigator`.
 
 .. figure:: img/navigator.png
@@ -36,78 +32,75 @@ Alternatively, you can enable and disable the panel by clicking the
    GeoGig Navigator button in the Manage Layers toolbar
 
 In the top of the :guilabel:`GeoGig navigator` panel there is a toolbar **(1)**
-with a drop-down list to select a GeoGig server, followed by this buttons:
+with a drop-down list to select a GeoGig server, followed by these buttons:
 
-* |add_server| :guilabel:`Add GeoGig server` sets up a new connection to a
+* |add_server| :guilabel:`Add GeoGig server` - sets up a new connection to a
   GeoGig server.
-* |edit_server| :guilabel:`Edit GeoGig server` allows changing the name or URL
+* |edit_server| :guilabel:`Edit GeoGig server` - allows changing the name or URL
   of the selected GeoGig server.
-* |delete_server| :guilabel:`Delete GeoGig server` deletes the selected GeoGig
+* |delete_server| :guilabel:`Delete GeoGig server` - deletes the selected GeoGig
   server connection.
-* |refresh| :guilabel:`Refresh` updates the full content of the GeoGig server
+* |refresh| :guilabel:`Refresh` - updates the full content of the GeoGig server
   tree.
-* |add_repository| :guilabel:`Add new repository` creates a new empty repository
-  to the current GeoGig server.
+* |add_repository| :guilabel:`Add new repository` - creates a new empty repository
+  on the current GeoGig server.
 
 Below the toolbar, there is a tree view with the contents of the selected GeoGig
-server **(2)**. At the first level, there are the repositories. Each repository
-can contain several branches. Inside each branch, you will see the layers under
+server **(2)**.  The first level of the tree shows the repositories. Each repository
+contains a set of branches. Each branch contains a set of layers under
 GeoGig version control. Right-clicking the tree view items will provide access
 to related actions in a context menu.
 
-Right-clicking a **Repository** name will provide the following options:
+Right-clicking on a **Repository** will provide the following options:
 
-* :guilabel:`Copy repository URL` copy the repository URL to the clipboard.
-* :guilabel:`Refresh` updates the content of the repository.
-* :guilabel:`Delete` erases the repository, all its branches, layers and
+* :guilabel:`Copy repository URL` - copy the repository URL to the clipboard.
+* :guilabel:`Refresh` - updates the content of the repository.
+* :guilabel:`Delete` - erases the repository, all its branches, layers and
   commit information from the GeoGig server.
-* :guilabel:`Manage connections` allows to add, edit and delete remote
-  connections to the repository
-* :guilabel:`Push` allows publishing your changes into a remote repository.
-* :guilabel:`Pull` allows getting changes from a remote repository.
+* :guilabel:`Manage connections` - allows to add, edit and delete remote
+  connections in the repository
+* :guilabel:`Push` - allows publishing changes to a remote repository.
+* :guilabel:`Pull` - allows getting changes from a remote repository.
 
 Right-clicking a **Branch** name will provide the following options:
 
-* :guilabel:`Refresh` updates the content of the branch. :guilabel:`Delete`
-  removes all the layers and commit information from the GeoGig Server.
-* :guilabel:`Delete` erases the branch from the repository.
-* :guilabel:`Delete` creates a new branch at the last commit of the selected branch.
+* :guilabel:`Refresh` - updates the content of the branch.
+* :guilabel:`Create Branch` - creates a new branch at the last commit of the selected branch.
+* :guilabel:`Delete` - removes all the layers and commit information from the GeoGig Server for this branch.
 
 Right-clicking a **Layer** name will provide the following options:
 
-* :guilabel:`Add to project` loads the layer in QGIS. If the layer has already been exported from the repository at a different commit, you will see *[Not in sync]* after the menu entry name.
-* :guilabel:`Delete` removes the layer from GeoGig tracking.
+* :guilabel:`Add to project` - loads the layer into QGIS.
+* :guilabel:`Delete` - removes all layers from the GeoGig Server for this branch.
 
-At the bottom of the panel, there is the :guilabel:`Repository history` **(3)**,
-which allows you to see and interact with the commit history of each branch of
-the currently selected repository. Inside each branch, you can see all the
-commits.
+Underneath the :guilabel:`GeoGig navigator` panel is the :guilabel:`Repository history` panel **(3)**,
+which allows you to see and interact with the commit history of the currently selected branch.
 
 In the :guilabel:`Repository History` right-clicking a **Branch** name open up
 the context menu with the following options:
 
-* :guilabel:`Merge this branch into` allows you to try to merge this branch
-  changes into another existing branch.
-* :guilabel:`Delete this branch` deletes all the layers and commit information
-  from the GeoGig Server.
+* :guilabel:`Merge this branch into ...` - allows merge the changes on this branch
+  changes into another branch in the same repository.
+* :guilabel:`Delete this branch` - deletes all the layers and commit information
+  from the GeoGig Server for this branch.
 
-Likewise, right-clicking the **commits** inside a branch will open the context
+Likewise, right-clicking a **commit** inside a branch will open the context
 menu with the following options:
 
-* :guilabel:`Show detailed description of this commit`
-* :guilabel:`Show changes introduced by this commit`
-* :guilabel:`Export changes introduced by this commit as a layer`
-* :guilabel:`Create new branch from this commit`
-* :guilabel:`Create new tag at this commit`
-* :guilabel:`Delete tags at this commit`
-* :guilabel:`Add 'X' layer to QGIS from this commit`
-* :guilabel:`Change 'X' layer to this commit`
+* :guilabel:`Show detailed description of this commit` - gives a summary of the changes from the selected commit
+* :guilabel:`Show changes introduced by this commit` - detailed explore all the changes for the selected commit
+* :guilabel:`Export changes introduced by this commit as a layer` - creates a new layer that shows the changes for the selected commit
+* :guilabel:`Create new branch from this commit` - creates a branch that only includes history up until this commit
+* :guilabel:`Create new tag at this commit` - creates a new tag at this commit
+* :guilabel:`Delete tags at this commit` - deletes tags associated with this commit`
+* :guilabel:`Add 'X' layer to QGIS from this commit` - adds the layer to QGIS at the state it was in at the selected commit
+* :guilabel:`Change 'X' layer to this commit` - changes an existing layer in the QGIS project to the state it was in at the selected commit
 
 GeoGig Feature Info Tool
 ........................
 
-The |current_plugin| also provides a *GeoGig Feature Info Tool*. This tool allows
-you to inspect features in a loaded layer under GeoGig tracking, and obtain
+The |current_plugin| also provides a *GeoGig Feature Info Tool* that allows
+you to inspect GeoGig features and obtain
 information about its history.
 
 To enable the GeoGig Feature Info Tool, from menus, select
@@ -117,24 +110,23 @@ Alternatively, you can use the button added by the plugin in the
 
 .. figure:: img/feature_info_tool_open.png
 
-Once the tool is enabled, in the :guilabel:`Layer panel`, select a layer
-to make it active. Then, in the Map canvas
+Once the tool is enabled, in the :guilabel:`Layer panel`, select a GeoGig layer
+to make it active. Then, in the Map canvas,
 click on any feature of the active layer. Two options will show up in a context
 menu:
 
-* :guilabel:`Show all versions of this feature` will open the :guilabel:`Commit
+* :guilabel:`Show all versions of this feature` - will open the :guilabel:`Commit
   Viewer` dialog. On the left side of the dialog, there will be a list of commits
-  that added or altered information to the selected feature. If you select one of
+  that added or altered information for the selected feature. If you select one of
   those commits, the right side of the dialog will show the attributes and the
   geometry of the feature at that particular commit.
 
   .. figure:: img/commit_viewer.png
 
-* :guilabel:`Show Authorship` will open the :guilabel:`Authorship` dialog for
-  that feature. The top part of the dialog will show the list of attributes of
-  the feature, their current value, and the author. Clicking one of the
-  attribute rows will populate the bottom part of the dialog, which will provide
-  more in detail information about the related attribute.
+* :guilabel:`Show Authorship` - will open the :guilabel:`Authorship` dialog for
+  that feature. The top part of the dialog will show the feature's attributes, their current values, and the author who last changed the value. Clicking one of the
+  attribute rows will populate the bottom part of the dialog, which provides
+  more detail technical information about the related commit.
 
   .. figure:: img/authorship_dialog.png
 
@@ -147,8 +139,8 @@ Starting the GeoGig server
 The GeoGig plugin connects to GeoGig using its WebAPI (for more details on
 GeoGig WebAPI see the `GeoGig User Manual <geogig webapi docs_>`_ page).
 
-First, make sure that the GeoGig folder and the Java JVM folder are in your
-PATH, so you can call and run GeoGig from any folder in your system.
+First, make sure that the GeoGig program folder and the Java JVM folder are in your
+PATH, so you can run GeoGig from any folder in your system.
 
 You can start GeoGig server by running the following command from the folder
 that contains you repository folders.
@@ -173,20 +165,19 @@ If the server starts correctly, you should see a message like this:
 Connecting to a repository server
 .................................
 
-The first step to work with the GeoGig plugin is to connect to a GeoGig WebAPI
-endpoint, which serves a collection of repositories.
+The first step to work with the GeoGig plugin is to connect to a GeoGig server.
 
-Click the |add_server| *Add GeoGig server* button. the following
+Click the |add_server| *Add GeoGig server* button on the :guilabel:`GeoGig Navigator`. The following
 dialog opens:
 
 .. figure:: img/addrepos.png
 
 Enter the :guilabel:`URL` to the WebAPI endpoint (example:
-http://192.168.1.87:8182/), a :guilabel:`Title` to identify the service, and
+http://192.168.1.87:8182/), a :guilabel:`Title` to identify the service, then
 click :guilabel:`OK`.
 
 A new entry in the :guilabel:`GeoGig Navigator` will be added, which will
-contain all repositories served by the chosen endpoint.
+contain all repositories served by the chosen server.
 
 .. figure:: img/reposinnavigator.png
 
@@ -194,19 +185,18 @@ Clicking on a repository or any of its elements will update the
 :guilabel:`Repository History` in the lower part of the :guilabel:`GeoGig
 Navigator`.
 
-The :guilabel:`Repository History` is shown as a tree, with elements
-representing branches, and under each branch all the commits it contains.
+The :guilabel:`Repository History` shows all the commits a branch contains.
 
 .. figure:: img/versionsinbranch.png
 
 Creating and deleting repositories
 ..................................
 
-New repositories can be added to a GeoGig server. To do it, select the server
+New repositories can be added to a GeoGig server. To do this, select the server
 from the drop-down list in the :guilabel:`GeoGig Navigator` toolbar and then
 click the |add_repository| *Create new repository* icon.
 
-You will be prompted to enter the name of the repository. 
+You will be prompted to enter the name of the repository.
 
 .. figure:: img/createrepo.png
 
@@ -234,9 +224,8 @@ layer you wish to import to GeoGig and, in the context menu, select
 
 The :guilabel:`Import to GeoGig` dialog will open. From the
 :guilabel:`Repository` drop-down list, choose the repository you wish to import
-the layer to. In case the repository has more that one branch, also select the
-branch where to add the layer from the :guilabel:`Branch` drop-down list. In the
-:guilabel:` Message to describe this updated` add a descriptive message, for
+the layer to. In case the repository has more that one branch, use the :guilabel:`Branch` drop-down list to select the branch you want to import the layer to.  In the
+:guilabel:`Message to describe this updated` add a descriptive commit message, for
 example, *"Adds buildings layer"*. Click :guilabel:`Add layer` to proceed.
 
 .. figure:: img/import_to_geogig.png
@@ -244,19 +233,17 @@ example, *"Adds buildings layer"*. Click :guilabel:`Add layer` to proceed.
 .. note::
 
    At the moment only single layers in **geopackage (\*.gpkg)** format can be
-   added (http://www.geopackage.org/). You can use QGIS :guilabel:`Save as...`
-   core functionality to export your layer to a *gpkg* file in case it is in a
-   different format and you want to add it to a GeoGig repository.
+   added (http://www.geopackage.org/). You can use QGIS's :guilabel:`Save as...`
+   core functionality to export any layer to a *gpkg* file and then import into GeoGig.
 
 Once the layer is added to the repository, a new commit with the chosen message
-is created in the repository selected branch. This can be seen in the
-:guilabel:`Repository History` where a new entry with the chosen update message
-will be added to the destination branch. Besides, the layer will be listed in
+is shown in the repository selected branch. This can be seen in the
+:guilabel:`Repository History` for the destination branch. The layer will be listed in
 the :guilabel:`GeoGig Navigator` tree.
 
 .. figure:: img/added_new_layer.png
 
-Once a layer is imported into a GeoGig repository, it becomes linked to it. The
+Once a layer is imported into a GeoGig repository, the QGIS plugin will manage the GeoPKG file. The
 layer context menu in the :guilabel:`Layers panel` will contain new entries in
 the :guilabel:`GeoGig` menu that allow operations with the layer as part of a
 GeoGig repository. These entries will be explained in further sections of this
@@ -267,38 +254,36 @@ document.
    GeoGig layer context menu
 
 If a repository is deleted, layers linked to it will not be
-removed from the current project or deleted locally. However, they will not be
-linked anymore to a repo, and the above context menu entries will not be
-available, just like it happens with any other regular QGIS layer.
+removed from the current project or deleted locally. However, they will not longer be
+linked to a repo, and the above context menu entries will not be
+available.
 
 .. note::
 
-   A specific geopackage datasource/layer can be added in only one GeoGig
-   repository. If you need to add the same original geopackage layer in
-   different GeoGig repositories, you must create different copies of the same
-   datasource/layer in advance.
+   A specific geopackage datasource/layer should be added in only one GeoGig
+   repository and then shared between different repositories/branches using GeoGig commands like push and pull.  Do not import the same layer more than once!
 
 
 Loading repository layers to the QGIS project
 .............................................
 
-To add a layer from a repository to the current project, in the
+To add a layer from a repository to the current project, use the
 :guilabel:`Geogig Navigator` tree, expand a repository item to see the list of
-branches. Then, expand a branch items to list all available layers. Right-click
-the wanted layer and choose :guilabel:`Add to project`. You can also add the layer from the history tree, selecting a commit, richt-clicking on it, and then using the corresponding menu entry to add the layer to the project.
+branches. Then, expand a branch items to list all available layers inside it. Right-click
+the wanted layer and choose :guilabel:`Add to project`. You can also add the layer from the history tree by selecting a commit, right-clicking on it, and then using the corresponding menu entry (described above) to add the layer to the project.
 
 .. figure:: img/add_layer_to_project.png
 
-If it is the first time you add that layer to a local project, it will be
+If it is the first time you added that layer to a local project, it will be
 exported from the GeoGig server and stored locally as a geopackage file before
-loading it in QGIS. The most recent version of the layer in the selected branch
+loading it in QGIS. The most recent version of the layer from the selected branch
 of the repository will be used.
 
-If the layer had been previously exported and the locally stored file is at the same version as the one you have selected in the tree (the last commit in the selected branch in the repo tree, but it is not currently loaded into
-your QGIS project, the file will be loaded.
+If the layer was previously exported and the locally stored file is the same version as the one you selected in the tree (the last commit in the selected branch in the repo tree), but it is not currently loaded into
+your QGIS project, the file will be simply added to the project.
 
 If a layer has already been exported (even if it is not in the current QGIS
-project), but the locally store file corresponds to a different version, when you try to add that layer to your project, you will be asked
+project), but the locally store file corresponds to a different version, you will be asked
 whether you want to use that the previously exported version, or the one from
 the selected branch.
 
@@ -311,20 +296,19 @@ in a branch, right-click a commit. Then, from the context menu, select the
 
 .. figure:: img/add_layer_from_commit.png
 
-If the repository layer has been loaded in QGIS already, in the context menu, you
-will find a different option: :guilabel:`Change 'X' layer to this
-commit`. See :ref:`recover_layer_version` for more details.
+If the repository layer has been loaded in QGIS already, the context menu will also show the :guilabel:`Change 'X' layer to this
+commit` option. See :ref:`recover_layer_version` for more details.
 
 Creating and deleting branches
 ..............................
 
 By default, new repositories only have one branch called *master*. The *master
 branch* cannot be deleted and it represents the main storyline of the data in
-the repository. Nevertheless, other branches can be created to provide a way of
+the repository. Other branches can be created to provide a way of
 testing changes without affecting the master storyline right away.
 
 To create a new branch, you must select the commit in the current history of the
-repository where the branch starts. In the :guilabel:`Repository History`,
+repository where the branch is. In the :guilabel:`Repository History`,
 expand the branch where the commit is located, select the commit and right-click
 on it. Select the :guilabel:`Create new branch at this commit...` option from
 the context menu and you will be prompted to enter the name of the new branch.
@@ -338,7 +322,7 @@ Enter the name of the branch and click :guilabel:`OK`.
 
    Choose branch name
 
-The new branch will be created and added to the list of branches in
+The new branch will be created and added to the list of branches in the
 :guilabel:`GeoGig Navigator`.
 
 .. figure:: img/new_branch_in_navigator.png
@@ -353,14 +337,14 @@ Once a branch is no longer needed, because it has been merged or because the
 testing didn't go well, you can remove it from the repository. To delete a
 branch, right-click on it in the :guilabel:`GeoGig Navigator` and select the
 :guilabel:`Delete` option from the context menu. The branch will be
-deleted, as well as all the layers and commit information it contains.
+deleted, as well as all the layers and commit information it contained.
 
 Editing, committing changes to a GeoGig layer
 .............................................
 
 To edit a layer under GeoGig versioning, use any of the available QGIS editing
 tools as usual. Once you are done editing and have saved them locally, you can
-transfer your changes to a GeoGig server repository.
+transfer your changes to a branch in a GeoGig repository.
 
 To transfer the layer's local changes to the repository, right-click the edited
 layer in the :guilabel:`Layers panel` and
@@ -368,18 +352,18 @@ selecting :menuselection:`GeoGig --> Sync layer to branch` from the context
 menu. The :guilabel:`Syncronize layer to repository branch` dialog will open.
 
 In the :guilabel:`Branch` drop-down list, select the destination branch. Only
-branches containing the layer to sync will be shown.
+branches containing the layer to be synched will be shown.
 
-In the :guilabel:`Message to describe this update`, you should enter a
-descriptive message about the changes that are going to be applied to the layer.
+In the :guilabel:`Message to describe this update`, enter a
+descriptive message about the changes that were applied to the layer.
 This message will help to identify the commit responsible for the changes, in
-case you need to go back to it. If you don't provide a commit message, a
+case you want to find it again. If you don't provide a commit message, a
 timestamp message will be added to the commit automatically.
 
 .. figure:: img/syncdialog.png
 
-Click :guilabel:`OK`. The data will be incorporated to the repository, and a
-new commit with the chosen message will be created in the selected branch.
+Click :guilabel:`OK`. The changes will be incorporated in the repository, and a
+new commit with the chosen message will be created on the selected branch.
 
 All new changes in the selected repository branch, which were not yet in
 the local layer, will be downloaded and merged with the local ones.
@@ -393,7 +377,7 @@ will see that it has a new entry with the same message that you entered in the
 .. figure:: img/new_edit_commit.png
 
 .. note::
-   
+
    Modifications to the structure of attributes table (delete or rename
    attributes) are not supported at the moment.
 
@@ -401,39 +385,39 @@ Reviewing and discarding local changes
 ......................................
 
 Before you transfer the layer's local changes to a repository, you may want to
-review it. You can do so by right-clicking the edited layer in the
+review them. You can do so by right-clicking the edited layer in the
 :guilabel:`Layers panel` and selecting :menuselection:`GeoGig --> Show local
 changes` from the context menu. A :guilabel:`Comparison View` dialog will open,
-where you can see all the changes that have been made in that layer since the
-last commit (see :ref:`view_changes_commit` for an in detail description of a
+where you can see all the changes that were made to that layer since the
+last commit (see :ref:`view_changes_commit` for an detailed description of a
 similar dialog).
 
-If you are unhappy with the local changes you made, you can manually edit to fix
-some problems before you commit them to the repository or you can just discard
-all the layer local changes. To discard all the local changes, right-click the
-edited layer in the :guilabel:`Layers panel` and selecting
+If you are unhappy with the local changes you made, you can manually edit the layer to fix
+the problems before you commit them to the repository or you can just discard
+all the layer's local changes you made. To discard all the local changes, right-click the
+edited layer in the :guilabel:`Layers panel` and select
 :menuselection:`GeoGig --> Revert local changes` from the context menu.
 
 .. _recover_layer_version:
 
-Recovering a given version of a layer
-.....................................
+Seeing a given version of a layer
+.................................
 
-If you have a Geogig layer in your project, you can update its content to match
+If you have a GeoGig layer in your project, you can update its content to match
 any existing commit in the corresponding repository.
 
 To do so, in the :guilabel:`Layer panel`, right-click the layer and choose
 :menuselection:`GeoGig --> Change to a different commit...` from the context
 menu. It will open the :guilabel:`repository history` dialog, showing all the
-branches and commits containing a version of the selected layer. Click the
-commit you want to update the layer to. Then, click :guilabel:`OK` to recover
-that layer's version.
+branches and commits containing a version of the selected layer. Select the
+commit you want to update the layer to. Then click :guilabel:`OK` to change the layer to
+that version.
 
 .. figure:: img/recover_layer_state.png
 
 It's also possible to recover a layer version from the :guilabel:`Repository
 history`. In the :guilabel:`Repository history`, in a branch, right-click a
-commit that has changed the layer. Then, from the context menu, select
+commit. Then, from the context menu, select
 :guilabel:`Change 'X' layer to this commit`.
 
 .. figure:: img/change_layer_to_a_commit.png
@@ -475,7 +459,7 @@ selected branch history, which removes the selected layer from the branch.
    The layer will not be unloaded from QGIS and will still be part of your QGIS
    project. If, after removing the layer from the selected branch, it is not
    found in any other branch of the repository, the layer won't be tracked
-   anymore. The layer file and the repository will now be independent and not
+   anymore. The layer file and the repository will now be independent and no longer
    linked. Otherwise, the layer will remain tracked, since it can still be
    synced with other branches of the repo.
 
@@ -487,10 +471,9 @@ Solving conflicts
 .................
 
 When you synchronize your local layer (uploading your local changes and fetching
-new remote ones), it might happen that the features that you have modified have
-also been modified in the repository by someone else. This causes a conflicting
-situation that has to be manually solved. For each feature in a conflicted
-situation, you will have to decide which version of it you want to keep.
+new remote ones), someone else might have modified the same features as you.  This causes a conflicting
+situation that has to be manually resolved. For each feature in a conflicted
+situation, you must decide which version of it you want to keep (either your change or the other person's change).
 
 When a sync operation results in conflicts, you will see a message like this
 one:
@@ -499,7 +482,7 @@ one:
 
 If you click :guilabel:`No` the sync process will be canceled. Click
 :guilabel:`Yes` to open the :guilabel:`Merge Conflicts` dialog, which will allow
-you to solve the conflicts.
+you to resolve the conflicts.
 
 On the left side of the dialog, you will find a list of all the conflicting
 features, grouped by layer. Clicking a feature item will display the conflicting
@@ -510,52 +493,51 @@ values in the table and the canvas on the right side.
 In the table, all the feature's attributes are shown in rows, and the
 corresponding values for the two conflicting versions are shown in columns:
 
-* :guilabel:`Remote`: The feature as it was modified in the remote repository.
-* :guilabel:`Local`: The feature as it was modified in the local layer.
+* :guilabel:`Remote` - The feature as it was modified in the remote repository.
+* :guilabel:`Local` - The feature as it was modified in the local layer.
 
 There are three additional columns in the table:
 
-* :guilabel:`Original`: shows the **original** values from which both edits
+* :guilabel:`Original` - shows the **original** values from which both edits
   came, that is, the last common version of the feature.
-* :guilabel:`ATTRIBUTES`: shows the name of the attributes.
-* :guilabel:`Merged`: show the resolution value for each attribute.
+* :guilabel:`ATTRIBUTES` - shows the name of the attributes.
+* :guilabel:`Merged` - show the resolved (final) value for each attribute.
 
 Conflicting values will be highlighted in a *yellow* background, and the
 corresponding cell in the :guilabel:`Merged` column will be empty. If an
 attribute has no conflict, its values will be displayed in a *white* background,
-and will also be shown in the :guilabel:`Merged` column.
+and also be shown in the :guilabel:`Merged` column.
 
-Solving an attribute conflict is done by selecting the value to use from any of
-the three columns (*Remote*,  *Local*, *Origin*). Click the version to use, and
+Solve an attribute conflict by selecting the value to use from any of
+the three columns (*Remote*, *Local*, *Origin*). Click the version to use, and
 its value will be put in the *Merged* column.
 
 .. figure:: img/conflictunsolved.png
 
-   DESCRIPTIO attribute with an unsolved conflict
+    Attribute `DESCRIPTIO` with an unsolved conflict
 
-The row will not be shown as conflicted anymore.
+The row will no longer be shown as conflicted anymore.
 
 .. figure:: img/conflictsolved.png
 
-   DESCRIPTIO attribute with solved conflict
+    Attribute `DESCRIPTIO` with a solved conflict (*Local*)
 
-Once the conflict for a given attribute has been solved, you can still click a
-cell to use its value in the merged feature. You can even do it for attributes
-that have no conflicts.
+Once the conflict for a given attribute has been solved, you can use still choose another value (*Remote*, *Local*, or *Origin*) for the merged feature. You can even change attributes
+that have were not in conflict.
 
 The geometry of the feature, whether conflicted or not, will be represented in
 the window canvas. You can toggle the rendering of the different versions using
 the :guilabel:`Local` and :guilabel:`Remote` checkboxes.
 
 No interaction is currently available on the canvas other than zooming and
-panning. To solve a conflict in a geometry, you must use the table above to
-select the geometry version to use.
+panning. To solve a conflict in a geometry, you must use the table, above, to
+select the geometry version to use (*Remote*, *Local*, or *Origin*).
 
 Once you have solved all conflicts (that is, all the cells in the
 :guilabel:`Merged` column are filled and there are no yellow cells in the
 attribute table), the :guilabel:`Solve with merged feature` button will be
-enabled. When you click it, the conflict for the current feature will be solved,
-and its entry will be inserted in the repository.
+enabled. When you click it, the conflict for the current feature will be resolved,
+and the feature will be inserted in the repository.
 
 .. figure:: img/all_conflicts_solved.png
 
@@ -563,11 +545,11 @@ If for the selected feature conflict you want to use all the values from
 either the :guilabel:`Remote` or the :guilabel:`Local` columns, you can use the
 :guilabel:`Solve with local version` or :guilabel:`Solve with remote version`
 buttons, respectively, to solve the conflict without having to select
-the value manually for each conflicted attribute.
+each value manually.
 
 On the other hand, if for all conflicting features, in all layers, you wish to
-keep either all the remote or all the local changes, next to :guilabel:`Resolve
-all conflicts with`, click :guilabel:`Remote` or :guilabel:`Local`, respectively.
+keep either all the remote or all the local changes, click :guilabel:`Remote` or :guilabel:`Local`, respectively (next to :guilabel:`Resolve
+all conflicts with`).
 
 Use any of the above steps to resolve all conflicted features before closing the
 :guilabel:`Merge conflicts` dialog.
@@ -591,7 +573,7 @@ Visualizing changes introduced by a commit
 ..........................................
 
 To visualize the changes introduced by a given commit (that is, the difference
-between that commit and the previous one in the history)  you can use the
+between that commit and the previous commit in the history) you can use the
 :guilabel:`Comparison view`. To do so, in the :guilabel:`Repository history`
 right-click the commit and select the :guilabel:`Show changes introduced by this
 commit` from the context menu. This will open the comparison viewer.
@@ -623,10 +605,9 @@ geometry changes by looking into the geometry nodes' coordinates.
 Visualizing changes between two commits
 .......................................
 
-You can also use the :guilabel:`Comparison view` to compare commits that are not
-parent and child. To do so, in the :guilabel:`Repository history`, click on two
+You can also use the :guilabel:`Comparison view` to compare changes made by multiple commits. To do so, in the :guilabel:`Repository history`, click on two
 commits while holding the :kbd:`CTRL` key. Then, right-click one of them and,
-from the context menus choose :guilabel:`Show changes between selected commits`.
+from the context menu, choose :guilabel:`Show changes between selected commits`.
 This will open the :guilabel:`Comparison viewer` dialog.
 
 The compared versions are listed in the :guilabel:`commits to Compare` section
@@ -644,7 +625,7 @@ The rest of the dialog works as described in the
 
 Without closing the :guilabel:`Comparison view`, you can change any of the
 commits to be compared by clicking the :guilabel:`...` button next to each text
-box, which will open the :guilabel:`Repository history` dialog. Click the branch
+box (at the very top), which will open the :guilabel:`Repository history` dialog. Click the branch
 and commit you want to use for comparison, and click :guilabel:`OK`.
 
 Exporting changes introduced by a commit
@@ -667,7 +648,7 @@ in red, and modified ones in yellow.
 Adding and removing Tags to a commit
 ....................................
 
-Tags are easy to remember names that you can give to commits. You can add tags
+Tags are easy to remember names that you can give to a commit. You can add tags
 to any commit in the repository history. To add a tag to a commit, right-click
 on it in the :guilabel:`Repository history` and select :guilabel:`Create new
 tag at this commit...`. You will be prompted to enter the name of the tag to
@@ -685,30 +666,30 @@ Collaborating with others
 -------------------------
 
 As with other "non-spatial" versioning tools, one of the main goals of GeoGig is
-to allow collaboration, in this case, collaboration while editing spatial data.
-Using GeoGig workflow, several people can be editing the same data sets, and
-GeoGig allows to ensure that no one work is lost. There are several ways you can
+to allow collaboration, especially while editing spatial data.
+Using the GeoGig workflow, several people can be editing the same data sets, and
+GeoGig ensures that no one's work is lost. There are several ways you can
 setup GeoGig inside your organization to enable that collaboration.
 
 The organization can set up **one GeoGig server as a shared service, and all the
 collaborators use the same URL**. They can all work on the master branch, but that may
-be confusing. So a better approach may be each collaborator create a branch to
-work on and commit changes, and then a project manager would take care of
-merging changes into the master branch. The workflow for this setup was already
+be confusing. A better approach is for each collaborator to create a branch to
+work on (commit changes), and then a project manager take cares of
+merging these changes into the master branch. The workflow for this setup was already
 fully described in the above sections.
 
-Another, a bit more elaborate, way of setting up a GeoGig project for
+Another, more elaborate, way of setting up a GeoGig project for
 collaboration within your organization is to have that same **GeoGig server as a
-shared service which can work as the centralized repository and a local GeoGig
-server per each collaborator**.
+shared service which can work as the centralized repository and each collaborator uses a local GeoGig
+server**.
 
 In this case, the sharing workflow needs a bit more of explanation.
 
 Managing remote connections
 ...........................
 
-Having a repository in your personal GeoGig server, you can add remote
-connections for other similar repositories, from where you can retrieve
+The repositories on your personal GeoGig server can have remote
+connections to other similar repositories, from where you can retrieve
 data and commits (pull) and send your own data and commits back (push).
 
 Create a new empty Repository in your personal GeoGig Server using the
@@ -754,7 +735,7 @@ After you edited the data and synchronized it into your repository, you can send
 the changes to other remote repositories. In the :guilabel:`GeoGig Navigator`,
 right-click your repository name and select :guilabel:`Push`. The
 :guilabel:`Remote reference` dialog opens. Select the :guilabel:`Remote` and the
-:guilabel:`Branch` from where you wish to export data and click :guilabel:`OK`.
+:guilabel:`Branch` from where you wish to export changes and click :guilabel:`OK`.
 
 All local commits that were not present in the remote repository will be merged
 into the remote repository.
