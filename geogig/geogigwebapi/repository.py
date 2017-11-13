@@ -55,7 +55,9 @@ from geogig.geogigwebapi.commit import NULL_ID, Commit
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
-from geogig.extlibs.qgiscommons2.gui import execute, startProgressBar, closeProgressBar, setProgressValue, setProgressText
+from geogig.extlibs.qgiscommons2.gui import (execute, startProgressBar, 
+                                            closeProgressBar, setProgressValue, 
+                                            setProgressText, isProgressCanceled)
 
 from geogig.tools.layers import formatSource, namesFromLayer
 from geogig.tools.utils import userFolder, resourceFile
@@ -229,6 +231,8 @@ class Repository(object):
                     f.write(data)
                     done = int(100 * dl / total)
                     setProgressValue(done)
+                    if isProgressCanceled():
+                        return
                     
         closeProgressBar()
 
@@ -245,7 +249,10 @@ class Repository(object):
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
         self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
 
@@ -381,13 +388,15 @@ class Repository(object):
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        startProgressBar("Creating geopkg on GeoGig server...", 0)
         taskid = self._preparelayerdownload(layername, bbox, ref)
-        checker = TaskChecker(self.rootUrl, taskid, "Preparing layer in server")
+        checker = TaskChecker(self.rootUrl, taskid, "Preparing layer in server", 100)
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
         self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
         closeProgressBar()
@@ -438,13 +447,16 @@ class Repository(object):
         encoder = MultipartEncoder(files)
         total = float(encoder.len)
         def callback(m):
-            done = int(100 * m.bytes_read / total)
-            setProgressValue(done)
+            if not isProgressCanceled():
+                done = int(100 * m.bytes_read / total)
+                setProgressValue(done)
         monitor = MultipartEncoderMonitor(encoder, callback)
         startProgressBar("Transferring geopkg to GeoGig server", 100)
-        setProgressValue(1)
         r = requests.post(self.url + "import.json", params = payload, data=monitor,
                   headers={'Content-Type': monitor.content_type})
+        if isProgressCanceled():
+            QApplication.restoreOverrideCursor()
+            return
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         resp = r.json()
@@ -453,8 +465,10 @@ class Repository(object):
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
         QApplication.restoreOverrideCursor()
+        if checker.canceled:
+            return
         closeProgressBar()
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
@@ -680,13 +694,19 @@ class TaskChecker(QObject):
         self.taskid = taskid
         self.url = url + "tasks/%s.json" % str(self.taskid)
         self.maxvalue = maxvalue
+        self.text = text
+        self.canceled = False
         startProgressBar(text, maxvalue)
-        setProgressValue(1)
         
     def start(self):
         self.checkTask()
         
     def checkTask(self):
+        if isProgressCanceled():
+            self.ok = True
+            self.canceled = True 
+            closeProgressBar()           
+            self.taskIsFinished.emit()
         r = requests.get(self.url, stream=True)
         r.raise_for_status()
         self.response = r.json()
@@ -699,7 +719,7 @@ class TaskChecker(QObject):
             self.taskIsFinished.emit()
         else:
             try:
-                progressTask = self.response["task"]["progress"]["task"]
+                progressTask = self.text or self.response["task"]["progress"]["task"]
                 progressAmount = int(self.response["task"]["progress"]["amount"])
                 if self.maxvalue:
                     setProgressValue(progressAmount)

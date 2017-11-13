@@ -148,7 +148,11 @@ def addDiffLayers(repo, commit, commit2, layernames):
     beforeFilename = tempFilename("gpkg")
     repo.exportdiff(commit.commitid, commit2.commitid, beforeFilename)
     afterFilename = tempFilename("gpkg")
+    if not os.path.exists(beforeFilename):
+        return
     repo.exportdiff(commit2.commitid, commit.commitid, afterFilename)
+    if not os.path.exists(afterFilename):
+        return
     for layername in layernames:
         styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
         geomTypes = ["Point","LineString","Polygon"]
