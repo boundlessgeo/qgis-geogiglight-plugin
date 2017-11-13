@@ -445,7 +445,6 @@ class Repository(object):
         setProgressValue(1)
         r = requests.post(self.url + "import.json", params = payload, data=monitor,
                   headers={'Content-Type': monitor.content_type})
-        closeProgressBar()
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         resp = r.json()
@@ -680,7 +679,9 @@ class TaskChecker(QObject):
         QObject.__init__(self)
         self.taskid = taskid
         self.url = url + "tasks/%s.json" % str(self.taskid)
+        self.maxvalue = maxvalue
         startProgressBar(text, maxvalue)
+        setProgressValue(1)
         
     def start(self):
         self.checkTask()
@@ -700,7 +701,12 @@ class TaskChecker(QObject):
             try:
                 progressTask = self.response["task"]["progress"]["task"]
                 progressAmount = int(self.response["task"]["progress"]["amount"])
-                setProgressValue(progressAmount)
+                if self.maxvalue:
+                    setProgressValue(progressAmount)
+                    setProgressText(progressTask)
+                else:
+                    text = "%s [%s]" % (progressTask, progressAmount)
+                    setProgressText(text)
             except KeyError:
                 pass
             QTimer.singleShot(500, self.checkTask)
