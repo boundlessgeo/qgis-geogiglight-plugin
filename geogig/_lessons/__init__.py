@@ -9,8 +9,8 @@ import requests
 import time
 from distutils.dir_util import copy_tree
 
-from qgiscommons2.files import tempFolderInTempFolder, tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.files import tempFolderInTempFolder, tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 
 from qgis.core import *
 from qgis.utils import iface

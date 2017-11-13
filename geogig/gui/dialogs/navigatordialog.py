@@ -57,7 +57,7 @@ from qgis.utils import iface
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.gui import execute
 from geogig.gui.dialogs.historyviewer import HistoryViewer, HistoryViewerDialog
 from geogig.gui.dialogs.importdialog import ImportDialog
 from geogig.gui.dialogs.geogigserverdialog import GeoGigServerDialog
@@ -86,7 +86,7 @@ from builtins import zip
 from builtins import str
 from builtins import range
 
-from qgiscommons2.layers import vectorLayers
+from geogig.extlibs.qgiscommons2.layers import vectorLayers
 
 qtVersion = int(QT_VERSION_STR.split(".")[0])
 pluginPath = os.path.split(os.path.dirname(os.path.dirname(__file__)))[0]

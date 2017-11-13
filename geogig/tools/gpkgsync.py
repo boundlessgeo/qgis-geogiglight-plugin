@@ -58,8 +58,8 @@ from geogig.tools.layers import (WrongLayerSourceException,
                                  hasLocalChanges
                                 )
 
-from qgiscommons2.files import tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.files import tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 

@@ -28,7 +28,7 @@ __revision__ = '$Format:%H$'
 import os
 
 from geogig.gui.dialogs.userconfigdialog import UserConfigDialog
-from qgiscommons2.settings import pluginSetting, setPluginSetting
+from geogig.extlibs.qgiscommons2.settings import pluginSetting, setPluginSetting
 
 iface = None
 explorer = None

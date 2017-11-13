@@ -55,14 +55,14 @@ from geogig.geogigwebapi.commit import NULL_ID, Commit
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
-from qgiscommons2.gui import execute, startProgressBar, closeProgressBar, setProgressValue
+from geogig.extlibs.qgiscommons2.gui import execute, startProgressBar, closeProgressBar, setProgressValue, setProgressText
 
 from geogig.tools.layers import formatSource, namesFromLayer
 from geogig.tools.utils import userFolder, resourceFile
 from geogig.tools.layertracking import isRepoLayer
 
-from qgiscommons2.settings import pluginSetting
-from qgiscommons2.files import tempFilenameInTempFolder
+from geogig.extlibs.qgiscommons2.settings import pluginSetting
+from geogig.extlibs.qgiscommons2.files import tempFilenameInTempFolder
 
 class GeoGigException(Exception):
     pass

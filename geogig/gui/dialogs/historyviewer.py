@@ -56,15 +56,15 @@ from qgis.core import QgsApplication
 from geogig import config
 from geogig.repowatcher import repoWatcher
 
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
 from geogig.geogigwebapi.commit import Commit
 from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
 from geogig.tools.layertracking import getTrackingInfo
 from geogig.tools.layers import hasLocalChanges, addDiffLayers
-from qgiscommons2.layers import loadLayerNoCrsDialog
-from qgiscommons2.gui import showMessageDialog
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.gui import showMessageDialog
 
 def icon(f):
     return QIcon(os.path.join(os.path.dirname(__file__),
