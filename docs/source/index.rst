@@ -19,6 +19,7 @@ core concepts to handle distributed versioning of geospatial data. GeoGig is a
 (http://boundlessgeo.com/) contributes actively. For more information about
 GeoGig see http://geogig.org/
 
+In order to use the GeoGig Client in QGIS, you must have a GeoGig server for it to connect to.
 
 Documentation contents:
 

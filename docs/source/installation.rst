@@ -7,13 +7,12 @@ Installation
 The easiest way to install the |current_plugin| is to use the **Boundless Connect plugin**, a QGIS plugin that will provide you access to Boundless's plugins and other content.
 
 .. note::
-
    If you are using |BLQGIS|, the *Boundless Connect plugin* is installed by default in its QGIS. Otherwise, if you are using QGIS from one of the community's installers, you can install the *Boundless Connect plugin* by setting up the `Boundless QGIS Plugin Repository`_ in QGIS's plugin manager.
 
-Install from repository
------------------------
+Installing from the Boundless repository
+----------------------------------------
 
-If your organization works with Boundless's remote plugin repository, you will
+If you are using Boundless's remote plugin repository, you will
 need to enter your `Boundless Connect`_ credentials using the *Boundless
 Connect* panel. If the panel is not visible, click the :menuselection:`Plugins
 --> Boundless Connect` menu item to make it visible. Enter your
@@ -24,7 +23,7 @@ Connect* panel. If the panel is not visible, click the :menuselection:`Plugins
    Boundless Connect login dialog
 
 After entering the Boundless Connect credentials, the search panel will show up.
-Type plugin's name in the :guilabel:`Search` field and press :kbd:`Enter` to
+Type the plugin's name in the :guilabel:`Search` field ("geogig") and press :kbd:`Enter` to
 search for it.
 
 .. figure:: img/connect-search-plugin.png
@@ -55,23 +54,23 @@ install plugins`.
 .. note::
 
    Login is a one-time operation for all Boundless's plugins installation, as
-   your credentials will be securely saved within QGIS authentication database
+   your credentials will be securely saved within QGIS's authentication database
    for future use. For more information on this subject, please consult the
    `Boundless Connect plugin's usage documentation`_
 
 .. note::
 
-   If the |current_plugin| is not visible in the *Not Installed* list, maybe it
-   was installed already. Check the *Installed* list and make sure the plugin is
+   If the |current_plugin| is not visible in the *Not Installed* list, it maybe
+   already installed. Check the *Installed* list and make sure the plugin is
    activated by enabling the respective checkbox.
 
 
-Install from a ZIP package
---------------------------
+Installing from a ZIP package
+-----------------------------
 
 If you have previously downloaded the plugin ZIP package from the `Boundless
 QGIS Plugin Repository`_ page, you can easily install it using the *Install
-plugin from ZIP* tool, which is available with Boundless Connect plugin.
+plugin from ZIP* tool, which is available with the Boundless Connect plugin.
 
 Go to :menuselection:`Plugins --> Install plugin from ZIP` menu item. Then,
 browse to and select the ZIP file, and click :guilabel:`Open` it. If everything
