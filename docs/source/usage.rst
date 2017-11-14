@@ -80,7 +80,7 @@ In the :guilabel:`Repository History` right-clicking a **Branch** name open up
 the context menu with the following options:
 
 * :guilabel:`Merge this branch into ...` - allows merge the changes on this branch
-  changes into another branch in the same repository.
+  into another branch in the same repository.
 * :guilabel:`Delete this branch` - deletes all the layers and commit information
   from the GeoGig Server for this branch.
 
