@@ -826,3 +826,4 @@ def unitTests():
 
 def run_tests():
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(pluginSuite())
+    unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(webapiSuite())
