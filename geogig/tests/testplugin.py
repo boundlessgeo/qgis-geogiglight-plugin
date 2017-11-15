@@ -788,27 +788,6 @@ class PluginTests(unittest.TestCase):
         self.assertEqual(2, len(features))
         self.assertEqual(getCommitId(layer), log[0].commitid)
 
-    def testCanCleanAuditTableAfterEdit(self):
-        src = os.path.join(os.path.dirname(__file__), "data", "layers", "points.gpkg")
-        dest = tempFilename("gpkg")
-        shutil.copy(src, dest)
-        layer = loadLayerNoCrsDialog(dest, "points", "ogr")
-        self.assertTrue(layer.isValid())
-        features = list(layer.getFeatures())
-        geom = QgsGeometry.fromPoint(QgsPoint(12,12))
-        self.assertTrue(layer.startEditing())
-        self.assertTrue(layer.changeGeometry(features[0].id(), geom))
-        self.assertTrue(layer.commitChanges())
-        con = sqlite3.connect(dest)
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM points_audit;")
-        self.assertRaises(OperationalError, con.commit)
-        con.close()
-        layer.reload()
-        con = sqlite3.connect(dest)
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM points_audit;")
-        con.commit()
 
 
 def pluginSuite():
