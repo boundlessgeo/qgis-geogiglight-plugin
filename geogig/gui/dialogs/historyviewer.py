@@ -31,7 +31,7 @@ import sqlite3
 from functools import partial
 from collections import defaultdict
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QAbstractItemView,
@@ -45,6 +45,7 @@ from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QListWidgetItem,
                                  QDialog,
                                  QVBoxLayout,
+                                 QHBoxLayout,
                                  QDialogButtonBox,
                                  QApplication,
                                  QPushButton
@@ -59,7 +60,8 @@ from geogig.repowatcher import repoWatcher
 from geogig.extlibs.qgiscommons2.gui import execute
 from geogig.gui.dialogs.diffviewerdialog import DiffViewerDialog
 from geogig.gui.dialogs.conflictdialog import ConflictDialog
-from geogig.geogigwebapi.commit import Commit
+from geogig.gui.dialogs.historygraphviewer import GraphView
+from geogig.geogigwebapi.commit import Commit, setChildren
 from geogig.tools.gpkgsync import checkoutLayer, HasLocalChangesError
 from geogig.tools.layertracking import getTrackingInfo
 from geogig.tools.layers import hasLocalChanges, addDiffLayers
@@ -96,9 +98,19 @@ class HistoryViewer(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.header().setVisible(False)
         if showContextMenu:
-            self.customContextMenuRequested.connect(self.showPopupMenu)
+            self.customContextMenuRequested.connect(self._showPopupMenu)
         self.itemExpanded.connect(self._itemExpanded)
-
+        self.itemSelectionChanged.connect(self.selectedCommitChanged)
+        
+    itemSelected = pyqtSignal(list)
+    
+    def selectedCommitChanged(self):
+        items = self.selectedItems()
+        commits = [item.commit for item in items]
+        self.selecting = True
+        self.itemSelected.emit(commits)
+        self.selecting = False
+        
     def getRef(self):
         selected = self.selectedItems()
         if len(selected) == 1:
@@ -107,6 +119,22 @@ class HistoryViewer(QTreeWidget):
     def exportVersion(self, repo, layer, commitId):
         checkoutLayer(repo, layer, None, commitId)
 
+
+    def selectCommits(self, commitids):
+        if self.selecting:
+            return
+        root = self.invisibleRootItem()
+        for i in range(root.childCount()):
+            item = root.child(i)
+            item.setSelected(False)
+            for j in range(item.childCount()):
+                subitem = item.child(j)
+                subitem.setSelected(subitem.commit.commitid in commitids)
+                    
+    def _showPopupMenu(self, point):
+        point = self.mapToGlobal(point)
+        self.showPopupMenu(point)
+             
     def showPopupMenu(self, point):
         selected = self.selectedItems()
         if len(selected) == 1:
@@ -139,8 +167,7 @@ class HistoryViewer(QTreeWidget):
                 if exportVersionActions:
                     menu.addSeparator()
                     for action in exportVersionActions:
-                        menu.addAction(action)
-                point = self.mapToGlobal(point)
+                        menu.addAction(action)                
                 menu.exec_(point)
             elif isinstance(item, BranchTreeItem):
                 mergeActions = []
@@ -161,7 +188,6 @@ class HistoryViewer(QTreeWidget):
                     deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
                     menu.addAction(deleteAction)
                 if not menu.isEmpty():
-                    point = self.mapToGlobal(point)
                     menu.exec_(point)
         elif len(selected) == 2:
             if isinstance(selected[0], (CommitTreeItem, BranchTreeItem)) and isinstance(selected[1], (CommitTreeItem, BranchTreeItem)):
@@ -172,7 +198,6 @@ class HistoryViewer(QTreeWidget):
                 exportDiffAction = QAction(diffIcon, "Export changes between selected commits as new layers", None)
                 exportDiffAction.triggered.connect(lambda: self.exportDiffs(selected[0].commit, selected[1].commit))
                 menu.addAction(exportDiffAction)
-                point = self.mapToGlobal(point)
                 menu.exec_(point)
 
     def _itemExpanded(self, item):
@@ -408,10 +433,25 @@ class HistoryViewerDialog(QDialog):
         execute(self.initGui)
 
     def initGui(self):
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
         self.history = HistoryViewer()
         self.history.updateContent(self.repo, layername = self.layer, branch = self.branch)
+        self.graph = GraphView(self)
+        self.graph.itemSelected.connect(self.itemSelectedInGraph)
+        self.graph.contextMenuRequested.connect(self.contextMenuRequestedInGraph)
+        self.history.itemSelected.connect(self.itemSelectedInHistory)
+        tags = defaultdict(list)
+        for k, v in self.repo.tags().items():
+            tags[v].append(k)
+        if self.branch is None:
+            commits = self.repo.commitgraph()
+        else:
+            commits = self.repo.log(until = self.branch, path = self.layer)
+        for commit in commits:
+            commit.tags = tags.get(commit.commitid, [])
+        self.graph.add_commits(commits)
         layout.addWidget(self.history)
+        layout.addWidget(self.graph)
         if self.showButtons:
             buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
             buttonBox.accepted.connect(self.okPressed)
@@ -419,9 +459,19 @@ class HistoryViewerDialog(QDialog):
             layout.addWidget(buttonBox)
         self.setLayout(layout)
 
-        self.resize(400, 500)
+        self.resize(800, 600)
         self.setWindowTitle("Repository history")
 
+    def itemSelectedInHistory(self, commits):
+        print commits
+        self.graph.commits_selected(commits)
+        
+    def itemSelectedInGraph(self, commits):
+        self.history.selectCommits(commits)
+        
+    def contextMenuRequestedInGraph(self, point):
+        self.history.showPopupMenu(point)
+        
     def okPressed(self):
         selected = self.history.getRef()
         if selected is None:

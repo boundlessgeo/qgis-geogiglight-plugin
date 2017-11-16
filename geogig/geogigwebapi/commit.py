@@ -38,6 +38,11 @@ NULL_ID = "0" * 40
 class Commit(Commitish):
 
     _commitcache = {}
+    
+    @staticmethod
+    def addToCache(commits):
+        for c in commits:
+            Commit._commitcache[c.commitid] = c 
 
     ''' A geogig commit'''
 
@@ -56,6 +61,9 @@ class Commit(Commitish):
         self.added = added
         self.removed = removed
         self.modified = modified
+        self._children = []
+        self.tags = []
+        self.generation = 1
 
     @staticmethod
     def fromref(repo, ref):
@@ -69,17 +77,27 @@ class Commit(Commitish):
             cid = repo.revparse(ref)
             if (repo.url, cid) not in Commit._commitcache:
                 log = repo.log(until = cid, limit = 1)
-                if log:
-                    Commit._commitcache[(repo.url, cid)] = log[0]
+                if not log:                                    
+                    Commit._commitcache[(repo.url, cid)] = Commitish(repo, NULL_ID)
                 else:
-                    return Commitish(repo, NULL_ID)
+                    Commit._commitcache[(repo.url, cid)] = log[0]
             return Commit._commitcache[(repo.url, cid)]
 
+    childrenCache = None
+    @property
+    def children(self):
+        '''Returns a list of commits with commits representing the children of this commit'''
+        if self.childrenCache is None:
+            self.childrenCache =  [self.fromref(self.repo, p) for p in self._children]
+        return self.childrenCache
+    
+    parentsCache = None
     @property
     def parents(self):
         '''Returns a list of commits with commits representing the parents of this commit'''
-        commits =  [self.fromref(self.repo, p) for p in self._parents]
-        return commits
+        if self.parentsCache is None:
+            self.parentsCache = [self.fromref(self.repo, p) for p in self._parents]
+        return self.parentsCache
 
     @property
     def parent(self):
@@ -131,3 +149,31 @@ class Commit(Commitish):
         s += "message " + msg + "\n"
 
         return s
+    
+    def isFork(self):
+        ''' Returns True if the node is a fork'''
+        return len(self._children) > 1
+
+    def isMerge(self):
+        ''' Returns True if the node is a fork'''
+        return len(self._parents) > 1
+
+def setChildren(commits):
+    commitsDict = {c.commitid:c for c in commits}
+    
+    for c in commits[::-1]:
+        if c.parents:
+            generation = None
+            for p in c._parents:
+                parent = commitsDict.get(p, None)
+                if parent:
+                    parent._children.append(c.commitid)
+                    if generation is None:
+                        generation = parent.generation+1
+                    generation = max(parent.generation+1, generation)
+                else:
+                    generation = 0
+            c.generation = generation
+
+    return commits
+    

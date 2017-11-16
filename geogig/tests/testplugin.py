@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from tests import _createComplexHistoryTestRepo
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -603,6 +604,13 @@ def functionalTests():
     test.addStep("Prepare test", _createNothingToPushScenario)
     test.addStep("Open navigator", lambda: _openNavigator(repos = [_remoteRepo, _localRepo]))
     test.addStep("TEST ON THE LOCAL AND REMOTE REPOS")
+    tests.append(test)
+    
+    test = Test("TEST SCENARIO: Complex history")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createComplexHistoryTestRepo)
+    test.addStep("Open navigator", lambda: _openNavigator)
+    test.addStep("Test history")
     tests.append(test)
 
     test = Test("Cannot push")

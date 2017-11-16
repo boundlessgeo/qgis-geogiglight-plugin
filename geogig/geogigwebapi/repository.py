@@ -51,10 +51,11 @@ from qgis.utils import iface
 from geogig import config
 from geogig.config import LOG_SERVER_CALLS
 
-from geogig.geogigwebapi.commit import NULL_ID, Commit
+from geogig.geogigwebapi.commit import NULL_ID, Commit, setChildren
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 from geogig.extlibs.qgiscommons2.gui import (execute, startProgressBar, 
                                             closeProgressBar, setProgressValue, 
                                             setProgressText, isProgressCanceled)
@@ -150,16 +151,16 @@ class Repository(object):
                 self.__log(url, resp, payload)
                 params = {"transactionId":transactionId, "output_format":"json"}
                 r = requests.get(self.url + "endTransaction", params = params)
-                r.raise_for_status()
                 self.__log(url, r.json(), params)
+                r.raise_for_status()
                 return resp
             else:
                 payload["output_format"] = "json"
-                url = self.url + command
+                url = self.url + command                
                 r = requests.get(url, params=payload)
+                self.__log(url, r.json(), payload)
                 r.raise_for_status()
                 j = json.loads(r.text.replace(r"\/", "/"))
-                self.__log(url, r.json(), payload)
                 return j["response"]
         except ConnectionError as e:
             msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
@@ -289,6 +290,42 @@ class Repository(object):
                 payload["page"] += 1
             else:
                 break
+
+        Commit.addToCache(commits)
+        commits = setChildren(commits)
+
+        return commits
+    
+    def commitgraph(self, ref=None):
+        payload = {}
+        if ref is None:
+            refs = self.branches()
+        else:
+            refs = [ref]
+        commits = []
+        commitids = []
+        for r in refs:
+            payload["commitId"] = self.revparse(r)
+            payload["page"] = 0
+            while True:
+                try:
+                    resp = self._apicall("getCommitGraph", payload)
+                except HTTPError as e:
+                    raise
+                    #TODO more accurate error treatment
+                    return []
+                if "commit" in resp and resp["commit"]:
+                    for c in _ensurelist(resp["commit"]):
+                        parsed = self._parseCommit(c)
+                        if parsed.commitid not in commitids:
+                            commits.append(parsed)
+                            commitids.append(parsed.commitid)
+                    payload["page"] += 1
+                else:
+                    break
+
+        Commit.addToCache(commits)
+        commits = setChildren(commits)
 
         return commits
 
@@ -461,6 +498,8 @@ class Repository(object):
         r.raise_for_status()
         resp = r.json()
         taskId = resp["task"]["id"]
+        if isinstance(layer, basestring):
+            layer = loadLayerNoCrsDialog(layer, "", "ogr")
         checker = TaskChecker(self.rootUrl, taskId, "Importing geopkg into GeoGig server", layer.featureCount())
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
