@@ -526,7 +526,6 @@ class GraphView(QtWidgets.QGraphicsView):
             item.setSelected(True)
             item_rect = item.sceneTransform().mapRect(item.boundingRect())
             self.ensureVisible(item_rect)
-        self.zoom_to_fit()
 
     def get_item_by_generation(self, commits, criteria_fn):
         """Return the item for the commit matching criteria"""
