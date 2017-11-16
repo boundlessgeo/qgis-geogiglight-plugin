@@ -77,9 +77,9 @@ def _createComplexHistoryTestRepo(group=None, name=None):
                 x = random.random()
                 y = random.random()
                 feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
-                feat.setAttributes([3, 2])
+                feat.setAttributes([i+1000, i+1000])
                 layer.addFeatures([feat])
-            repo.importgeopkg(layer, branch, "commit %i in branch" % (i, branch), "tester", "test@test.test", True)
+            repo.importgeopkg(layer, branch, "commit %i in branch %s" % (i, branch), "tester", "test@test.test", True)
 
     repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "complexhistory_%s" %  str(time.time()))
     _importLayerToRepo(repo, "first")

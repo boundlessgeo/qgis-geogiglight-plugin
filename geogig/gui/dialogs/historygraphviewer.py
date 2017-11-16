@@ -620,12 +620,6 @@ class GraphView(QtWidgets.QGraphicsView):
 
         self.fit_view_to_items(items)
 
-    def zoom_to_fit(self):
-        """Fit selected items into the viewport"""
-
-        items = self.scene().selectedItems()
-        self.fit_view_to_items(items)
-
     def fit_view_to_items(self, items):
         if not items:
             rect = self.scene().itemsBoundingRect()

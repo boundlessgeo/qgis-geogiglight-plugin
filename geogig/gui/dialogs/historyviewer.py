@@ -89,6 +89,7 @@ class HistoryViewer(QTreeWidget):
         self.repo = None
         self.layername = None
         self.initGui(showContextMenu)
+        self.selecting = False
 
     def initGui(self, showContextMenu):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -118,7 +119,6 @@ class HistoryViewer(QTreeWidget):
 
     def exportVersion(self, repo, layer, commitId):
         checkoutLayer(repo, layer, None, commitId)
-
 
     def selectCommits(self, commitids):
         if self.selecting:
@@ -463,7 +463,6 @@ class HistoryViewerDialog(QDialog):
         self.setWindowTitle("Repository history")
 
     def itemSelectedInHistory(self, commits):
-        print commits
         self.graph.commits_selected(commits)
         
     def itemSelectedInGraph(self, commits):

@@ -291,7 +291,7 @@ class Repository(object):
             else:
                 break
 
-        Commit.addToCache(commits)
+        Commit.addToCache(self.url, commits)
         commits = setChildren(commits)
 
         return commits
@@ -309,7 +309,7 @@ class Repository(object):
             payload["page"] = 0
             while True:
                 try:
-                    resp = self._apicall("getCommitGraph", payload)
+                    resp = self._apicall("log", payload)
                 except HTTPError as e:
                     raise
                     #TODO more accurate error treatment
@@ -324,7 +324,7 @@ class Repository(object):
                 else:
                     break
 
-        Commit.addToCache(commits)
+        Commit.addToCache(self.url, commits)
         commits = setChildren(commits)
 
         return commits

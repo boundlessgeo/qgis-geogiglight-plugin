@@ -40,9 +40,9 @@ class Commit(Commitish):
     _commitcache = {}
     
     @staticmethod
-    def addToCache(commits):
+    def addToCache(repoUrl, commits):
         for c in commits:
-            Commit._commitcache[c.commitid] = c 
+            Commit._commitcache[(repoUrl, c.commitid)] = c 
 
     ''' A geogig commit'''
 
