@@ -54,7 +54,7 @@ class Cache(object):
 class Edge(QtWidgets.QGraphicsItem):
     item_type = QtWidgets.QGraphicsItem.UserType + 1
 
-    def __init__(self, source, dest):
+    def __init__(self, source, dest, color):
 
         QtWidgets.QGraphicsItem.__init__(self)
 
@@ -67,18 +67,7 @@ class Edge(QtWidgets.QGraphicsItem):
         self.recompute_bound()
         self.path_valid = False
 
-        # Choose a new color for new branch edges
-        if self.source.x() < self.dest.x():
-            color = EdgeColor.cycle()
-            line = Qt.SolidLine
-        elif self.source.x() != self.dest.x():
-            color = EdgeColor.current()
-            line = Qt.SolidLine
-        else:
-            color = EdgeColor.current()
-            line = Qt.SolidLine
-
-        self.pen = QtGui.QPen(color, 4.0, line, Qt.SquareCap, Qt.RoundJoin)
+        self.pen = QtGui.QPen(color, 4.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin)
 
     def recompute_bound(self):
         dest_pt = Commit.item_bbox.center()
@@ -776,28 +765,28 @@ class GraphView(QtWidgets.QGraphicsView):
     def link(self, commits):
         """Create edges linking commits with their parents"""
         scene = self.scene()
-        for commit in commits:
+        linked = []
+        def linkCommit(commit, color=None): 
+            color = color or EdgeColor.cycle()
+            linked.append(commit.commitid)      
             try:
                 commit_item = self.items[commit.commitid]
             except KeyError:
                 # TODO - Handle truncated history viewing
-                continue
-            for parent in reversed(commit.parents):
+                return            
+            for i, parent in enumerate(commit.parents):
                 try:
                     parent_item = self.items[parent.commitid]
-                except KeyError:
+                    edge = Edge(parent_item, commit_item, color)
+                    if parent.commitid not in linked:
+                        nextColor = color if i == 0 else None                            
+                        linkCommit(parent, nextColor)
+                except KeyError:                    
                     # TODO - Handle truncated history viewing
                     continue
-                try:
-                    edge = parent_item.edges[commit.commitid]
-                except KeyError:
-                    edge = Edge(parent_item, commit_item)
-                else:
-                    continue
-                parent_item.edges[commit.commitid] = edge
-                commit_item.edges[parent.commitid] = edge
                 scene.addItem(edge)
-
+        linkCommit(commits[0])
+        
     def layout_commits(self):
         positions = self.position_nodes()
 
@@ -951,65 +940,21 @@ class GraphView(QtWidgets.QGraphicsView):
     def recompute_grid(self):
         self.reset_columns()
         self.reset_rows()
-
-        for node in self.sort_by_generation(list(self.commits)):
-            col = self.commitColumns.get(node.commitid, None)
-            if col is None:
-                # Node is either root or its parent is not in items. The last
-                # happens when tree loading is in progress. Allocate new
-                # columns for such nodes.
-                col = self.alloc_column()
-                self.commitColumns[node.commitid] = col
-
-            row = self.alloc_cell(col, node.tags)
-            self.commitRows[node.commitid] = row            
-            # Allocate columns for children which are still without one. Also
-            # propagate frontier for children.
-            if node.isFork():
-                sorted_children = sorted(node.children,
-                                         key=lambda c: c.generation,
-                                         reverse=True)
-                citer = iter(sorted_children)
-                for child in citer:
-                    childcol = self.commitColumns.get(child.commitid, None)
-                    if childcol is None:
-                        # Top most child occupies column of parent.
-                        childcol = col
-                        self.commitColumns[node.commitid] = childcol
-                        # Note that frontier is propagated in course of
-                        # alloc_cell.
-                        break
-                    else:
-                        self.propagate_frontier(childcol, row + 1)
-                else:
-                    # No child occupies same column.
-                    self.leave_column(col)
-                    # Note that the loop below will pass no iteration.
-
-                # Rest children are allocated new column.
-                for child in citer:
-                    childcol = self.commitColumns.get(child.commitid, None)
-                    if childcol is None:
-                        childcol = self.alloc_column(col)
-                        self.commitColumns[child.commitid] = childcol
-                    self.propagate_frontier(childcol, row + 1)
-            elif node.children:               
-                child = node.children[0]
-                childcol = self.commitColumns.get(child.commitid, None)
-                if childcol is None:
-                    childcol = col
-                    self.commitColumns[child.commitid] = childcol
-                    # Note that frontier is propagated in course of alloc_cell.
-                elif childcol != col:
-                    # Child node have other parents and occupies column of one
-                    # of them.
-                    self.leave_column(col)
-                    # But frontier must be propagated with respect to this
-                    # parent.
-                    self.propagate_frontier(childcol, row + 1)
-            else:
-                # This is a leaf node.
-                self.leave_column(col)
+        for i, commit in enumerate(self.commits):
+            self.commitRows[commit.commitid] = len(self.commits) - i 
+        used = []
+        def addCommit(commit, col): 
+            used.append(commit.commitid) 
+            self.commitColumns[commit.commitid] = col         
+            try:
+                for i, parent in enumerate(commit.parents):                
+                    if parent.commitid not in used:
+                        nextCol = col if i == 0 else col + 1                            
+                        addCommit(parent, nextCol)
+            except:
+                pass
+        addCommit(self.commits[0], 0)
+        
             
     def position_nodes(self):
         self.recompute_grid()

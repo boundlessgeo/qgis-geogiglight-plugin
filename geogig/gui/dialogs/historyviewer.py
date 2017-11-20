@@ -220,17 +220,16 @@ class HistoryViewer(QTreeWidget):
         self.updateTags(item.commit.commitid)
 
     def updateTags(self, commitid, tag=None):
-        for i in range(self.topLevelItemCount()):
-            branchItem = self.topLevelItem(i)
-            for j in range(branchItem.childCount()):
-                commitItem = branchItem.child(j)
-                if commitItem.commit.commitid == commitid:
-                    w = self.itemWidget(commitItem, 0)
-                    if tag is None:
-                        w.tags = []
-                    else:
-                        w.tags.append(tag)
-                    w.updateText()
+        root = self.invisibleRootItem()
+        for i in range(root.childCount()):
+            item = root.child(i)
+            if item.commit.commitid == commitid:
+                w = self.itemWidget(item, 0)
+                if tag is None:
+                    w.tags = []
+                else:
+                    w.tags.append(tag)
+                w.updateText()
 
     def createBranch(self, ref):
         text, ok = QInputDialog.getText(self, 'Create New Branch',
