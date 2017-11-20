@@ -296,39 +296,6 @@ class Repository(object):
 
         return commits
     
-    def commitgraph(self, ref=None):
-        payload = {}
-        if ref is None:
-            refs = self.branches()
-        else:
-            refs = [ref]
-        commits = []
-        commitids = []
-        for r in refs:
-            payload["commitId"] = self.revparse(r)
-            payload["page"] = 0
-            while True:
-                try:
-                    resp = self._apicall("log", payload)
-                except HTTPError as e:
-                    raise
-                    #TODO more accurate error treatment
-                    return []
-                if "commit" in resp and resp["commit"]:
-                    for c in _ensurelist(resp["commit"]):
-                        parsed = self._parseCommit(c)
-                        if parsed.commitid not in commitids:
-                            commits.append(parsed)
-                            commitids.append(parsed.commitid)
-                    payload["page"] += 1
-                else:
-                    break
-
-        Commit.addToCache(self.url, commits)
-        commits = setChildren(commits)
-
-        return commits
-
     def _parseCommit(self, c):
         parentslist = _ensurelist(c["parents"])
         if parentslist == [""]:

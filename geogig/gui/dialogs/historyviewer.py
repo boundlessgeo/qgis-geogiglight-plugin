@@ -95,12 +95,12 @@ class HistoryViewer(QTreeWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.header().setStretchLastSection(True)
+        self.setAlternatingRowColors(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.header().setVisible(False)
+        self.setHeaderLabels(["Description", "Changes", "Author", "Date"])
         if showContextMenu:
-            self.customContextMenuRequested.connect(self._showPopupMenu)
-        self.itemExpanded.connect(self._itemExpanded)
+            self.customContextMenuRequested.connect(self._showPopupMenu)        
         self.itemSelectionChanged.connect(self.selectedCommitChanged)
         
     itemSelected = pyqtSignal(list)
@@ -126,10 +126,7 @@ class HistoryViewer(QTreeWidget):
         root = self.invisibleRootItem()
         for i in range(root.childCount()):
             item = root.child(i)
-            item.setSelected(False)
-            for j in range(item.childCount()):
-                subitem = item.child(j)
-                subitem.setSelected(subitem.commit.commitid in commitids)
+            item.setSelected(item.commit.commitid in commitids)
                     
     def _showPopupMenu(self, point):
         point = self.mapToGlobal(point)
@@ -139,120 +136,44 @@ class HistoryViewer(QTreeWidget):
         selected = self.selectedItems()
         if len(selected) == 1:
             item = selected[0]
-            if isinstance(item, CommitTreeItem):
-                trees = self.repo.trees(item.commit.commitid)
-                exportVersionActions = []
-                for tree in trees:
-                    exportVersionActions.append(QAction(resetIcon, "Add '%s' layer to QGIS from this commit" % tree, None))
-                    exportVersionActions[-1].triggered.connect(partial(self.exportVersion, self.repo, tree, item.commit.commitid))
-                menu = QMenu()
-                describeAction = QAction(infoIcon, "Show detailed description of this commit", None)
-                describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
-                menu.addAction(describeAction)
-                diffAction = QAction(diffIcon, "Show changes introduced by this commit...", None)
-                diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
-                menu.addAction(diffAction)
-                exportDiffAction = QAction(diffIcon, "Export changes introduced by this commit as new layer", None)
-                exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
-                menu.addAction(exportDiffAction)
-                createBranchAction = QAction(newBranchIcon, "Create new branch at this commit...", None)
-                createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
-                menu.addAction(createBranchAction)
-                createTagAction = QAction(tagIcon, "Create new tag at this commit...", None)
-                createTagAction.triggered.connect(lambda: self.createTag(item))
-                menu.addAction(createTagAction)
-                deleteTagsAction = QAction(tagIcon, "Delete tags at this commit", None)
-                deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
-                menu.addAction(deleteTagsAction)
-                if exportVersionActions:
-                    menu.addSeparator()
-                    for action in exportVersionActions:
-                        menu.addAction(action)                
-                menu.exec_(point)
-            elif isinstance(item, BranchTreeItem):
-                mergeActions = []
-                menu = QMenu()
-                for branch in self.repo.branches():
-                    if branch != item.branch:
-                        mergeAction = QAction(mergeIcon, branch, None)
-                        mergeAction.triggered.connect(partial(self.mergeInto, branch, item.branch))
-                        mergeActions.append(mergeAction)
-                if mergeActions:
-                    mergeMenu = QMenu("Merge this branch into")
-                    mergeMenu.setIcon(mergeIcon)
-                    menu.addMenu(mergeMenu)
-                    for action in mergeActions:
-                        mergeMenu.addAction(action)
-                if self.topLevelItemCount() > 1 and item.branch != "master":
-                    deleteAction = QAction("Delete this branch", None)
-                    deleteAction.triggered.connect(lambda: self.deleteBranch(item.text(0)))
-                    menu.addAction(deleteAction)
-                if not menu.isEmpty():
-                    menu.exec_(point)
-        elif len(selected) == 2:
-            if isinstance(selected[0], (CommitTreeItem, BranchTreeItem)) and isinstance(selected[1], (CommitTreeItem, BranchTreeItem)):
-                menu = QMenu()
-                diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
-                diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
-                menu.addAction(diffAction)
-                exportDiffAction = QAction(diffIcon, "Export changes between selected commits as new layers", None)
-                exportDiffAction.triggered.connect(lambda: self.exportDiffs(selected[0].commit, selected[1].commit))
-                menu.addAction(exportDiffAction)
-                menu.exec_(point)
-
-    def _itemExpanded(self, item):
-        if item is not None and isinstance(item, BranchTreeItem):
-            item.populate()
-
-    def mergeInto(self, mergeInto, branch):
-        conflicts = self.repo.merge(branch, mergeInto)
-        if conflicts:
-            ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
-                                      "There are conflicts between local and remote changes.\n"
-                                      "Do you want to continue and fix them?",
-                                      QMessageBox.Yes | QMessageBox.No)
-            if ret == QMessageBox.No:
-                self.repo.closeTransaction(conflicts[0].transactionId)
-                return
-
-            dlg = ConflictDialog(conflicts)
-            dlg.exec_()
-            solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
-            if not solved:
-                self.repo.closeTransaction(conflicts[0].transactionId)
-                return
-            for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
-                if resolution == ConflictDialog.LOCAL:
-                    conflict.resolveWithLocalVersion()
-                elif resolution == ConflictDialog.REMOTE:
-                    conflict.resolveWithRemoteVersion()
-                elif resolution == ConflictDialog.DELETE:
-                    conflict.resolveDeletingFeature()
-                else:
-                    conflict.resolveWithNewFeature(resolution)
-            user, email = config.getUserInfo()
-            if user is None:
-                return
-            self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
-
-
-        iface.messageBar().pushMessage("GeoGig", "Branch has been correctly merged",
-                                              level=QgsMessageBar.INFO, duration=5)
-        repoWatcher.repoChanged.emit(self.repo)
-
-    def describeVersion(self, commit):
-        html = ("<p><b>Full commit Id:</b> %s </p>"
-                "<p><b>Author:</b> %s </p>"
-                "<p><b>Created at:</b> %s</p>"
-                "<p><b>Description message:</b> %s</p>"
-                "<p><b>Changes added by this commit </b>:"
-                "<ul><li><b><font color='#FBB117'>%i features modified</font></b></li>"
-                "<li><b><font color='green'>%i features added</font></b></li>"
-                "<li><b><font color='red'>%i features deleted</font></b></li></ul></p>"
-                % (commit.commitid, commit.authorname, commit.authordate.strftime(" %m/%d/%y %H:%M"),
-                   commit.message.replace("\n", "<br>"),commit.modified, commit.added,
-                   commit.removed))
-        showMessageDialog("Commit description", html)
+            trees = self.repo.trees(item.commit.commitid)
+            exportVersionActions = []
+            for tree in trees:
+                exportVersionActions.append(QAction(resetIcon, "Add '%s' layer to QGIS from this commit" % tree, None))
+                exportVersionActions[-1].triggered.connect(partial(self.exportVersion, self.repo, tree, item.commit.commitid))
+            menu = QMenu()
+            describeAction = QAction(infoIcon, "Show detailed description of this commit", None)
+            describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
+            menu.addAction(describeAction)
+            diffAction = QAction(diffIcon, "Show changes introduced by this commit...", None)
+            diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
+            menu.addAction(diffAction)
+            exportDiffAction = QAction(diffIcon, "Export changes introduced by this commit as new layer", None)
+            exportDiffAction.triggered.connect(lambda: self.exportDiffs(item.commit))
+            menu.addAction(exportDiffAction)
+            createBranchAction = QAction(newBranchIcon, "Create new branch at this commit...", None)
+            createBranchAction.triggered.connect(lambda: self.createBranch(item.commit.commitid))
+            menu.addAction(createBranchAction)
+            createTagAction = QAction(tagIcon, "Create new tag at this commit...", None)
+            createTagAction.triggered.connect(lambda: self.createTag(item))
+            menu.addAction(createTagAction)
+            deleteTagsAction = QAction(tagIcon, "Delete tags at this commit", None)
+            deleteTagsAction.triggered.connect(lambda: self.deleteTags(item))
+            menu.addAction(deleteTagsAction)
+            if exportVersionActions:
+                menu.addSeparator()
+                for action in exportVersionActions:
+                    menu.addAction(action)                
+            menu.exec_(point)
+        elif len(selected) == 2:            
+            menu = QMenu()
+            diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
+            diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
+            menu.addAction(diffAction)
+            exportDiffAction = QAction(diffIcon, "Export changes between selected commits as new layers", None)
+            exportDiffAction.triggered.connect(lambda: self.exportDiffs(selected[0].commit, selected[1].commit))
+            menu.addAction(exportDiffAction)
+            menu.exec_(point)
 
     def exportDiffs(self, commit, commit2 = None):
         commit2 = commit2 or commit.parent
@@ -317,81 +238,34 @@ class HistoryViewer(QTreeWidget):
         if ok:
             branchName =  text.replace(" ", "_")
             self.repo.createbranch(ref, branchName)
-            item = BranchTreeItem(branchName, self.repo, self.layername)
-            self.addTopLevelItem(item)
-            item.populate()
             repoWatcher.repoChanged.emit(self.repo)
 
-    def deleteBranch(self, branch):
-        ret = QMessageBox.question(self, 'Delete Branch',
-                    'Are you sure you want to delete this branch?',
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.No)
-        if ret == QMessageBox.No:
-            return
-
-        self.repo.deletebranch(branch)
-        for i in range(self.topLevelItemCount()):
-            item = self.topLevelItem(i)
-            if item.branch == branch:
-                self.takeTopLevelItem(i)
-                break
-        repoWatcher.repoChanged.emit(self.repo)
-
-    def updateContent(self, repo, layername = None, branch = None):
+    def updateContent(self, repo, branch, layername = None):
         self.repo = repo
+        self.branch = branch
         self.layername = layername
         self.clear()
-        if repo is not None:
-            branches = repo.branches()
-            for b in branches:
-                if branch is None or b == branch:
-                    item = BranchTreeItem(b, repo, layername)
-                    self.addTopLevelItem(item)
-                    item.populate()
-            self.resizeColumnToContents(0)
-        if (branch or layername):
-            self.expandAll()
-
-class BranchTreeItem(QTreeWidgetItem):
-
-    def __init__(self, branch, repo, path):
-        QTreeWidgetItem.__init__(self)
-        self.branch = branch
-        self.ref = branch
-        self.repo = repo
-        self.path = path
-        self.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
-        self.setText(0, branch)
-        self.setIcon(0, branchIcon)
-        self._commit = None
-
-    @property
-    def commit(self):
-        if self._commit is None:
-            self._commit = Commit.fromref(self.repo, self.branch)
-        return self._commit
+        tags = defaultdict(list)
+        for k, v in self.repo.tags().items():
+            tags[v].append(k)
+        commits = self.repo.log(until = branch, path = layername)
+        for commit in commits:
+            item = CommitTreeItem(commit)
+            item.setText(2, commit.authorname)
+            item.setText(3, commit.authorprettydate())
+            self.addTopLevelItem(item)
+            w = CommitMessageItemWidget(commit, tags.get(commit.commitid, []))
+            self.setItemWidget(item, 0, w)
+            w = CommitChangesItemWidget(commit)
+            self.setItemWidget(item, 1, w)
+            
+        self.resizeColumnToContents(0)
+        self.expandAll()
 
 
-    def populate(self):
-        if not self.childCount():
-            tags = defaultdict(list)
-            for k, v in self.repo.tags().items():
-                tags[v].append(k)
-            commits = self.repo.log(until = self.branch, limit = 100, path = self.path)
-            if commits:
-                self._commit = commits[0]
-            for commit in commits:
-                item = CommitTreeItem(commit)
-                self.addChild(item)
-                w = CommitTreeItemWidget(commit, tags.get(commit.commitid, []))
-                self.treeWidget().setItemWidget(item, 0, w)
-            self.treeWidget().resizeColumnToContents(0)
-
-
-class CommitTreeItemWidget(QLabel):
+class CommitMessageItemWidget(QLabel):
     def __init__(self, commit, tags):
-        QTextEdit.__init__(self)
+        QLabel.__init__(self)
         self.setWordWrap(False)
         self.tags = tags
         self.commit = commit
@@ -403,19 +277,24 @@ class CommitTreeItemWidget(QLabel):
                                              % t for t in self.tags]) + "&nbsp;"
         else:
             tags = ""
-        size = self.font().pointSize()
-        text = ('%s<b><font style="font-size:%spt">%s</font></b>'
-            '<br><font color="#5f6b77" style="font-size:%spt"><b>%s</b> by <b>%s</b></font> '
-            '<font color="#5f6b77" style="font-size:%spt; background-color:rgb(225,225,225)"> %s </font>' %
-            (tags, str(size), self.commit.message.splitlines()[0], str(size - 1),
-             self.commit.authorprettydate(), self.commit.authorname, str(size - 1), self.commit.id[:10]))
+        text = ('%s %s' %  (tags, self.commit.message.splitlines()[0]))
+        self.setText(text)
+
+class CommitChangesItemWidget(QLabel):
+    
+    def __init__(self, commit):
+        QLabel.__init__(self)
+        text = (("<font color='#FBB117'>~%i </font>"
+                "<font color='green'>+%i </font>"
+                "<font color='red'>-%i</font>") % 
+                (commit.modified, commit.added, commit.removed))
         self.setText(text)
 
 
 class CommitTreeItem(QTreeWidgetItem):
 
     def __init__(self, commit):
-        QListWidgetItem.__init__(self)
+        QTreeWidgetItem.__init__(self)
         self.commit = commit
         self.ref = commit.commitid
 
@@ -434,8 +313,9 @@ class HistoryViewerDialog(QDialog):
 
     def initGui(self):
         layout = QHBoxLayout()
+        branch = self.branch or "master"
         self.history = HistoryViewer()
-        self.history.updateContent(self.repo, layername = self.layer, branch = self.branch)
+        self.history.updateContent(self.repo, layername = self.layer, branch = branch)
         self.graph = GraphView(self)
         self.graph.itemSelected.connect(self.itemSelectedInGraph)
         self.graph.contextMenuRequested.connect(self.contextMenuRequestedInGraph)
@@ -443,10 +323,7 @@ class HistoryViewerDialog(QDialog):
         tags = defaultdict(list)
         for k, v in self.repo.tags().items():
             tags[v].append(k)
-        if self.branch is None:
-            commits = self.repo.commitgraph()
-        else:
-            commits = self.repo.log(until = self.branch, path = self.layer)
+        commits = self.repo.log(until = branch, path = self.layer)
         for commit in commits:
             commit.tags = tags.get(commit.commitid, [])
         self.graph.add_commits(commits)

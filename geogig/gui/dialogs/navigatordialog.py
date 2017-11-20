@@ -30,6 +30,7 @@ import sys
 import sqlite3
 import webbrowser
 from collections import defaultdict
+from functools import partial
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QUrl, QSize, QT_VERSION_STR
@@ -98,6 +99,7 @@ repoIcon = icon("repository.svg")
 branchIcon = icon("branch.svg")
 layerIcon = icon('geometry.svg')
 copyIcon  = icon('copy.png')
+mergeIcon = icon("merge-24.png")
 
 WIDGET, BASE = uic.loadUiType(
     os.path.join(pluginPath, 'ui', 'navigatordialog.ui'))
@@ -383,8 +385,56 @@ class BranchItem(QTreeWidgetItem):
         pushAction.triggered.connect(self.push)
         menu.addAction(pushAction)
         deleteAction.setEnabled(self.parent().childCount() > 1 and self.branch != "master")
+        mergeActions = []
+        for branch in self.repo.branches():
+            if branch != self.branch:
+                mergeAction = QAction(mergeIcon, branch, None)
+                mergeAction.triggered.connect(partial(self.mergeInto, branch, self.branch))
+                mergeActions.append(mergeAction)
+        if mergeActions:
+            mergeMenu = QMenu("Merge this branch into")
+            mergeMenu.setIcon(mergeIcon)
+            menu.addMenu(mergeMenu)
+            for action in mergeActions:
+                mergeMenu.addAction(action)
+                
         return menu
 
+    def mergeInto(self, mergeInto, branch):
+        conflicts = self.repo.merge(branch, mergeInto)
+        if conflicts:
+            ret = QMessageBox.warning(iface.mainWindow(), "Conflict(s) found while syncing",
+                                      "There are conflicts between local and remote changes.\n"
+                                      "Do you want to continue and fix them?",
+                                      QMessageBox.Yes | QMessageBox.No)
+            if ret == QMessageBox.No:
+                self.repo.closeTransaction(conflicts[0].transactionId)
+                return
+
+            dlg = ConflictDialog(conflicts)
+            dlg.exec_()
+            solved, resolvedConflicts = dlg.solved, dlg.resolvedConflicts
+            if not solved:
+                self.repo.closeTransaction(conflicts[0].transactionId)
+                return
+            for conflict, resolution in zip(conflicts, list(resolvedConflicts.values())):
+                if resolution == ConflictDialog.LOCAL:
+                    conflict.resolveWithLocalVersion()
+                elif resolution == ConflictDialog.REMOTE:
+                    conflict.resolveWithRemoteVersion()
+                elif resolution == ConflictDialog.DELETE:
+                    conflict.resolveDeletingFeature()
+                else:
+                    conflict.resolveWithNewFeature(resolution)
+            user, email = config.getUserInfo()
+            if user is None:    
+                return
+            self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
+
+        iface.messageBar().pushMessage("GeoGig", "Branch has been correctly merged",
+                                              level=QgsMessageBar.INFO, duration=5)
+        repoWatcher.repoChanged.emit(self.repo)
+        
     def showHistory(self):
         dlg = HistoryViewerDialog(self.repo, branch = self.branch)
         dlg.exec_()
