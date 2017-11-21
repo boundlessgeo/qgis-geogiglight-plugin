@@ -67,7 +67,7 @@ def _createComplexHistoryTestRepo(group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     def _populateBranch(branch):
-        for i in range(10):
+        for i in range(3):
             log = repo.log(until = branch)
             filename = tempFilename("gpkg")
             repo.checkoutlayer(filename, "points", ref = log[0].commitid)

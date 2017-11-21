@@ -84,6 +84,9 @@ mergeIcon = icon("merge-24.png")
 
 class HistoryViewer(QTreeWidget):
 
+    tagsUpdated = pyqtSignal(dict)
+    itemSelected = pyqtSignal(list)
+
     def __init__(self, showContextMenu = True):
         super(HistoryViewer, self).__init__()
         self.repo = None
@@ -100,18 +103,16 @@ class HistoryViewer(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setHeaderLabels(["Description", "Changes", "Author", "Date"])
         if showContextMenu:
-            self.customContextMenuRequested.connect(self._showPopupMenu)        
+            self.customContextMenuRequested.connect(self._showPopupMenu)
         self.itemSelectionChanged.connect(self.selectedCommitChanged)
-        
-    itemSelected = pyqtSignal(list)
-    
+
     def selectedCommitChanged(self):
         items = self.selectedItems()
         commits = [item.commit for item in items]
         self.selecting = True
         self.itemSelected.emit(commits)
         self.selecting = False
-        
+
     def getRef(self):
         selected = self.selectedItems()
         if len(selected) == 1:
@@ -127,11 +128,11 @@ class HistoryViewer(QTreeWidget):
         for i in range(root.childCount()):
             item = root.child(i)
             item.setSelected(item.commit.commitid in commitids)
-                    
+
     def _showPopupMenu(self, point):
         point = self.mapToGlobal(point)
         self.showPopupMenu(point)
-             
+
     def showPopupMenu(self, point):
         selected = self.selectedItems()
         if len(selected) == 1:
@@ -142,9 +143,6 @@ class HistoryViewer(QTreeWidget):
                 exportVersionActions.append(QAction(resetIcon, "Add '%s' layer to QGIS from this commit" % tree, None))
                 exportVersionActions[-1].triggered.connect(partial(self.exportVersion, self.repo, tree, item.commit.commitid))
             menu = QMenu()
-            describeAction = QAction(infoIcon, "Show detailed description of this commit", None)
-            describeAction.triggered.connect(lambda: self.describeVersion(item.commit))
-            menu.addAction(describeAction)
             diffAction = QAction(diffIcon, "Show changes introduced by this commit...", None)
             diffAction.triggered.connect(lambda: self.showDiffs(item.commit))
             menu.addAction(diffAction)
@@ -163,9 +161,9 @@ class HistoryViewer(QTreeWidget):
             if exportVersionActions:
                 menu.addSeparator()
                 for action in exportVersionActions:
-                    menu.addAction(action)                
+                    menu.addAction(action)
             menu.exec_(point)
-        elif len(selected) == 2:            
+        elif len(selected) == 2:
             menu = QMenu()
             diffAction = QAction(diffIcon, "Show changes between selected commits...", None)
             diffAction.triggered.connect(lambda: self.showDiffs(selected[0].commit, selected[1].commit))
@@ -230,6 +228,10 @@ class HistoryViewer(QTreeWidget):
                 else:
                     w.tags.append(tag)
                 w.updateText()
+        tags = defaultdict(list)
+        for k, v in self.repo.tags().items():
+            tags[v].append(k)
+        self.tagsUpdated.emit(tags)
 
     def createBranch(self, ref):
         text, ok = QInputDialog.getText(self, 'Create New Branch',
@@ -251,15 +253,16 @@ class HistoryViewer(QTreeWidget):
         for commit in commits:
             item = CommitTreeItem(commit)
             item.setText(2, commit.authorname)
-            item.setText(3, commit.authorprettydate())
+            item.setText(3, commit.authordate.strftime(" %m/%d/%y %H:%M"))
             self.addTopLevelItem(item)
             w = CommitMessageItemWidget(commit, tags.get(commit.commitid, []))
             self.setItemWidget(item, 0, w)
             w = CommitChangesItemWidget(commit)
             self.setItemWidget(item, 1, w)
-            
+
         self.resizeColumnToContents(0)
         self.expandAll()
+        return commits
 
 
 class CommitMessageItemWidget(QLabel):
@@ -280,12 +283,12 @@ class CommitMessageItemWidget(QLabel):
         self.setText(text)
 
 class CommitChangesItemWidget(QLabel):
-    
+
     def __init__(self, commit):
         QLabel.__init__(self)
         text = (("<font color='#FBB117'>~%i </font>"
                 "<font color='green'>+%i </font>"
-                "<font color='red'>-%i</font>") % 
+                "<font color='red'>-%i</font>") %
                 (commit.modified, commit.added, commit.removed))
         self.setText(text)
 
@@ -314,18 +317,18 @@ class HistoryViewerDialog(QDialog):
         layout = QHBoxLayout()
         branch = self.branch or "master"
         self.history = HistoryViewer()
-        self.history.updateContent(self.repo, layername = self.layer, branch = branch)
+        commits = self.history.updateContent(self.repo, layername = self.layer, branch = branch)
         self.graph = GraphView(self)
         self.graph.itemSelected.connect(self.itemSelectedInGraph)
         self.graph.contextMenuRequested.connect(self.contextMenuRequestedInGraph)
         self.history.itemSelected.connect(self.itemSelectedInHistory)
+        self.history.tagsUpdated.connect(self.tagsUpdated)
         tags = defaultdict(list)
         for k, v in self.repo.tags().items():
             tags[v].append(k)
-        commits = self.repo.log(until = branch, path = self.layer)
         for commit in commits:
             commit.tags = tags.get(commit.commitid, [])
-        self.graph.add_commits(commits)
+        self.graph.setCommits(commits)
         layout.addWidget(self.history)
         layout.addWidget(self.graph)
         if self.showButtons:
@@ -338,15 +341,18 @@ class HistoryViewerDialog(QDialog):
         self.resize(800, 600)
         self.setWindowTitle("Repository history")
 
+    def tagsUpdated(self, tags):
+        self.graph.updateTags(tags)
+
     def itemSelectedInHistory(self, commits):
         self.graph.commits_selected(commits)
-        
+
     def itemSelectedInGraph(self, commits):
         self.history.selectCommits(commits)
-        
+
     def contextMenuRequestedInGraph(self, point):
         self.history.showPopupMenu(point)
-        
+
     def okPressed(self):
         selected = self.history.getRef()
         if selected is None:

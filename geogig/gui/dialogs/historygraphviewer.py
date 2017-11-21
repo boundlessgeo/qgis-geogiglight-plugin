@@ -10,34 +10,6 @@ from qgis.PyQt import QtCore
 from qgis.PyQt import QtGui
 from qgis.PyQt import QtWidgets
 
-from docutils.nodes import row
-
-'''
-from ..compat import maxsize
-from ..i18n import N_
-from ..models import dag
-from .. import core
-from .. import cmds
-from .. import difftool
-from .. import gitcmds
-from .. import hotkeys
-from .. import icons
-from .. import observable
-from .. import qtcompat
-from .. import qtutils
-from .. import utils
-from . import archive
-from . import browse
-from . import completion
-from . import createbranch
-from . import createtag
-from . import defs
-from . import diff
-from . import filelist
-from . import standard
-'''
-
-
 class Cache(object):
 
     _label_font = None
@@ -54,42 +26,31 @@ class Cache(object):
 class Edge(QtWidgets.QGraphicsItem):
     item_type = QtWidgets.QGraphicsItem.UserType + 1
 
-    def __init__(self, source, dest, color):
+    def __init__(self, child, parent, color):
 
         QtWidgets.QGraphicsItem.__init__(self)
 
         self.setAcceptedMouseButtons(Qt.NoButton)
-        self.source = source
-        self.dest = dest
-        self.commit = source.commit
+        self.child = child
+        self.parent = parent
+        self.commit = child.commit
         self.setZValue(-2)
 
         self.recompute_bound()
-        self.path_valid = False
 
         self.pen = QtGui.QPen(color, 4.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin)
 
     def recompute_bound(self):
         dest_pt = Commit.item_bbox.center()
 
-        self.source_pt = self.mapFromItem(self.source, dest_pt)
-        self.dest_pt = self.mapFromItem(self.dest, dest_pt)
+        self.source_pt = self.mapFromItem(self.child, dest_pt)
+        self.dest_pt = self.mapFromItem(self.parent, dest_pt)
         self.line = QtCore.QLineF(self.source_pt, self.dest_pt)
 
         width = self.dest_pt.x() - self.source_pt.x()
         height = self.dest_pt.y() - self.source_pt.y()
         rect = QtCore.QRectF(self.source_pt, QtCore.QSizeF(width, height))
         self.bound = rect.normalized()
-
-    def commits_were_invalidated(self):
-        self.recompute_bound()
-        self.prepareGeometryChange()
-        # The path should not be recomputed immediately because just small part
-        # of DAG is actually shown at same time. It will be recomputed on
-        # demand in course of 'paint' method.
-        self.path_valid = False
-        # Hence, just queue redrawing.
-        self.update()
 
     # Qt overrides
     def type(self):
@@ -98,61 +59,16 @@ class Edge(QtWidgets.QGraphicsItem):
     def boundingRect(self):
         return self.bound
 
-    def recompute_path(self):
-        QRectF = QtCore.QRectF
-        QPointF = QtCore.QPointF
-
-        arc_rect = 10
-        connector_length = 5
-
-        path = QtGui.QPainterPath()
-
-        if self.source.x() == self.dest.x():
-            path.moveTo(self.source.x(), self.source.y())
-            path.lineTo(self.dest.x(), self.dest.y())
-        else:
-            # Define points starting from source
-            point1 = QPointF(self.source.x(), self.source.y())
-            point2 = QPointF(point1.x(), point1.y() - connector_length)
-            point3 = QPointF(point2.x() + arc_rect, point2.y() - arc_rect)
-
-            # Define points starting from dest
-            point4 = QPointF(self.dest.x(), self.dest.y())
-            point5 = QPointF(point4.x(), point3.y() - arc_rect)
-            point6 = QPointF(point5.x() - arc_rect, point5.y() + arc_rect)
-
-            start_angle_arc1 = 180
-            span_angle_arc1 = 90
-            start_angle_arc2 = 90
-            span_angle_arc2 = -90
-
-            # If the dest is at the left of the source, then we
-            # need to reverse some values
-            if self.source.x() > self.dest.x():
-                point5 = QPointF(point4.x(), point4.y() + connector_length)
-                point6 = QPointF(point5.x() + arc_rect, point5.y() + arc_rect)
-                point3 = QPointF(self.source.x() - arc_rect, point6.y())
-                point2 = QPointF(self.source.x(), point3.y() + arc_rect)
-
-                span_angle_arc1 = 90
-
-            path.moveTo(point1)
-            path.lineTo(point2)
-            path.arcTo(QRectF(point2, point3),
-                       start_angle_arc1, span_angle_arc1)
-            path.lineTo(point6)
-            path.arcTo(QRectF(point6, point5),
-                       start_angle_arc2, span_angle_arc2)
-            path.lineTo(point4)
-
-        self.path = path
-        self.path_valid = True
-
     def paint(self, painter, option, widget):
-        if not self.path_valid:
-            self.recompute_path()
+        path = QtGui.QPainterPath()
+        path.moveTo(self.child.x(), self.child.y())
+        if self.child.commit.isMerge():
+            path.lineTo(self.parent.x(), self.child.y())
+        elif self.parent.commit.isFork():
+            path.lineTo(self.child.x(), self.parent.y())
+        path.lineTo(self.parent.x(), self.parent.y())
         painter.setPen(self.pen)
-        painter.drawPath(self.path)
+        painter.drawPath(path)
 
 def rgb(r, g, b):
     color = QtGui.QColor()
@@ -442,7 +358,7 @@ class GraphView(QtWidgets.QGraphicsView):
 
     x_off = -18
     y_off = -24
-    
+
     itemSelected = pyqtSignal(list)
     contextMenuRequested = pyqtSignal(object)
 
@@ -452,7 +368,7 @@ class GraphView(QtWidgets.QGraphicsView):
         highlight = self.palette().color(QtGui.QPalette.Highlight)
         Commit.commit_selected_color = highlight
         Commit.selected_outline_color = highlight.darker()
-        
+
         self.selection_list = []
         self.menu_actions = None
         self.commits = []
@@ -480,7 +396,7 @@ class GraphView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QtWidgets.QGraphicsView.NoAnchor)
         self.setBackgroundBrush(QtGui.QColor(Qt.white))
-        
+
         self.zoom_in()
 
 
@@ -492,6 +408,11 @@ class GraphView(QtWidgets.QGraphicsView):
         self.x_offsets.clear()
         self.x_min = 24
         self.commits = []
+
+    def updateTags(self, tags):
+        for commit in self.commits:
+            commit.tags = tags.get(commit.commitid, [])
+        self.refreshGraph()
 
     def zoom_in(self):
         self.scale_view(1.5)
@@ -515,85 +436,6 @@ class GraphView(QtWidgets.QGraphicsView):
             item.setSelected(True)
             item_rect = item.sceneTransform().mapRect(item.boundingRect())
             self.ensureVisible(item_rect)
-
-    def get_item_by_generation(self, commits, criteria_fn):
-        """Return the item for the commit matching criteria"""
-        if not commits:
-            return None
-        generation = None
-        for commit in commits:
-            if (generation is None or
-                    criteria_fn(generation, commit.generation)):
-                oid = commit.commitid
-                generation = commit.generation
-        try:
-            return self.items[oid]
-        except KeyError:
-            return None
-
-    def oldest_item(self, commits):
-        """Return the item for the commit with the oldest generation number"""
-        return self.get_item_by_generation(commits, lambda a, b: a > b)
-
-    def newest_item(self, commits):
-        """Return the item for the commit with the newest generation number"""
-        return self.get_item_by_generation(commits, lambda a, b: a < b)
-
-    def select_parent(self):
-        """Select the parent with the newest generation number"""
-        selected_item = self.selected_item()
-        if selected_item is None:
-            return
-        parent_item = self.newest_item(selected_item.commit.parents)
-        if parent_item is None:
-            return
-        selected_item.setSelected(False)
-        parent_item.setSelected(True)
-        self.ensureVisible(
-                parent_item.mapRectToScene(parent_item.boundingRect()))
-
-    def select_oldest_parent(self):
-        """Select the parent with the oldest generation number"""
-        selected_item = self.selected_item()
-        if selected_item is None:
-            return
-        parent_item = self.oldest_item(selected_item.commit.parents)
-        if parent_item is None:
-            return
-        selected_item.setSelected(False)
-        parent_item.setSelected(True)
-        scene_rect = parent_item.mapRectToScene(parent_item.boundingRect())
-        self.ensureVisible(scene_rect)
-
-    def select_child(self):
-        """Select the child with the oldest generation number"""
-        selected_item = self.selected_item()
-        if selected_item is None:
-            return
-        child_item = self.oldest_item(selected_item.commit.children)
-        if child_item is None:
-            return
-        selected_item.setSelected(False)
-        child_item.setSelected(True)
-        scene_rect = child_item.mapRectToScene(child_item.boundingRect())
-        self.ensureVisible(scene_rect)
-
-    def select_newest_child(self):
-        """Select the Nth child with the newest generation number (N > 1)"""
-        selected_item = self.selected_item()
-        if selected_item is None:
-            return
-        if len(selected_item.commit.children) > 1:
-            children = selected_item.commit.children[1:]
-        else:
-            children = selected_item.commit.children
-        child_item = self.newest_item(children)
-        if child_item is None:
-            return
-        selected_item.setSelected(False)
-        child_item.setSelected(True)
-        scene_rect = child_item.mapRectToScene(child_item.boundingRect())
-        self.ensureVisible(scene_rect)
 
     def set_initial_view(self):
         self_commits = self.commits
@@ -748,9 +590,15 @@ class GraphView(QtWidgets.QGraphicsView):
             value = min_ + int(float(range_) * scrolloffset)
             scrollbar.setValue(value)
 
-    def add_commits(self, commits):
+    def refreshGraph(self):
+        commits = self.commits
+        self.clear()
+        self.setCommits(commits)
+        self.scene().invalidate()
+
+    def setCommits(self, commits):
         """Traverse commits and add them to the view."""
-        self.commits.extend(commits)
+        self.commits = commits
         scene = self.scene()
         for commit in commits:
             item = Commit(commit)
@@ -766,47 +614,38 @@ class GraphView(QtWidgets.QGraphicsView):
         """Create edges linking commits with their parents"""
         scene = self.scene()
         linked = []
-        def linkCommit(commit, color=None): 
+        def linkCommit(commit, color=None):
             color = color or EdgeColor.cycle()
-            linked.append(commit.commitid)      
+            linked.append(commit.commitid)
             try:
                 commit_item = self.items[commit.commitid]
             except KeyError:
-                # TODO - Handle truncated history viewing
-                return            
+                return
             for i, parent in enumerate(commit.parents):
                 try:
                     parent_item = self.items[parent.commitid]
-                    edge = Edge(parent_item, commit_item, color)
+                    if i == 0:
+                        nextColor = color
+                        edge = Edge(commit_item, parent_item, color)
+                    else:
+                        nextColor = EdgeColor.cycle()
+                        edge = Edge(commit_item, parent_item, nextColor)
                     if parent.commitid not in linked:
-                        nextColor = color if i == 0 else None                            
                         linkCommit(parent, nextColor)
-                except KeyError:                    
+                except KeyError:
                     # TODO - Handle truncated history viewing
                     continue
                 scene.addItem(edge)
         linkCommit(commits[0])
-        
+
     def layout_commits(self):
         positions = self.position_nodes()
-
-        # Each edge is accounted in two commits. Hence, accumulate invalid
-        # edges to prevent double edge invalidation.
-        invalid_edges = set()
-
         for oid, (x, y) in positions.items():
             item = self.items[oid]
-
             pos = item.pos()
             if pos != (x, y):
                 item.setPos(x, y)
 
-                for edge in item.edges.values():
-                    invalid_edges.add(edge)
-
-        for edge in invalid_edges:
-            edge.commits_were_invalidated()
-    
     def reset_columns(self):
 
         self.commitColumns = {}
@@ -941,21 +780,21 @@ class GraphView(QtWidgets.QGraphicsView):
         self.reset_columns()
         self.reset_rows()
         for i, commit in enumerate(self.commits):
-            self.commitRows[commit.commitid] = len(self.commits) - i 
+            self.commitRows[commit.commitid] = len(self.commits) - i
         used = []
-        def addCommit(commit, col): 
-            used.append(commit.commitid) 
-            self.commitColumns[commit.commitid] = col         
+        def addCommit(commit, col):
+            used.append(commit.commitid)
+            self.commitColumns[commit.commitid] = col
             try:
-                for i, parent in enumerate(commit.parents):                
+                for i, parent in enumerate(commit.parents):
                     if parent.commitid not in used:
-                        nextCol = col if i == 0 else col + 1                            
+                        nextCol = col if i == 0 else col + 1
                         addCommit(parent, nextCol)
             except:
                 pass
         addCommit(self.commits[0], 0)
-        
-            
+
+
     def position_nodes(self):
         self.recompute_grid()
 
@@ -978,12 +817,6 @@ class GraphView(QtWidgets.QGraphicsView):
         self.x_min = x_min
 
         return positions
-
-    def sort_by_generation(self, commits):
-        if len(commits) < 2:
-            return commits
-        commits.sort(key=lambda x: x.generation)
-        return commits
 
     # Qt overrides
     def contextMenuEvent(self, event):
@@ -1052,7 +885,3 @@ class GraphView(QtWidgets.QGraphicsView):
         self.centerOn(rect.center())
 
 
-# Glossary
-# ========
-# oid -- Git objects IDs (i.e. SHA-1 IDs)
-# ref -- Git references that resolve to a commit-ish (HEAD, branches, tags)
