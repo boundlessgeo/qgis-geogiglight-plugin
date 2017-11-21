@@ -3,8 +3,9 @@ import shutil
 import time
 from geogig.geogigwebapi.repository import createRepoAtUrl, GeoGigException, Repository
 from qgis.core import *
-from qgiscommons2.files import tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.files import tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
+import random
 
 conf = dict(
         REPOS_SERVER_URL = "http://localhost:8182/",
@@ -56,6 +57,43 @@ def _createSimpleTestRepo(modifiesRepo = True, group=None, name=None):
         layer.changeGeometry(featureid, QgsGeometry.fromPoint(QgsPoint(5, 5)))
     repo.importgeopkg(layer, "master", "third", "tester", "test@test.test", True)
     repo.createbranch(repo.HEAD, "mybranch")
+    repo.createtag(repo.HEAD, "mytag")
+    global _lastRepo
+    _lastRepo = repo
+    return _lastRepo
+
+complexHistoryTestRepo = None
+def _createComplexHistoryTestRepo(group=None, name=None):
+    conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
+
+    def _populateBranch(branch):
+        for i in range(10):
+            log = repo.log(until = branch)
+            filename = tempFilename("gpkg")
+            repo.checkoutlayer(filename, "points", ref = log[0].commitid)
+            layer = loadLayerNoCrsDialog(filename, "points", "ogr")
+            with edit(layer):
+                feat = QgsFeature()
+                x = random.random()
+                y = random.random()
+                feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
+                feat.setAttributes([i+1000, i+1000])
+                layer.addFeatures([feat])
+            repo.importgeopkg(layer, branch, "commit %i in branch %s" % (i, branch), "tester", "test@test.test", True)
+
+    repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "complexhistory_%s" %  str(time.time()))
+    _importLayerToRepo(repo, "first")
+    _populateBranch("master")
+    repo.createbranch(repo.HEAD, "mybranch")
+    repo.createbranch(repo.HEAD, "separatebranch")
+    _populateBranch("separatebranch")
+    _populateBranch("mybranch")
+    _populateBranch("master")
+    repo.createbranch("mybranch", "anotherbranch")
+    _populateBranch("anotherbranch")
+    _populateBranch("mybranch")
+    repo.merge("anotherbranch", "mybranch")
+    repo.merge("mybranch", "master")
     repo.createtag(repo.HEAD, "mytag")
     global _lastRepo
     _lastRepo = repo

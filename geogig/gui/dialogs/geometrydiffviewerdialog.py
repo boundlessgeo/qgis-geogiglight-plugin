@@ -35,8 +35,8 @@ from qgis.PyQt.QtGui import QBrush
 from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
 
-from qgiscommons2.layers import loadLayerNoCrsDialog
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.gui import execute
 
 resourcesPath = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "resources")
 lineBeforeStyle = os.path.join(resourcesPath, "line_geomdiff_before.qml")

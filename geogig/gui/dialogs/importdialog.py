@@ -49,8 +49,8 @@ from geogig.tools.layertracking import addTrackedLayer, isRepoLayer
 from geogig.tools.gpkgsync import getCommitId
 from geogig.tools.layers import namesFromLayer
 
-from qgiscommons2.layers import layerFromName, vectorLayers
-from qgiscommons2.files import tempFilenameInTempFolder
+from geogig.extlibs.qgiscommons2.layers import layerFromName, vectorLayers
+from geogig.extlibs.qgiscommons2.files import tempFilenameInTempFolder
 
 
 class ImportDialog(QDialog):
@@ -165,11 +165,8 @@ class ImportDialog(QDialog):
                                     QMessageBox.Ok)
                 return
             newLayer = QgsVectorLayer(newFilename, 'tmp', 'ogr')
+            self.setVisible(False)
             self.repo.importgeopkg(newLayer, branch, message, user, email, False)
-            '''filename, layername = namesFromLayer(self.layer)
-            self.repo.checkoutlayer(filename, layername, ref = branch)
-            self.layer.reload()
-            self.layer.triggerRepaint()'''
         except GeoGigException as e:
             iface.messageBar().pushMessage("Error", str(e),
                                            level=QgsMessageBar.CRITICAL,

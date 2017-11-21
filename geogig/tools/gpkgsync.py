@@ -58,8 +58,8 @@ from geogig.tools.layers import (WrongLayerSourceException,
                                  hasLocalChanges
                                 )
 
-from qgiscommons2.files import tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.files import tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 
 INSERT, UPDATE, DELETE  = 1, 2, 3
 
@@ -180,7 +180,8 @@ def applyLayerChanges(repo, layer, beforeCommitId, afterCommitId, clearAudit = T
     changesFilename = tempFilename("gpkg")
     beforeCommitId, afterCommitId = repo.revparse(beforeCommitId), repo.revparse(afterCommitId)
     repo.exportdiff(beforeCommitId, afterCommitId, changesFilename, layername)
-
+    if not os.path.exists(changesFilename):
+        return
     con = sqlite3.connect(filename)
     cursor = con.cursor()
     changesCon = sqlite3.connect(changesFilename)
@@ -266,6 +267,7 @@ class HasLocalChangesError(Exception):
 
 def checkoutLayer(repo, layername, bbox, ref = None):
     ref = ref or repo.HEAD
+    layer = None
     newCommitId = repo.revparse(ref)
     trackedlayers = getTrackingInfoForGeogigLayer(repo.url, layername, newCommitId)
     if trackedlayers:
@@ -295,6 +297,8 @@ def checkoutLayer(repo, layername, bbox, ref = None):
             filename = layerGeopackageFilename(layername, repo.title, repo.group)
             source = "%s|layername=%s" % (filename, layername)
             repo.checkoutlayer(filename, layername, bbox, ref)
+            if not os.path.exists(filename):
+                return
             addTrackedLayer(source, repo.url)
         except WrongLayerSourceException:
             pass
@@ -307,12 +311,12 @@ def checkoutLayer(repo, layername, bbox, ref = None):
                           duration=5)
     else:
         repo.checkoutlayer(filename, layername, bbox, ref)
-        addTrackedLayer(source, repo.url)
-        layer = loadLayerNoCrsDialog(source, layername, "ogr")
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
-        iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
-                                      level=QgsMessageBar.INFO,
-                                      duration=5)
-        #currentCommitId = getCommitId(source)
+        if os.path.exists(filename):
+            addTrackedLayer(source, repo.url)
+            layer = loadLayerNoCrsDialog(source, layername, "ogr")
+            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
+                                          level=QgsMessageBar.INFO,
+                                          duration=5)
 
     return layer

@@ -49,7 +49,7 @@ from qgis.PyQt.QtWidgets import (QTableWidgetItem,
 from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem, QgsFeatureRequest
 
 from geogig import config
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.gui import execute
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 from geogig.geogigwebapi.commit import Commit
 from geogig.geogigwebapi.repository import Repository

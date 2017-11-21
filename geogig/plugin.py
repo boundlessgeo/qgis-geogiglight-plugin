@@ -46,10 +46,10 @@ from geogig.layeractions import setAsRepoLayer, setAsNonRepoLayer, removeLayerAc
 from geogig.tools.infotool import MapToolGeoGigInfo
 from geogig.tools.layertracking import removeNonexistentTrackedLayers, readTrackedLayers, isRepoLayer
 
-from qgiscommons2.gui import addAboutMenu, removeAboutMenu, addHelpMenu, removeHelpMenu
-from qgiscommons2.settings import readSettings
-from qgiscommons2.gui.settings import addSettingsMenu, removeSettingsMenu
-from qgiscommons2.files import removeTempFolder
+from geogig.extlibs.qgiscommons2.gui import addAboutMenu, removeAboutMenu, addHelpMenu, removeHelpMenu
+from geogig.extlibs.qgiscommons2.settings import readSettings
+from geogig.extlibs.qgiscommons2.gui.settings import addSettingsMenu, removeSettingsMenu
+from geogig.extlibs.qgiscommons2.files import removeTempFolder
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:

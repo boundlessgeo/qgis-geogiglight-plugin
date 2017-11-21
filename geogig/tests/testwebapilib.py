@@ -28,8 +28,8 @@ from geogig.tests import (_layer, _createSimpleTestRepo, _createEmptyTestRepo,
                         _createMultilayerTestRepo, _createWithMergeTestRepo)
 from geogig.tests import conf
 
-from qgiscommons2.files import tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.files import tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 
 class WebApiTests(unittest.TestCase):
 

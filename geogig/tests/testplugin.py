@@ -15,6 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
+from tests import _createComplexHistoryTestRepo
 
 __author__ = 'Victor Olaya'
 __date__ = 'March 2016'
@@ -50,8 +51,8 @@ from geogig.tests.testgpkg import GeoPackageEditTests
 from geogig.tools import layertracking
 from geogig.tools.gpkgsync import applyLayerChanges, getCommitId, checkoutLayer
 
-from qgiscommons2.files import tempFolderInTempFolder, tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog, layerFromName
+from geogig.extlibs.qgiscommons2.files import tempFolderInTempFolder, tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog, layerFromName
 
 def openTestProject(name):
     orgPath = os.path.join(os.path.dirname(__file__), "data", "projects", name)
@@ -603,6 +604,13 @@ def functionalTests():
     test.addStep("Prepare test", _createNothingToPushScenario)
     test.addStep("Open navigator", lambda: _openNavigator(repos = [_remoteRepo, _localRepo]))
     test.addStep("TEST ON THE LOCAL AND REMOTE REPOS")
+    tests.append(test)
+    
+    test = Test("TEST SCENARIO: Complex history")
+    test.addStep("New project", iface.newProject)
+    test.addStep("Prepare test", _createComplexHistoryTestRepo)
+    test.addStep("Open navigator", lambda: _openNavigator)
+    test.addStep("Test history")
     tests.append(test)
 
     test = Test("Cannot push")

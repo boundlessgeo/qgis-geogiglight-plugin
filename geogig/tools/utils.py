@@ -37,7 +37,7 @@ from datetime import tzinfo, timedelta, datetime
 from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsVectorLayer
 from geogig import config
-from qgiscommons2.settings import pluginSetting
+from geogig.extlibs.qgiscommons2.settings import pluginSetting
 
 def userFolder():
     folder = os.path.join(os.path.expanduser('~'), 'geogig')

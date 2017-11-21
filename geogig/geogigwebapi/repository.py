@@ -51,18 +51,21 @@ from qgis.utils import iface
 from geogig import config
 from geogig.config import LOG_SERVER_CALLS
 
-from geogig.geogigwebapi.commit import NULL_ID, Commit
+from geogig.geogigwebapi.commit import NULL_ID, Commit, setChildren
 from geogig.geogigwebapi.commitish import Commitish
 from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
 
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.gui import (execute, startProgressBar, 
+                                            closeProgressBar, setProgressValue, 
+                                            setProgressText, isProgressCanceled)
 
 from geogig.tools.layers import formatSource, namesFromLayer
 from geogig.tools.utils import userFolder, resourceFile
 from geogig.tools.layertracking import isRepoLayer
 
-from qgiscommons2.settings import pluginSetting
-from qgiscommons2.files import tempFilenameInTempFolder
+from geogig.extlibs.qgiscommons2.settings import pluginSetting
+from geogig.extlibs.qgiscommons2.files import tempFilenameInTempFolder
 
 class GeoGigException(Exception):
     pass
@@ -148,16 +151,16 @@ class Repository(object):
                 self.__log(url, resp, payload)
                 params = {"transactionId":transactionId, "output_format":"json"}
                 r = requests.get(self.url + "endTransaction", params = params)
-                r.raise_for_status()
                 self.__log(url, r.json(), params)
+                r.raise_for_status()
                 return resp
             else:
                 payload["output_format"] = "json"
-                url = self.url + command
+                url = self.url + command                
                 r = requests.get(url, params=payload)
+                self.__log(url, r.json(), payload)
                 r.raise_for_status()
                 j = json.loads(r.text.replace(r"\/", "/"))
-                self.__log(url, r.json(), payload)
                 return j["response"]
         except ConnectionError as e:
             msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
@@ -217,18 +220,22 @@ class Repository(object):
         with open(filename, 'wb') as f:
             total = r.headers.get('content-length')
             if total is None:
+                startProgressBar("Transferring geopkg from GeoGig server", 0)
                 r.raw.decode_content = True
                 shutil.copyfileobj(r.raw, f)
             else:
+                startProgressBar("Transferring geopkg from GeoGig server", 100)
                 dl = 0
                 total = float(total)
                 for data in r.iter_content(chunk_size=4096):
                     dl += len(data)
                     f.write(data)
                     done = int(100 * dl / total)
-                    iface.mainWindow().statusBar().showMessage("Transferring geopkg from GeoGig server [{}%]".format(done))
-
-        iface.mainWindow().statusBar().showMessage("")
+                    setProgressValue(done)
+                    if isProgressCanceled():
+                        return
+                    
+        closeProgressBar()
 
     def exportdiff(self, oldRef, newRef, filename, layername = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -239,11 +246,14 @@ class Repository(object):
         r = requests.get(url, params=params)
         r.raise_for_status()
         taskid = r.json()["task"]["id"]
-        checker = TaskChecker(self.rootUrl, taskid)
+        checker = TaskChecker(self.rootUrl, taskid, "Creating diff files in server")
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
         self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
 
@@ -281,8 +291,11 @@ class Repository(object):
             else:
                 break
 
-        return commits
+        Commit.addToCache(self.url, commits)
+        commits = setChildren(commits)
 
+        return commits
+    
     def _parseCommit(self, c):
         parentslist = _ensurelist(c["parents"])
         if parentslist == [""]:
@@ -379,15 +392,18 @@ class Repository(object):
 
     def checkoutlayer(self, filename, layername, bbox = None, ref = None):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        iface.mainWindow().statusBar().showMessage("Creating geopkg on GeoGig server...")
         taskid = self._preparelayerdownload(layername, bbox, ref)
-        checker = TaskChecker(self.rootUrl, taskid)
+        checker = TaskChecker(self.rootUrl, taskid, "Preparing layer in server", 100)
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
         self._downloadfile(taskid, filename)
         QApplication.restoreOverrideCursor()
+        closeProgressBar()
 
     def saveaudittables(self, filename, layer):
         newfilename = tempFilenameInTempFolder(os.path.basename(filename))
@@ -435,22 +451,31 @@ class Repository(object):
         encoder = MultipartEncoder(files)
         total = float(encoder.len)
         def callback(m):
-            done = int(100 * m.bytes_read / total)
-            iface.mainWindow().statusBar().showMessage("Transferring geopkg to GeoGig server [{}%]".format(done))
+            if not isProgressCanceled():
+                done = int(100 * m.bytes_read / total)
+                setProgressValue(done)
         monitor = MultipartEncoderMonitor(encoder, callback)
+        startProgressBar("Transferring geopkg to GeoGig server", 100)
         r = requests.post(self.url + "import.json", params = payload, data=monitor,
                   headers={'Content-Type': monitor.content_type})
+        if isProgressCanceled():
+            QApplication.restoreOverrideCursor()
+            return
         self.__log(r.url, r.text, payload, "POST")
         r.raise_for_status()
         resp = r.json()
         taskId = resp["task"]["id"]
-        checker = TaskChecker(self.rootUrl, taskId)
+        if isinstance(layer, basestring):
+            layer = loadLayerNoCrsDialog(layer, "", "ogr")
+        checker = TaskChecker(self.rootUrl, taskId, "Importing geopkg into GeoGig server", layer.featureCount())
         loop = QEventLoop()
         checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
         checker.start()
-        loop.exec_(flags = QEventLoop.ExcludeUserInputEvents)
+        loop.exec_()
         QApplication.restoreOverrideCursor()
-        iface.mainWindow().statusBar().showMessage("")
+        if checker.canceled:
+            return
+        closeProgressBar()
         if not checker.ok and "error" in checker.response["task"]:
             errorMessage = checker.response["task"]["error"]["message"]
             raise GeoGigException("Cannot import layer: %s" % errorMessage)
@@ -670,27 +695,44 @@ class Repository(object):
 
 class TaskChecker(QObject):
     taskIsFinished = pyqtSignal()
-    def __init__(self, url, taskid):
+    def __init__(self, url, taskid, text, maxvalue = 0):
         QObject.__init__(self)
         self.taskid = taskid
         self.url = url + "tasks/%s.json" % str(self.taskid)
+        self.maxvalue = maxvalue
+        self.text = text
+        self.canceled = False
+        startProgressBar(text, maxvalue)
+        
     def start(self):
         self.checkTask()
+        
     def checkTask(self):
+        if isProgressCanceled():
+            self.ok = True
+            self.canceled = True 
+            closeProgressBar()           
+            self.taskIsFinished.emit()
         r = requests.get(self.url, stream=True)
         r.raise_for_status()
         self.response = r.json()
         if self.response["task"]["status"] == "FINISHED":
             self.ok = True
+            closeProgressBar()
             self.taskIsFinished.emit()
         elif self.response["task"]["status"] == "FAILED":
             self.ok = False
             self.taskIsFinished.emit()
         else:
             try:
-                progressTask = self.response["task"]["progress"]["task"]
-                progressAmount = self.response["task"]["progress"]["amount"]
-                iface.mainWindow().statusBar().showMessage("%s [%s]" % (progressTask, progressAmount))
+                progressTask = self.text or self.response["task"]["progress"]["task"]
+                progressAmount = int(self.response["task"]["progress"]["amount"])
+                if self.maxvalue:
+                    setProgressValue(progressAmount)
+                    setProgressText(progressTask)
+                else:
+                    text = "%s [%s]" % (progressTask, progressAmount)
+                    setProgressText(text)
             except KeyError:
                 pass
             QTimer.singleShot(500, self.checkTask)

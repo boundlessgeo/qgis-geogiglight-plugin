@@ -62,6 +62,11 @@ def setup(options):
                   ext_libs.abspath(),
                   req])
 
+    initFile = os.path.join(ext_libs.abspath(), "__init__.py")
+    with open(initFile, "w") as f:
+        f.write("")
+
+
 
 def read_requirements():
     '''return a list of runtime and list of test requirements'''

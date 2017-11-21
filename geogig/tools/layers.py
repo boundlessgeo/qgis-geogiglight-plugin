@@ -39,8 +39,8 @@ from qgis.core import (QgsMapLayerRegistry,
                       )
 from qgis.utils import iface
 
-from qgiscommons2.files import tempFilename
-from qgiscommons2.layers import loadLayerNoCrsDialog, vectorLayers
+from geogig.extlibs.qgiscommons2.files import tempFilename
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog, vectorLayers
 
 ALL_TYPES = -1
 
@@ -148,7 +148,11 @@ def addDiffLayers(repo, commit, commit2, layernames):
     beforeFilename = tempFilename("gpkg")
     repo.exportdiff(commit.commitid, commit2.commitid, beforeFilename)
     afterFilename = tempFilename("gpkg")
+    if not os.path.exists(beforeFilename):
+        return
     repo.exportdiff(commit2.commitid, commit.commitid, afterFilename)
+    if not os.path.exists(afterFilename):
+        return
     for layername in layernames:
         styles = [diffStylePoints, diffStyleLines, diffStylePolygons]
         geomTypes = ["Point","LineString","Polygon"]

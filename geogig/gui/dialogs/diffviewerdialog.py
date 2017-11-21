@@ -46,7 +46,7 @@ from qgis.core import QgsGeometry, QgsCoordinateReferenceSystem
 
 from geogig import config
 from geogig.gui.dialogs.geogigref import RefPanel
-from qgiscommons2.gui import execute
+from geogig.extlibs.qgiscommons2.gui import execute
 from geogig.gui.dialogs.geometrydiffviewerdialog import GeometryDiffViewerDialog
 from geogig.geogigwebapi.diff import FEATURE_MODIFIED, FEATURE_ADDED, FEATURE_REMOVED
 from geogig.geogigwebapi.commit import Commit
