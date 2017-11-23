@@ -94,6 +94,17 @@ def _createComplexHistoryTestRepo(group=None, name=None):
     _populateBranch("mybranch")
     repo.merge("anotherbranch", "mybranch")
     repo.merge("mybranch", "master")
+    _populateBranch("master")
+    repo.createbranch("master", "branch_A")
+    _populateBranch("branch_A")
+    _populateBranch("master")
+    repo.createbranch("master", "branch_B")
+    _populateBranch("branch_B")
+    _populateBranch("master")
+    repo.merge("branch_A", "master")
+    _populateBranch("master")
+    repo.merge("branch_B", "master")
+    _populateBranch("master")
     repo.createtag(repo.HEAD, "mytag")
     global _lastRepo
     _lastRepo = repo

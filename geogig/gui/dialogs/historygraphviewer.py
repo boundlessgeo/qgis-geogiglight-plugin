@@ -10,6 +10,8 @@ from qgis.PyQt import QtCore
 from qgis.PyQt import QtGui
 from qgis.PyQt import QtWidgets
 
+from geogig.geogigwebapi.commitish import Commitish
+
 class Cache(object):
 
     _label_font = None
@@ -36,11 +38,11 @@ class Edge(QtWidgets.QGraphicsItem):
         self.commit = child.commit
         self.setZValue(-2)
 
-        self.recompute_bound()
+        self.recomputeBound()
 
         self.pen = QtGui.QPen(color, 4.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin)
 
-    def recompute_bound(self):
+    def recomputeBound(self):
         dest_pt = Commit.item_bbox.center()
 
         self.source_pt = self.mapFromItem(self.child, dest_pt)
@@ -397,7 +399,7 @@ class GraphView(QtWidgets.QGraphicsView):
         self.setResizeAnchor(QtWidgets.QGraphicsView.NoAnchor)
         self.setBackgroundBrush(QtGui.QColor(Qt.white))
 
-        self.zoom_in()
+        self.scaleView(1.5)
 
 
     def clear(self):
@@ -414,19 +416,12 @@ class GraphView(QtWidgets.QGraphicsView):
             commit.tags = tags.get(commit.commitid, [])
         self.refreshGraph()
 
-    def zoom_in(self):
-        self.scale_view(1.5)
-
-    def zoom_out(self):
-        self.scale_view(1.0/1.5)
-
-    def commits_selected(self, commits):
+    def selectCommits(self, commits):
         if self.selecting:
             return
         self.select([commit.commitid for commit in commits])
 
     def select(self, oids):
-        """Select the item for the oids"""
         self.scene().clearSelection()
         for oid in oids:
             try:
@@ -437,7 +432,7 @@ class GraphView(QtWidgets.QGraphicsView):
             item_rect = item.sceneTransform().mapRect(item.boundingRect())
             self.ensureVisible(item_rect)
 
-    def set_initial_view(self):
+    def setInitialView(self):
         self_commits = self.commits
         self_items = self.items
 
@@ -450,7 +445,7 @@ class GraphView(QtWidgets.QGraphicsView):
 
         self.fit_view_to_items(items)
 
-    def fit_view_to_items(self, items):
+    def fitViewToItems(self, items):
         if not items:
             rect = self.scene().itemsBoundingRect()
         else:
@@ -484,23 +479,23 @@ class GraphView(QtWidgets.QGraphicsView):
         self.fitInView(rect, Qt.KeepAspectRatio)
         self.scene().invalidate()
 
-    def save_selection(self, event):
+    def saveSelection(self, event):
         if event.button() != Qt.LeftButton:
             return
         elif Qt.ShiftModifier != event.modifiers():
             return
         self.selection_list = self.scene().selectedItems()
 
-    def restore_selection(self, event):
+    def restoreSelection(self, event):
         if Qt.ShiftModifier != event.modifiers():
             return
         for item in self.selection_list:
             item.setSelected(True)
 
-    def handle_event(self, event_handler, event):
-        self.save_selection(event)
+    def handleEvent(self, event_handler, event):
+        self.saveSelection(event)
         event_handler(self, event)
-        self.restore_selection(event)
+        self.restoreSelection(event)
         self.update()
 
     def pan(self, event):
@@ -530,21 +525,8 @@ class GraphView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.NoAnchor)
         self.setTransform(matrix)
 
-    def wheel_zoom(self, event):
-        """Handle mouse wheel zooming."""
-        delta = event.delta
-        zoom = math.pow(2.0, delta/512.0)
-        factor = (self.transform()
-                  .scale(zoom, zoom)
-                  .mapRect(QtCore.QRectF(0.0, 0.0, 1.0, 1.0))
-                  .width())
-        if factor < 0.014 or factor > 42.0:
-            return
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.zoom = zoom
-        self.scale(zoom, zoom)
 
-    def wheel_pan(self, event):
+    def wheelPan(self, event):
         """Handle mouse wheel panning."""
         unit = QtCore.QRectF(0.0, 0.0, 1.0, 1.0)
         factor = 1.0 / self.transform().mapRect(unit).width()
@@ -556,7 +538,7 @@ class GraphView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.NoAnchor)
         self.setTransform(matrix)
 
-    def scale_view(self, scale):
+    def scaleView(self, scale):
         factor = (self.transform()
                   .scale(scale, scale)
                   .mapRect(QtCore.QRectF(0, 0, 1, 1))
@@ -607,7 +589,7 @@ class GraphView(QtWidgets.QGraphicsView):
                 self.items[ref] = item
             scene.addItem(item)
 
-        self.layout_commits()
+        self.layoutCommits()
         self.link(commits)
 
     def link(self, commits):
@@ -618,185 +600,70 @@ class GraphView(QtWidgets.QGraphicsView):
             color = color or EdgeColor.cycle()
             linked.append(commit.commitid)
             try:
-                commit_item = self.items[commit.commitid]
+                commitItem = self.items[commit.commitid]
             except KeyError:
                 return
             for i, parent in enumerate(commit.parents):
                 try:
-                    parent_item = self.items[parent.commitid]
+                    parentItem = self.items[parent.commitid]
                     if i == 0:
                         nextColor = color
-                        edge = Edge(commit_item, parent_item, color)
+                        edge = Edge(commitItem, parentItem, color)
                     else:
                         nextColor = EdgeColor.cycle()
-                        edge = Edge(commit_item, parent_item, nextColor)
+                        edge = Edge(commitItem, parentItem, nextColor)
                     if parent.commitid not in linked:
                         linkCommit(parent, nextColor)
                 except KeyError:
-                    # TODO - Handle truncated history viewing
                     continue
                 scene.addItem(edge)
         linkCommit(commits[0])
 
-    def layout_commits(self):
-        positions = self.position_nodes()
+    def layoutCommits(self):
+        positions = self.positionNodes()
         for oid, (x, y) in positions.items():
             item = self.items[oid]
             pos = item.pos()
             if pos != (x, y):
                 item.setPos(x, y)
 
-    def reset_columns(self):
-
-        self.commitColumns = {}
-
-        self.columns = {}
-        self.max_column = 0
-        self.min_column = 0
-
-    def reset_rows(self):
+    def recomputeGrid(self):
         self.commitRows = {}
-        self.frontier = {}
-        self.tagged_cells = set()
-
-    def declare_column(self, column):
-        if self.frontier:
-            # Align new column frontier by frontier of nearest column. If all
-            # columns were left then select maximum frontier value.
-            if not self.columns:
-                self.frontier[column] = max(self.frontier.values())
-                return
-            # This is heuristic that mostly affects roots. Note that the
-            # frontier values for fork children will be overridden in course of
-            # propagate_frontier.
-            for offset in itertools.count(1):
-                for c in [column + offset, column - offset]:
-                    if not c in self.columns:
-                        # Column 'c' is not occupied.
-                        continue
-                    try:
-                        frontier = self.frontier[c]
-                    except KeyError:
-                        # Column 'c' was never allocated.
-                        continue
-
-                    frontier -= 1
-                    # The frontier of the column may be higher because of
-                    # tag overlapping prevention performed for previous head.
-                    try:
-                        if self.frontier[column] >= frontier:
-                            break
-                    except KeyError:
-                        pass
-
-                    self.frontier[column] = frontier
-                    break
-                else:
-                    continue
-                break
-        else:
-            # First commit must be assigned 0 row.
-            self.frontier[column] = 0
-
-    def alloc_column(self, column = 0):
-        columns = self.columns
-        # First, look for free column by moving from desired column to graph
-        # center (column 0).
-        for c in range(column, 0, -1 if column > 0 else 1):
-            if c not in columns:
-                if c > self.max_column:
-                    self.max_column = c
-                elif c < self.min_column:
-                    self.min_column = c
-                break
-        else:
-            # If no free column was found between graph center and desired
-            # column then look for free one by moving from center along both
-            # directions simultaneously.
-            for c in itertools.count(0):
-                if c not in columns:
-                    if c > self.max_column:
-                        self.max_column = c
-                    break
-                c = -c
-                if c not in columns:
-                    if c < self.min_column:
-                        self.min_column = c
-                    break
-        self.declare_column(c)
-        columns[c] = 1
-        return c
-
-    def alloc_cell(self, column, tags):
-        # Get empty cell from frontier.
-        cell_row = self.frontier[column]
-
-        if tags:
-            # Prevent overlapping of tag with cells already allocated a row.
-            if self.x_off > 0:
-                can_overlap = list(range(column + 1, self.max_column + 1))
-            else:
-                can_overlap = list(range(column - 1, self.min_column - 1, -1))
-            for c in can_overlap:
-                frontier = self.frontier[c]
-                if frontier > cell_row:
-                    cell_row = frontier
-
-        # Avoid overlapping with tags of commits at cell_row.
-        if self.x_off > 0:
-            can_overlap = list(range(self.min_column, column))
-        else:
-            can_overlap = list(range(self.max_column, column, -1))
-        for cell_row in itertools.count(cell_row):
-            for c in can_overlap:
-                if (c, cell_row) in self.tagged_cells:
-                    # Overlapping. Try next row.
-                    break
-            else:
-                # No overlapping was found.
-                break
-            # Note that all checks should be made for new cell_row value.
-
-        if tags:
-            self.tagged_cells.add((column, cell_row))
-
-        # Propagate frontier.
-        self.frontier[column] = cell_row + 1
-        return cell_row
-
-    def propagate_frontier(self, column, value):
-        current = self.frontier[column]
-        if current < value:
-            self.frontier[column] = value
-
-    def leave_column(self, column):
-        count = self.columns[column]
-        if count == 1:
-            del self.columns[column]
-        else:
-            self.columns[column] = count - 1
-
-    def recompute_grid(self):
-        self.reset_columns()
-        self.reset_rows()
+        self.commitColumns = {}
         for i, commit in enumerate(self.commits):
             self.commitRows[commit.commitid] = len(self.commits) - i
         used = []
+        self.maxCol = 0
+
         def addCommit(commit, col):
             used.append(commit.commitid)
             self.commitColumns[commit.commitid] = col
             try:
                 for i, parent in enumerate(commit.parents):
                     if parent.commitid not in used:
-                        nextCol = col if i == 0 else col + 1
+                        if i == 0:
+                            nextCol = col
+                        else:
+                            self.maxCol = self.maxCol + 1
+                            nextCol = self.maxCol
                         addCommit(parent, nextCol)
             except:
                 pass
+
         addCommit(self.commits[0], 0)
 
+        cols = 0
+        for i, commit in enumerate(reversed(self.commits)):
+            col = self.commitColumns[commit.commitid]
+            self.commitColumns[commit.commitid] = min(col, cols)
 
-    def position_nodes(self):
-        self.recompute_grid()
+            if commit.isMerge():
+                cols -= 1
+            elif  commit.isFork():
+                cols += 1
+
+    def positionNodes(self):
+        self.recomputeGrid()
 
         x_start = self.x_start
         x_min = self.x_min
@@ -806,13 +673,16 @@ class GraphView(QtWidgets.QGraphicsView):
         positions = {}
 
         for node in self.commits:
-            col = self.commitColumns[node.commitid]
-            row = self.commitRows[node.commitid]
-            x_pos = x_start + col * x_off
-            y_pos = y_off + row * y_off
+            try:
+                col = self.commitColumns[node.commitid]
+                row = self.commitRows[node.commitid]
+                x_pos = x_start + col * x_off
+                y_pos = y_off + row * y_off
 
-            positions[node.commitid] = (x_pos, y_pos)
-            x_min = min(x_min, x_pos)
+                positions[node.commitid] = (x_pos, y_pos)
+                x_min = min(x_min, x_pos)
+            except:
+                pass
 
         self.x_min = x_min
 
@@ -834,7 +704,7 @@ class GraphView(QtWidgets.QGraphicsView):
             return
         if event.button() == Qt.LeftButton:
             self.pressed = True
-        self.handle_event(QtWidgets.QGraphicsView.mousePressEvent, event)
+        self.handleEvent(QtWidgets.QGraphicsView.mousePressEvent, event)
 
     def mouseMoveEvent(self, event):
         pos = self.mapToScene(event.pos())
@@ -843,7 +713,7 @@ class GraphView(QtWidgets.QGraphicsView):
             return
         self.last_mouse[0] = pos.x()
         self.last_mouse[1] = pos.y()
-        self.handle_event(QtWidgets.QGraphicsView.mouseMoveEvent, event)
+        self.handleEvent(QtWidgets.QGraphicsView.mouseMoveEvent, event)
         if self.pressed:
             self.viewport().repaint()
 
@@ -857,11 +727,7 @@ class GraphView(QtWidgets.QGraphicsView):
         self.viewport().repaint()
 
     def wheelEvent(self, event):
-        """Handle Qt mouse wheel events."""
-        if event.modifiers() & Qt.ControlModifier:
-            self.wheel_zoom(event)
-        else:
-            self.wheel_pan(event)
+        self.wheelPan(event)
 
     def fitInView(self, rect, flags=Qt.IgnoreAspectRatio):
         """Override fitInView to remove unwanted margins

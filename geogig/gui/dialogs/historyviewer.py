@@ -48,7 +48,8 @@ from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QHBoxLayout,
                                  QDialogButtonBox,
                                  QApplication,
-                                 QPushButton
+                                 QPushButton,
+                                 QSplitter
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
@@ -315,6 +316,9 @@ class HistoryViewerDialog(QDialog):
 
     def initGui(self):
         layout = QHBoxLayout()
+        splitterH = QSplitter(Qt.Horizontal)
+        splitterV = QSplitter(Qt.Vertical)
+        self.commitDetail = QTextEdit()
         branch = self.branch or "master"
         self.history = HistoryViewer()
         commits = self.history.updateContent(self.repo, layername = self.layer, branch = branch)
@@ -329,8 +333,11 @@ class HistoryViewerDialog(QDialog):
         for commit in commits:
             commit.tags = tags.get(commit.commitid, [])
         self.graph.setCommits(commits)
-        layout.addWidget(self.history)
-        layout.addWidget(self.graph)
+        splitterV.addWidget(self.history)
+        splitterV.addWidget(self.commitDetail)
+        splitterH.addWidget(splitterV)
+        splitterH.addWidget(self.graph)
+        layout.addWidget(splitterH)
         if self.showButtons:
             buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
             buttonBox.accepted.connect(self.okPressed)
@@ -345,10 +352,14 @@ class HistoryViewerDialog(QDialog):
         self.graph.updateTags(tags)
 
     def itemSelectedInHistory(self, commits):
-        self.graph.commits_selected(commits)
+        self.graph.selectCommits(commits)
+        self.showCommitDetail(commits[0])
 
     def itemSelectedInGraph(self, commits):
         self.history.selectCommits(commits)
+
+    def showCommitDetail(self, commit):
+        self.commitDetail.setText(str([c.commitid for c in commit.parents]))
 
     def contextMenuRequestedInGraph(self, point):
         self.history.showPopupMenu(point)
