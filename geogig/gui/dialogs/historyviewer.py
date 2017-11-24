@@ -31,8 +31,8 @@ import sqlite3
 from functools import partial
 from collections import defaultdict
 
-from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import Qt, pyqtSignal, QPoint, QRectF
+from qgis.PyQt.QtGui import QIcon, QImage, QPixmap, QPainter, QColor, QPainterPath, QPen
 from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QAbstractItemView,
                                  QMessageBox,
@@ -49,7 +49,8 @@ from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QDialogButtonBox,
                                  QApplication,
                                  QPushButton,
-                                 QSplitter
+                                 QSplitter,
+                                 QWidget
                                 )
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
@@ -85,9 +86,6 @@ mergeIcon = icon("merge-24.png")
 
 class HistoryViewer(QTreeWidget):
 
-    tagsUpdated = pyqtSignal(dict)
-    itemSelected = pyqtSignal(list)
-
     def __init__(self, showContextMenu = True):
         super(HistoryViewer, self).__init__()
         self.repo = None
@@ -102,17 +100,9 @@ class HistoryViewer(QTreeWidget):
         self.setAlternatingRowColors(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setHeaderLabels(["Description", "Changes", "Author", "Date"])
+        self.setHeaderLabels(["Graph", "Description", "Changes", "Author", "Date"])
         if showContextMenu:
             self.customContextMenuRequested.connect(self._showPopupMenu)
-        self.itemSelectionChanged.connect(self.selectedCommitChanged)
-
-    def selectedCommitChanged(self):
-        items = self.selectedItems()
-        commits = [item.commit for item in items]
-        self.selecting = True
-        self.itemSelected.emit(commits)
-        self.selecting = False
 
     def getRef(self):
         selected = self.selectedItems()
@@ -121,14 +111,6 @@ class HistoryViewer(QTreeWidget):
 
     def exportVersion(self, repo, layer, commitId):
         checkoutLayer(repo, layer, None, commitId)
-
-    def selectCommits(self, commitids):
-        if self.selecting:
-            return
-        root = self.invisibleRootItem()
-        for i in range(root.childCount()):
-            item = root.child(i)
-            item.setSelected(item.commit.commitid in commitids)
 
     def _showPopupMenu(self, point):
         point = self.mapToGlobal(point)
@@ -229,10 +211,6 @@ class HistoryViewer(QTreeWidget):
                 else:
                     w.tags.append(tag)
                 w.updateText()
-        tags = defaultdict(list)
-        for k, v in self.repo.tags().items():
-            tags[v].append(k)
-        self.tagsUpdated.emit(tags)
 
     def createBranch(self, ref):
         text, ok = QInputDialog.getText(self, 'Create New Branch',
@@ -242,6 +220,117 @@ class HistoryViewer(QTreeWidget):
             self.repo.createbranch(ref, branchName)
             repoWatcher.repoChanged.emit(self.repo)
 
+    def computeGraph(self):
+        self.commitRows = {}
+        self.commitColumns = {}
+        for i, commit in enumerate(self.commits):
+            self.commitRows[commit.commitid] = i + 1
+        used = []
+        self.maxCol = 0
+        def addCommit(commit, col):
+            used.append(commit.commitid)
+            self.commitColumns[commit.commitid] = col
+            try:
+                for i, parent in enumerate(commit.parents):
+                    if parent.commitid not in used:
+                        if i == 0:
+                            nextCol = col
+                        else:
+                            self.maxCol = self.maxCol + 1
+                            nextCol = self.maxCol
+                        addCommit(parent, nextCol)
+            except:
+                pass
+
+        addCommit(self.commits[0], 0)
+
+        cols = 0
+
+        for i, commit in enumerate(reversed(self.commits)):
+            col = self.commitColumns[commit.commitid]
+            self.commitColumns[commit.commitid] = min(col, cols)
+            col = self.commitColumns[commit.commitid]
+            if commit.isMerge():
+                cols -= 1
+            elif  commit.isFork():
+                cols += 1
+
+    COMMIT_GRAPH_HEIGHT = 20
+    COMMIT_GRAPH_WIDTH = 100
+    COLUMN_SEPARATION = 20
+    RADIUS = 5
+
+    COLORS = [QColor(Qt.red),
+                QColor(Qt.green),
+                QColor(Qt.blue),
+                QColor(Qt.black),
+                QColor(Qt.darkRed),
+                QColor(Qt.darkGreen),
+                QColor(Qt.darkBlue),
+                QColor(Qt.cyan),
+                QColor(Qt.magenta)]
+
+    def createGraphImage(self):
+        self.image = QPixmap(self.COMMIT_GRAPH_WIDTH, 1000).toImage()
+        qp = QPainter(self.image)
+        qp.fillRect(QRectF(0, 0, self.COMMIT_GRAPH_WIDTH, 1000), Qt.white);
+        qp.begin(self.image)
+        self.drawLines(qp)
+        self.drawPoints(qp)
+        qp.end()
+
+    def drawPoints(self, painter):
+        for commit in self.commits:
+            row = self.commitRows[commit.commitid]
+            y = row * self.COLUMN_SEPARATION
+            col = self.commitColumns[commit.commitid]
+            x = self.RADIUS * 3 + col * self.COLUMN_SEPARATION
+            painter.setPen(self.COLORS[col])
+            painter.setBrush(self.COLORS[col])
+            painter.drawEllipse(QPoint(x, y), self.RADIUS, self.RADIUS)
+
+    def drawLine(self, painter, commit, parent, color):
+        commitRow = self.commitRows[commit.commitid]
+        commitCol = self.commitColumns[commit.commitid]
+        parentRow = self.commitRows[parent.commitid]
+        parentCol = self.commitColumns[parent.commitid]
+        commitX = self.RADIUS * 3 + commitCol * self.COLUMN_SEPARATION
+        parentX = self.RADIUS * 3 + parentCol * self.COLUMN_SEPARATION
+        commitY = commitRow * self.COMMIT_GRAPH_HEIGHT
+        parentY = parentRow * self.COMMIT_GRAPH_HEIGHT
+        path = QPainterPath()
+        path.moveTo(commitX, commitY)
+        color = self.COLORS[parentCol]
+        if commit.isMerge():
+            path.lineTo(parentX, commitY)
+        elif parent.isFork():
+            color = self.COLORS[commitCol]
+            path.lineTo(commitX, parentY)
+        path.lineTo(parentX, parentY)
+        pen = QPen(color, 4.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin)
+        painter.setPen(pen)
+        painter.drawPath(path)
+
+
+    def drawLines(self, painter):
+        linked = []
+        def linkCommit(commit, coloridx):
+            linked.append(commit.commitid)
+            for i, parent in enumerate(commit.parents):
+                try:
+                    if i >= 0:
+                        coloridx = self.commitColumns[parent.commitid]
+                    self.drawLine(painter, commit, parent, self.COLORS[coloridx])
+                    if parent.commitid not in linked:
+                        linkCommit(parent, coloridx)
+                except:
+                    continue
+        linkCommit(self.commits[0], 0)
+
+    def graphSlice(self, row):
+        return self.image.copy(0, (row - .5) * self.COMMIT_GRAPH_HEIGHT,
+                               self.COMMIT_GRAPH_WIDTH, self.COMMIT_GRAPH_HEIGHT)
+
     def updateContent(self, repo, branch, layername = None):
         self.repo = repo
         self.branch = branch
@@ -250,21 +339,43 @@ class HistoryViewer(QTreeWidget):
         tags = defaultdict(list)
         for k, v in self.repo.tags().items():
             tags[v].append(k)
-        commits = self.repo.log(until = branch, path = layername)
-        for commit in commits:
+        self.commits = self.repo.log(until = branch, path = layername)
+        self.computeGraph()
+        self.createGraphImage()
+        for i, commit in enumerate(self.commits):
             item = CommitTreeItem(commit)
-            item.setText(2, commit.authorname)
-            item.setText(3, commit.authordate.strftime(" %m/%d/%y %H:%M"))
+            item.setText(3, commit.authorname)
+            item.setText(4, commit.authordate.strftime(" %m/%d/%y %H:%M"))
             self.addTopLevelItem(item)
             w = CommitMessageItemWidget(commit, tags.get(commit.commitid, []))
-            self.setItemWidget(item, 0, w)
-            w = CommitChangesItemWidget(commit)
             self.setItemWidget(item, 1, w)
+            w = CommitChangesItemWidget(commit)
+            self.setItemWidget(item, 2, w)
+            img = self.graphSlice(i + 1)
+            w = GraphWidget(img)
+            w.setFixedHeight(self.COMMIT_GRAPH_HEIGHT)
+            w.setFixedWidth(self.COMMIT_GRAPH_WIDTH)
+            self.setItemWidget(item, 0, w)
 
-        self.resizeColumnToContents(0)
+        self.header().resizeSection(0, self.COMMIT_GRAPH_WIDTH)
+        for i in range(3):
+            self.resizeColumnToContents(i + 1)
+
+
         self.expandAll()
-        return commits
 
+
+class GraphWidget(QWidget):
+
+    def __init__(self, img):
+        QWidget.__init__(self)
+        self.img = img
+
+    def paintEvent(self, e):
+        painter = QPainter(self)
+        painter.begin(self);
+        painter.drawImage(0, 0, self.img)
+        painter.end()
 
 class CommitMessageItemWidget(QLabel):
     def __init__(self, commit, tags):
@@ -316,28 +427,10 @@ class HistoryViewerDialog(QDialog):
 
     def initGui(self):
         layout = QHBoxLayout()
-        splitterH = QSplitter(Qt.Horizontal)
-        splitterV = QSplitter(Qt.Vertical)
-        self.commitDetail = QTextEdit()
         branch = self.branch or "master"
         self.history = HistoryViewer()
-        commits = self.history.updateContent(self.repo, layername = self.layer, branch = branch)
-        self.graph = GraphView(self)
-        self.graph.itemSelected.connect(self.itemSelectedInGraph)
-        self.graph.contextMenuRequested.connect(self.contextMenuRequestedInGraph)
-        self.history.itemSelected.connect(self.itemSelectedInHistory)
-        self.history.tagsUpdated.connect(self.tagsUpdated)
-        tags = defaultdict(list)
-        for k, v in self.repo.tags().items():
-            tags[v].append(k)
-        for commit in commits:
-            commit.tags = tags.get(commit.commitid, [])
-        self.graph.setCommits(commits)
-        splitterV.addWidget(self.history)
-        splitterV.addWidget(self.commitDetail)
-        splitterH.addWidget(splitterV)
-        splitterH.addWidget(self.graph)
-        layout.addWidget(splitterH)
+        self.history.updateContent(self.repo, layername = self.layer, branch = branch)
+        layout.addWidget(self.history)
         if self.showButtons:
             buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Close)
             buttonBox.accepted.connect(self.okPressed)
@@ -347,22 +440,6 @@ class HistoryViewerDialog(QDialog):
 
         self.resize(800, 600)
         self.setWindowTitle("Repository history")
-
-    def tagsUpdated(self, tags):
-        self.graph.updateTags(tags)
-
-    def itemSelectedInHistory(self, commits):
-        self.graph.selectCommits(commits)
-        self.showCommitDetail(commits[0])
-
-    def itemSelectedInGraph(self, commits):
-        self.history.selectCommits(commits)
-
-    def showCommitDetail(self, commit):
-        self.commitDetail.setText(str([c.commitid for c in commit.parents]))
-
-    def contextMenuRequestedInGraph(self, point):
-        self.history.showPopupMenu(point)
 
     def okPressed(self):
         selected = self.history.getRef()
