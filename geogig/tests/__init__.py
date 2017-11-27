@@ -62,12 +62,13 @@ def _createSimpleTestRepo(modifiesRepo = True, group=None, name=None):
     _lastRepo = repo
     return _lastRepo
 
+iCommit = 0
 complexHistoryTestRepo = None
 def _createComplexHistoryTestRepo(group=None, name=None):
     conf.update([(k, os.getenv(k)) for k in conf if k in os.environ])
 
     def _populateBranch(branch):
-        for i in range(3):
+        for i in range(2):
             log = repo.log(until = branch)
             filename = tempFilename("gpkg")
             repo.checkoutlayer(filename, "points", ref = log[0].commitid)
@@ -79,6 +80,8 @@ def _createComplexHistoryTestRepo(group=None, name=None):
                 feat.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
                 feat.setAttributes([i+1000, i+1000])
                 layer.addFeatures([feat])
+            global iCommit
+            iCommit += 1
             repo.importgeopkg(layer, branch, "commit %i in branch %s" % (i, branch), "tester", "test@test.test", True)
 
     repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "complexhistory_%s" %  str(time.time()))
