@@ -247,9 +247,15 @@ class HistoryViewer(QTreeWidget):
         cols = 0
 
         for i, commit in enumerate(reversed(self.commits)):
-            col = self.commitColumns[commit.commitid]
-            self.commitColumns[commit.commitid] = min(col, cols)
-            col = self.commitColumns[commit.commitid]
+            try:
+                parent = commit.parent
+                if parent.children[0].commitid == commit.commitid:
+                    self.commitColumns[commit.commitid] = self.commitColumns[parent.commitid]
+                else:
+                    col = self.commitColumns[commit.commitid]
+                    self.commitColumns[commit.commitid] = min(col, cols)
+            except:
+                pass
             if commit.isMerge():
                 cols -= 1
             elif  commit.isFork():
@@ -342,8 +348,6 @@ class HistoryViewer(QTreeWidget):
             painter.setPen(commitColor)
             painter.setBrush(commitColor)
             painter.drawEllipse(QPoint(x, y), self.RADIUS, self.RADIUS)
-
-            print x, y, commit.message, str(parentColor.rgb()), str(self.lastColor)
 
     def drawLines(self, painter):
         self.linked = []

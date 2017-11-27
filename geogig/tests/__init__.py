@@ -82,7 +82,7 @@ def _createComplexHistoryTestRepo(group=None, name=None):
                 layer.addFeatures([feat])
             global iCommit
             iCommit += 1
-            repo.importgeopkg(layer, branch, "commit %i in branch %s" % (i, branch), "tester", "test@test.test", True)
+            repo.importgeopkg(layer, branch, "commit %i in branch %s" % (iCommit, branch), "tester", "test@test.test", True)
 
     repo = createRepoAtUrl(conf['REPOS_SERVER_URL'], group or "test", name or "complexhistory_%s" %  str(time.time()))
     _importLayerToRepo(repo, "first")
@@ -100,6 +100,9 @@ def _createComplexHistoryTestRepo(group=None, name=None):
     _populateBranch("master")
     repo.createbranch("master", "branch_A")
     _populateBranch("branch_A")
+    repo.createbranch("branch_A", "branch_C")
+    _populateBranch("branch_C")
+    _populateBranch("branch_A")
     _populateBranch("master")
     repo.createbranch("master", "branch_B")
     _populateBranch("branch_B")
@@ -108,6 +111,7 @@ def _createComplexHistoryTestRepo(group=None, name=None):
     _populateBranch("master")
     repo.merge("branch_B", "master")
     _populateBranch("master")
+    repo.merge("branch_C", "master")
     repo.createtag(repo.HEAD, "mytag")
     global _lastRepo
     _lastRepo = repo

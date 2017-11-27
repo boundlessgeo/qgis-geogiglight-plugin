@@ -38,11 +38,11 @@ NULL_ID = "0" * 40
 class Commit(Commitish):
 
     _commitcache = {}
-    
+
     @staticmethod
     def addToCache(repoUrl, commits):
         for c in commits:
-            Commit._commitcache[(repoUrl, c.commitid)] = c 
+            Commit._commitcache[(repoUrl, c.commitid)] = c
 
     ''' A geogig commit'''
 
@@ -77,7 +77,7 @@ class Commit(Commitish):
             cid = repo.revparse(ref)
             if (repo.url, cid) not in Commit._commitcache:
                 log = repo.log(until = cid, limit = 1)
-                if not log:                                    
+                if not log:
                     Commit._commitcache[(repo.url, cid)] = Commitish(repo, NULL_ID)
                 else:
                     Commit._commitcache[(repo.url, cid)] = log[0]
@@ -90,7 +90,7 @@ class Commit(Commitish):
         if self.childrenCache is None:
             self.childrenCache =  [self.fromref(self.repo, p) for p in self._children]
         return self.childrenCache
-    
+
     parentsCache = None
     @property
     def parents(self):
@@ -149,7 +149,7 @@ class Commit(Commitish):
         s += "message " + msg + "\n"
 
         return s
-    
+
     def isFork(self):
         ''' Returns True if the node is a fork'''
         return len(self._children) > 1
@@ -160,20 +160,17 @@ class Commit(Commitish):
 
 def setChildren(commits):
     commitsDict = {c.commitid:c for c in commits}
-    
-    for c in commits[::-1]:
-        if c.parents:
-            generation = None
-            for p in c._parents:
-                parent = commitsDict.get(p, None)
-                if parent:
-                    parent._children.append(c.commitid)
-                    if generation is None:
-                        generation = parent.generation+1
-                    generation = max(parent.generation+1, generation)
-                else:
-                    generation = 0
-            c.generation = generation
+    def addCommit(commit):
+        try:
+            for parentId in commit._parents:
+                parent = commitsDict.get(parentId, None)
+                if commit.commitid not in parent._children:
+                    parent._children.append(commit.commitid)
+                    addCommit(parent)
+        except Exception, e:
+            pass
+
+    addCommit(commits[0])
+
 
     return commits
-    
