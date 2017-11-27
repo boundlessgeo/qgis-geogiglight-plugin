@@ -259,6 +259,7 @@ class HistoryViewer(QTreeWidget):
     COMMIT_GRAPH_WIDTH = 100
     COLUMN_SEPARATION = 20
     RADIUS = 5
+    PEN_WIDTH = 4
 
     COLORS = [QColor(Qt.red),
                 QColor(Qt.green),
@@ -276,20 +277,19 @@ class HistoryViewer(QTreeWidget):
         qp.fillRect(QRectF(0, 0, self.COMMIT_GRAPH_WIDTH, 1000), Qt.white);
         qp.begin(self.image)
         self.drawLines(qp)
-        self.drawPoints(qp)
+        #self.drawPoints(qp)
         qp.end()
 
-    def drawPoints(self, painter):
-        for commit in self.commits:
-            row = self.commitRows[commit.commitid]
-            y = row * self.COLUMN_SEPARATION
-            col = self.commitColumns[commit.commitid]
-            x = self.RADIUS * 3 + col * self.COLUMN_SEPARATION
-            painter.setPen(self.COLORS[col])
-            painter.setBrush(self.COLORS[col])
-            painter.drawEllipse(QPoint(x, y), self.RADIUS, self.RADIUS)
+    def _columnColor(self, column):
+        if column in self.columnColor:
+            color = self.columnColor[column]
+        else:
+            self.lastColor += 1
+            color = self.COLORS[self.lastColor % len(self.COLORS)]
+            self.columnColor[column] = color
+        return color
 
-    def drawLine(self, painter, commit, parent, color):
+    def drawLine(self, painter, commit, parent):
         commitRow = self.commitRows[commit.commitid]
         commitCol = self.commitColumns[commit.commitid]
         parentRow = self.commitRows[parent.commitid]
@@ -299,37 +299,71 @@ class HistoryViewer(QTreeWidget):
         commitY = commitRow * self.COMMIT_GRAPH_HEIGHT
         parentY = parentRow * self.COMMIT_GRAPH_HEIGHT
         path = QPainterPath()
-        path.moveTo(commitX, commitY)
-        color = self.COLORS[parentCol]
-        if commit.isMerge():
-            path.lineTo(parentX, commitY)
-        elif parent.isFork():
-            color = self.COLORS[commitCol]
-            path.lineTo(commitX, parentY)
-        path.lineTo(parentX, parentY)
-        pen = QPen(color, 4.0, Qt.SolidLine, Qt.SquareCap, Qt.RoundJoin)
-        painter.setPen(pen)
-        painter.drawPath(path)
 
+        commitColor = self._columnColor(commitCol)
+        column = commitCol if parent.isFork() else parentCol
+        color = self._columnColor(column)
+
+        if parentCol != commitCol:
+            if commit.isMerge():
+                path2 = QPainterPath()
+                path2.moveTo(commitX + self.RADIUS + 1, commitY)
+                path2.lineTo(commitX + self.RADIUS + self.COLUMN_SEPARATION / 2, commitY + self.COLUMN_SEPARATION / 3)
+                path2.lineTo(commitX + self.RADIUS + self.COLUMN_SEPARATION / 2, commitY - self.COLUMN_SEPARATION / 3)
+                path2.lineTo(commitX + + self.RADIUS + 1, commitY)
+                painter.setBrush(color)
+                painter.setPen(color)
+                painter.drawPath(path2)
+                path.moveTo(commitX + self.RADIUS + self.COLUMN_SEPARATION / 2, commitY)
+                path.lineTo(parentX, commitY)
+                path.lineTo(parentX, parentY)
+            elif parent.isFork():
+                path.moveTo(commitX, commitY)
+                path.lineTo(commitX, parentY)
+                path.lineTo(parentX + self.RADIUS + 1, parentY)
+                del self.columnColor[commitCol]
+        else:
+            path.moveTo(commitX, commitY)
+            path.lineTo(parentX, parentY)
+
+        pen = QPen(color, self.PEN_WIDTH, Qt.SolidLine, Qt.FlatCap, Qt.RoundJoin)
+        painter.strokePath(path, pen)
+
+        if not parent.commitid in self.linked:
+            parentColor = self._columnColor(parentCol)
+            y = parentRow * self.COLUMN_SEPARATION
+            x = self.RADIUS * 3 + parentCol * self.COLUMN_SEPARATION
+            painter.setPen(parentColor)
+            painter.setBrush(parentColor)
+            painter.drawEllipse(QPoint(x, y), self.RADIUS, self.RADIUS)
+        if not commit.commitid in self.linked:
+            y = commitRow * self.COLUMN_SEPARATION
+            x = self.RADIUS * 3 + commitCol * self.COLUMN_SEPARATION
+            painter.setPen(commitColor)
+            painter.setBrush(commitColor)
+            painter.drawEllipse(QPoint(x, y), self.RADIUS, self.RADIUS)
+
+            print x, y, commit.message, str(parentColor.rgb()), str(self.lastColor)
 
     def drawLines(self, painter):
-        linked = []
-        def linkCommit(commit, coloridx):
-            linked.append(commit.commitid)
-            for i, parent in enumerate(commit.parents):
+        self.linked = []
+        self.columnColor = {}
+        self.lastColor = -1
+        def linkCommit(commit):
+            for parent in commit.parents:
                 try:
-                    if i >= 0:
-                        coloridx = self.commitColumns[parent.commitid]
-                    self.drawLine(painter, commit, parent, self.COLORS[coloridx])
-                    if parent.commitid not in linked:
-                        linkCommit(parent, coloridx)
+                    self.drawLine(painter, commit, parent)
+                    if parent.commitid not in self.linked:
+                        linkCommit(parent)
+                        self.linked.append(commit.commitid)
                 except:
                     continue
-        linkCommit(self.commits[0], 0)
 
-    def graphSlice(self, row):
+        linkCommit(self.commits[0])
+
+    def graphSlice(self, row, width):
         return self.image.copy(0, (row - .5) * self.COMMIT_GRAPH_HEIGHT,
-                               self.COMMIT_GRAPH_WIDTH, self.COMMIT_GRAPH_HEIGHT)
+                               width, self.COMMIT_GRAPH_HEIGHT)
 
     def updateContent(self, repo, branch, layername = None):
         self.repo = repo
@@ -342,6 +376,7 @@ class HistoryViewer(QTreeWidget):
         self.commits = self.repo.log(until = branch, path = layername)
         self.computeGraph()
         self.createGraphImage()
+        width = self.COLUMN_SEPARATION * (max(self.commitColumns.values()) + 1) + self.RADIUS
         for i, commit in enumerate(self.commits):
             item = CommitTreeItem(commit)
             item.setText(3, commit.authorname)
@@ -351,24 +386,24 @@ class HistoryViewer(QTreeWidget):
             self.setItemWidget(item, 1, w)
             w = CommitChangesItemWidget(commit)
             self.setItemWidget(item, 2, w)
-            img = self.graphSlice(i + 1)
+            img = self.graphSlice(i + 1, width)
             w = GraphWidget(img)
             w.setFixedHeight(self.COMMIT_GRAPH_HEIGHT)
             w.setFixedWidth(self.COMMIT_GRAPH_WIDTH)
             self.setItemWidget(item, 0, w)
 
-        self.header().resizeSection(0, self.COMMIT_GRAPH_WIDTH)
-        for i in range(3):
-            self.resizeColumnToContents(i + 1)
-
+        for i in range(4):
+            self.resizeColumnToContents(i)
 
         self.expandAll()
 
+        #self.header().resizeSection(0, width)
 
 class GraphWidget(QWidget):
 
     def __init__(self, img):
         QWidget.__init__(self)
+        self.setFixedWidth(img.width())
         self.img = img
 
     def paintEvent(self, e):
