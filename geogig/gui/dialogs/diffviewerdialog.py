@@ -77,31 +77,12 @@ class DiffViewerDialog(WIDGET, BASE):
                             Qt.WindowSystemMenuHint)
 
         self.commit1 = refa
-        self.commit1Panel = RefPanel(self.repo, refa)
-        layout = QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setMargin(0)
-        layout.addWidget(self.commit1Panel)
-        self.commit1Widget.setLayout(layout)
         self.commit2 = refb
-        self.commit2Panel = RefPanel(self.repo, refb)
-        layout = QHBoxLayout()
-        layout.setSpacing(0)
-        layout.setMargin(0)
-        layout.addWidget(self.commit2Panel)
-        self.commit2Widget.setLayout(layout)
-        self.commit1Panel.refChanged.connect(self.refsHaveChanged)
-        self.commit2Panel.refChanged.connect(self.refsHaveChanged)
 
         self.featuresTree.currentItemChanged.connect(self.treeItemChanged)
 
         self.featuresTree.header().hide()
 
-        self.computeDiffs()
-        self.groupBox.adjustSize()
-
-
-    def refsHaveChanged(self):
         self.computeDiffs()
 
     def treeItemChanged(self, current, previous):
@@ -176,8 +157,6 @@ class DiffViewerDialog(WIDGET, BASE):
 
 
     def computeDiffs(self):
-        self.commit1 = self.commit1Panel.getRef()
-        self.commit2 = self.commit2Panel.getRef()
 
         self.featuresTree.clear()
         changes = execute(lambda: self.repo.diff(self.commit1.commitid, self.commit2.commitid))
@@ -219,7 +198,7 @@ class DiffViewerDialog(WIDGET, BASE):
         self.attributesTable.clear()
         self.attributesTable.verticalHeader().hide()
         self.attributesTable.horizontalHeader().hide()
-        
+
         self.featuresTree.expandAll()
 
     def reject(self):
