@@ -68,3 +68,12 @@ class Commitish(object):
 
     def __str__(self):
         return str(self.ref)
+
+    def isFork(self):
+        ''' Returns True if the node is a fork'''
+        return False
+
+    def isMerge(self):
+        ''' Returns True if the node is a fork'''
+        return False
+
