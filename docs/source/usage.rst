@@ -57,42 +57,40 @@ to related actions in a context menu.
 
 Right-clicking a **Repository** name will provide the following options:
 
-* :guilabel:`Copy repository URL` copy the repository URL to the clipboard.
+* :guilabel:`Show history` shows the repository history at the 'master' branch.
+* :guilabel:`Copy repository URL` copies the repository URL to the clipboard.
 * :guilabel:`Refresh` updates the content of the repository.
 * :guilabel:`Delete` erases the repository, all its branches, layers and
   commit information from the GeoGig server.
 * :guilabel:`Manage connections` allows to add, edit and delete remote
   connections to the repository
-* :guilabel:`Push` allows publishing your changes into a remote repository.
-* :guilabel:`Pull` allows getting changes from a remote repository.
+
 
 Right-clicking a **Branch** name will provide the following options:
 
+* :guilabel:`Show history` shows the repository history at the selected branch.
 * :guilabel:`Refresh` updates the content of the branch. :guilabel:`Delete`
   removes all the layers and commit information from the GeoGig Server.
 * :guilabel:`Delete` erases the branch from the repository.
-* :guilabel:`Delete` creates a new branch at the last commit of the selected branch.
+* :guilabel:`Create new branch` creates a new branch at the last commit of the selected branch.
+* :guilabel:`Push` allows publishing your changes in the selected branch into a remote repository.
+* :guilabel:`Pull` allows getting changes from a remote repository for the selected branch.
+* :guilabel:`Merge this branch into` allows you to try to merge the changes in the selected into another existing branch.
 
 Right-clicking a **Layer** name will provide the following options:
 
-* :guilabel:`Add to project` loads the layer in QGIS. If the layer has already been exported from the repository at a different commit, you will see *[Not in sync]* after the menu entry name.
+* :guilabel:`Show history` shows the repository history at the selected branch and layer.
+* :guilabel:`Add to project` loads the layer in QGIS, using the version at the tip of the selected branch
 * :guilabel:`Delete` removes the layer from GeoGig tracking.
 
-At the bottom of the panel, there is the :guilabel:`Repository history` **(3)**,
-which allows you to see and interact with the commit history of each branch of
-the currently selected repository. Inside each branch, you can see all the
-commits.
+GeoGig History Dialog
+........................
 
-In the :guilabel:`Repository History` right-clicking a **Branch** name open up
-the context menu with the following options:
+The History Dialog allows you to see and interact with the commit history of a branch branch of the currently selected repository. 
 
-* :guilabel:`Merge this branch into` allows you to try to merge this branch
-  changes into another existing branch.
-* :guilabel:`Delete this branch` deletes all the layers and commit information
-  from the GeoGig Server.
+.. figure:: img/history.png
 
-Likewise, right-clicking the **commits** inside a branch will open the context
-menu with the following options:
+Right clicking in a commit will open the context menu with the following options:
 
 * :guilabel:`Show detailed description of this commit`
 * :guilabel:`Show changes introduced by this commit`
@@ -185,19 +183,8 @@ Enter the :guilabel:`URL` to the WebAPI endpoint (example:
 http://192.168.1.87:8182/), a :guilabel:`Title` to identify the service, and
 click :guilabel:`OK`.
 
-A new entry in the :guilabel:`GeoGig Navigator` will be added, which will
-contain all repositories served by the chosen endpoint.
+A new entry in the dropdown list of the :guilabel:`GeoGig Navigator` will be added. Selecting that new option will cause the tree panel to display all repositories served by the chosen endpoint.
 
-.. figure:: img/reposinnavigator.png
-
-Clicking on a repository or any of its elements will update the
-:guilabel:`Repository History` in the lower part of the :guilabel:`GeoGig
-Navigator`.
-
-The :guilabel:`Repository History` is shown as a tree, with elements
-representing branches, and under each branch all the commits it contains.
-
-.. figure:: img/versionsinbranch.png
 
 Creating and deleting repositories
 ..................................
@@ -236,17 +223,11 @@ The :guilabel:`Import to GeoGig` dialog will open. From the
 :guilabel:`Repository` drop-down list, choose the repository you wish to import
 the layer to. In case the repository has more that one branch, also select the
 branch where to add the layer from the :guilabel:`Branch` drop-down list. In the
-:guilabel:` Message to describe this updated` add a descriptive message, for
+:guilabel:` Message to describe this update` add a descriptive message, for
 example, *"Adds buildings layer"*. Click :guilabel:`Add layer` to proceed.
 
 .. figure:: img/import_to_geogig.png
 
-.. note::
-
-   At the moment only single layers in **geopackage (\*.gpkg)** format can be
-   added (http://www.geopackage.org/). You can use QGIS :guilabel:`Save as...`
-   core functionality to export your layer to a *gpkg* file in case it is in a
-   different format and you want to add it to a GeoGig repository.
 
 Once the layer is added to the repository, a new commit with the chosen message
 is created in the repository selected branch. This can be seen in the
@@ -256,7 +237,13 @@ the :guilabel:`GeoGig Navigator` tree.
 
 .. figure:: img/added_new_layer.png
 
-Once a layer is imported into a GeoGig repository, it becomes linked to it. The
+The original layer that you have imported into the GeoGig repository is not linked to it in anyway. In order to be able to work with it, create new versions and commit them to the repository, you need to work with a layer that has been taken from the repository directly. To do so, follow this step:
+
+  - Close your original layer. You should work with it anymore.
+  - In the repository tree panel, find the repository and branch where you imported your layer.
+  - Right-click on the item representing the layer you have just imported, and select the :guilabel:`Add to QGIS Project` menu option.
+
+A new layer will be added to your project.  The corresponding 
 layer context menu in the :guilabel:`Layers panel` will contain new entries in
 the :guilabel:`GeoGig` menu that allow operations with the layer as part of a
 GeoGig repository. These entries will be explained in further sections of this
@@ -271,13 +258,6 @@ removed from the current project or deleted locally. However, they will not be
 linked anymore to a repo, and the above context menu entries will not be
 available, just like it happens with any other regular QGIS layer.
 
-.. note::
-
-   A specific geopackage datasource/layer can be added in only one GeoGig
-   repository. If you need to add the same original geopackage layer in
-   different GeoGig repositories, you must create different copies of the same
-   datasource/layer in advance.
-
 
 Loading repository layers to the QGIS project
 .............................................
@@ -285,35 +265,17 @@ Loading repository layers to the QGIS project
 To add a layer from a repository to the current project, in the
 :guilabel:`Geogig Navigator` tree, expand a repository item to see the list of
 branches. Then, expand a branch items to list all available layers. Right-click
-the wanted layer and choose :guilabel:`Add to project`. You can also add the layer from the history tree, selecting a commit, richt-clicking on it, and then using the corresponding menu entry to add the layer to the project.
+the wanted layer and choose :guilabel:`Add to project`. 
+
+You can also add the layer from the history tree, selecting a commit, right-clicking on it, and then using the corresponding menu entry to add the layer to the project.
 
 .. figure:: img/add_layer_to_project.png
 
-If it is the first time you add that layer to a local project, it will be
-exported from the GeoGig server and stored locally as a geopackage file before
-loading it in QGIS. The most recent version of the layer in the selected branch
-of the repository will be used.
+IF a layer at the current commit has already been exported, you will be promted whether you want to open the already eisting layer or export it again to a different file and open that new file.
 
-If the layer had been previously exported and the locally stored file is at the same version as the one you have selected in the tree (the last commit in the selected branch in the repo tree, but it is not currently loaded into
-your QGIS project, the file will be loaded.
+.. figure:: img/confirm_layer_at_commit.png
 
-If a layer has already been exported (even if it is not in the current QGIS
-project), but the locally store file corresponds to a different version, when you try to add that layer to your project, you will be asked
-whether you want to use that the previously exported version, or the one from
-the selected branch.
 
-.. figure:: img/layer_was_already_exported.png
-
-It's also possible to add repository layers to the QGIS project at a particular
-point in the history of the repository. In the :guilabel:`Repository history`,
-in a branch, right-click a commit. Then, from the context menu, select the
-:guilabel:`Add 'X' layer to QGIS from this commit` item.
-
-.. figure:: img/add_layer_from_commit.png
-
-If the repository layer has been loaded in QGIS already, in the context menu, you
-will find a different option: :guilabel:`Change 'X' layer to this
-commit`. See :ref:`recover_layer_version` for more details.
 
 Creating and deleting branches
 ..............................
@@ -324,8 +286,7 @@ the repository. Nevertheless, other branches can be created to provide a way of
 testing changes without affecting the master storyline right away.
 
 To create a new branch, you must select the commit in the current history of the
-repository where the branch starts. In the :guilabel:`Repository History`,
-expand the branch where the commit is located, select the commit and right-click
+repository where yo want the branch starts and right-click
 on it. Select the :guilabel:`Create new branch at this commit...` option from
 the context menu and you will be prompted to enter the name of the new branch.
 Enter the name of the branch and click :guilabel:`OK`.
@@ -390,8 +351,6 @@ can open the :guilabel:`GeoGig Navigator`, select the repository and, in the
 will see that it has a new entry with the same message that you entered in the
 :guilabel:`Syncronize layer to repository branch` dialog.
 
-.. figure:: img/new_edit_commit.png
-
 .. note::
    
    Modifications to the structure of attributes table (delete or rename
@@ -429,14 +388,6 @@ branches and commits containing a version of the selected layer. Click the
 commit you want to update the layer to. Then, click :guilabel:`OK` to recover
 that layer's version.
 
-.. figure:: img/recover_layer_state.png
-
-It's also possible to recover a layer version from the :guilabel:`Repository
-history`. In the :guilabel:`Repository history`, in a branch, right-click a
-commit that has changed the layer. Then, from the context menu, select
-:guilabel:`Change 'X' layer to this commit`.
-
-.. figure:: img/change_layer_to_a_commit.png
 
 If you have local changes that haven't been added to the repository yet, you
 will have to :guilabel:`Sync layer to branch` or :guilabel:`Discard local
@@ -469,15 +420,6 @@ item in the repository tree of the :guilabel:`GeoGig Navigator`; then, select
 :guilabel:`Delete` from the context menu. A new commit will be added to the
 selected branch history, which removes the selected layer from the branch.
 
-
-.. note::
-
-   The layer will not be unloaded from QGIS and will still be part of your QGIS
-   project. If, after removing the layer from the selected branch, it is not
-   found in any other branch of the repository, the layer won't be tracked
-   anymore. The layer file and the repository will now be independent and not
-   linked. Otherwise, the layer will remain tracked, since it can still be
-   synced with other branches of the repo.
 
 .. _solve_conflicts:
 
@@ -575,16 +517,6 @@ After closing the conflicts window, and only if all conflicts were solved, the
 new commit corresponding to the sync operation will be created and added to the
 history panel.
 
-Getting more information about a commit
-.......................................
-
-At any time, to get more information about a given commit, you can right-click
-on it in the :guilabel:`Repository History` and select :guilabel:`Show detailed
-description of this commit` from the context menu. The :guilabel:`Commit
-description` dialog will open.
-
-.. figure:: img/commit_full_description.png
-
 .. _view_changes_commit:
 
 Visualizing changes introduced by a commit
@@ -629,10 +561,6 @@ commits while holding the :kbd:`CTRL` key. Then, right-click one of them and,
 from the context menus choose :guilabel:`Show changes between selected commits`.
 This will open the :guilabel:`Comparison viewer` dialog.
 
-The compared versions are listed in the :guilabel:`commits to Compare` section
-at the top of the dialog. When the dialog is opened, it compares the selected
-commits as :guilabel:`new` and :guilabel:`old`.
-
 The rest of the dialog works as described in the
 :ref:`previous section <view_changes_commit>`.
 
@@ -642,10 +570,6 @@ The rest of the dialog works as described in the
    will not be visible in the :guilabel:`Comparison viewer`, as it is considered
    to be the starting point. If needed, select its parent commit instead.
 
-Without closing the :guilabel:`Comparison view`, you can change any of the
-commits to be compared by clicking the :guilabel:`...` button next to each text
-box, which will open the :guilabel:`Repository history` dialog. Click the branch
-and commit you want to use for comparison, and click :guilabel:`OK`.
 
 Exporting changes introduced by a commit
 ........................................
@@ -736,10 +660,14 @@ Click :guilabel:`Close` once you are done adding remote connections
 Getting data from a remote connection
 .....................................
 
-To get data and commit information from one of your remote connections into your
-own repository (for example, to get all the data and commits from the shared
-GeoGig Server), in the :guilabel:`GeoGig Navigator`, right-click your repository
-name and select :guilabel:`Pull`. The :guilabel:`Remote reference` dialog opens.
+There are two ways of getting data from a remote connection:
+
+- Getting branches that are not in your current repository.
+- Getting history and data to a repository branch, from a branch in the remote connecction.
+
+To get missing branches, right-click on the repository item and select  :guilabel:`Pull`. That will add the missing branches to your local repo. 
+
+To update a specific branch, right-click on the item that represents it and select  :guilabel:`Pull`. The :guilabel:`Remote reference` dialog opens.
 Select the :guilabel:`Remote` and the :guilabel:`Branch` from where you wish to
 import data and click :guilabel:`OK`.
 
@@ -752,7 +680,7 @@ Push changes to a remote connection
 
 After you edited the data and synchronized it into your repository, you can send
 the changes to other remote repositories. In the :guilabel:`GeoGig Navigator`,
-right-click your repository name and select :guilabel:`Push`. The
+right-click the branch you want to use and select :guilabel:`Push`. The
 :guilabel:`Remote reference` dialog opens. Select the :guilabel:`Remote` and the
 :guilabel:`Branch` from where you wish to export data and click :guilabel:`OK`.
 
