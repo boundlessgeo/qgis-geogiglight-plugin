@@ -32,7 +32,8 @@ from functools import partial
 from collections import defaultdict
 
 from qgis.PyQt.QtCore import Qt, pyqtSignal, QPoint, QRectF
-from qgis.PyQt.QtGui import QIcon, QImage, QPixmap, QPainter, QColor, QPainterPath, QPen, QBrush
+from qgis.PyQt.QtGui import (QIcon, QImage, QPixmap, QPainter, QColor,
+                            QPainterPath, QPen, QBrush,qRgba)
 from qgis.PyQt.QtWidgets import (QTreeWidget,
                                  QAbstractItemView,
                                  QMessageBox,
@@ -280,9 +281,9 @@ class HistoryViewer(QTreeWidget):
                 QColor(Qt.magenta)]
 
     def createGraphImage(self):
-        self.image = QPixmap(self.COMMIT_GRAPH_WIDTH, 1000).toImage()
+        self.image = QImage(self.COMMIT_GRAPH_WIDTH, 1000, QImage.Format_ARGB32)
+        self.image.fill(qRgba(0,0,0,0))
         qp = QPainter(self.image)
-        qp.fillRect(QRectF(0, 0, self.COMMIT_GRAPH_WIDTH, 1000), Qt.white);
         qp.begin(self.image)
         self.drawLines(qp)
         qp.end()
