@@ -1,0 +1,823 @@
+# -*- coding: utf-8 -*-
+
+"""
+***************************************************************************
+    repository.py
+    ---------------------
+    Date                 : March 2016
+    Copyright            : (C) 2016 Boundless, http://boundlessgeo.com
+***************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************
+"""
+from __future__ import print_function
+from builtins import str
+from builtins import object
+
+__author__ = 'Victor Olaya'
+__date__ = 'March 2016'
+__copyright__ = '(C) 2016 Boundless, http://boundlessgeo.com'
+
+# This will get replaced with a git SHA1 when you do a git archive
+
+__revision__ = '$Format:%H$'
+
+import os
+import re
+import json
+import time
+import sqlite3
+from datetime import datetime
+import shutil
+import xml.etree.ElementTree as ET
+from collections import defaultdict
+
+import requests
+from requests.exceptions import HTTPError, ConnectionError
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QTimer, QObject, QEventLoop
+from qgis.PyQt.QtGui import QCursor
+from qgis.PyQt.QtWidgets import QApplication
+
+from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFeatureRequest, NULL
+from qgis.utils import iface
+
+from geogig import config
+from geogig.config import LOG_SERVER_CALLS
+
+from geogig.geogigwebapi.commit import NULL_ID, Commit, setChildren
+from geogig.geogigwebapi.commitish import Commitish
+from geogig.geogigwebapi.diff import Diffentry, ConflictDiff
+
+from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
+from geogig.extlibs.qgiscommons2.gui import (execute, startProgressBar,
+                                            closeProgressBar, setProgressValue,
+                                            setProgressText, isProgressCanceled)
+
+from geogig.tools.layers import formatSource, namesFromLayer
+from geogig.tools.utils import userFolder, resourceFile
+from geogig.tools.layertracking import isRepoLayer
+
+from geogig.extlibs.qgiscommons2.settings import pluginSetting
+from geogig.extlibs.qgiscommons2.files import tempFilenameInTempFolder
+
+class GeoGigException(Exception):
+    pass
+
+
+class MergeConflictsException(GeoGigException):
+    pass
+
+
+class CannotPushException(GeoGigException):
+    pass
+
+class NothingToPushException(GeoGigException):
+    pass
+
+def _resolveref(ref):
+    '''
+    Tries to resolve the pased object into a string representing a commit reference
+    (a SHA-1, branch name, or something like HEAD~1)
+    This should be called by all commands using references, so they can accept both
+    strings and Commitish objects indistinctly
+    '''
+    if ref is None:
+        return None
+    if isinstance(ref, Commitish):
+        return ref.ref
+    elif isinstance(ref, str):
+        return ref
+    else:
+        return str(ref)
+
+SHA_MATCHER = re.compile(r"\b([a-f0-9]{40})\b")
+
+def _ensurelist(o):
+    if isinstance(o, list):
+        return o
+    else:
+        return [o]
+
+
+class Repository(object):
+
+    MASTER = 'master'
+    HEAD = 'HEAD'
+    WORK_HEAD = 'WORK_HEAD'
+    STAGE_HEAD = 'STAGE_HEAD'
+
+    def __init__(self, url, group="", title = ""):
+        self.url = url
+        self.rootUrl = url.split("/repos")[0] + "/"
+        self.title = title
+        self.group = group
+
+    def __eq__(self, o):
+        try:
+            return o.url == self.url
+        except:
+            return False
+
+    def __ne__(self, o):
+        return not self.__eq__(o)
+
+    def __log(self, url, response, params, operation = "GET"):
+        if pluginSetting(LOG_SERVER_CALLS):
+            msg = "%s: %s\nPARAMS: %s\nRESPONSE: %s" % (operation, url, params, response)
+            QgsMessageLog.logMessage(msg, 'GeoGig', QgsMessageLog.INFO)
+
+    def __apicall(self, command, payload={}, transaction=False):
+        try:
+            if transaction:
+                url = self.url + "beginTransaction"
+                params = {"output_format":"json"}
+                r = requests.get(url, params=params)
+                r.raise_for_status()
+                self.__log(url, r.json(), params)
+                transactionId = r.json()["response"]["Transaction"]["ID"]
+                payload["output_format"] = "json"
+                payload["transactionId"] = transactionId
+                url = self.url + command
+                r = requests.get(url, params=payload)
+                r.raise_for_status()
+                resp = json.loads(r.text.replace(r"\/", "/"))["response"]
+                self.__log(url, resp, payload)
+                params = {"transactionId":transactionId, "output_format":"json"}
+                r = requests.get(self.url + "endTransaction", params = params)
+                self.__log(url, r.json(), params)
+                r.raise_for_status()
+                return resp
+            else:
+                payload["output_format"] = "json"
+                url = self.url + command
+                r = requests.get(url, params=payload)
+                self.__log(url, r.json(), payload)
+                r.raise_for_status()
+                j = json.loads(r.text.replace(r"\/", "/"))
+                return j["response"]
+        except ConnectionError as e:
+            msg = "<b>Network connection error</b><br><tt>%s</tt>" % e
+            QgsMessageLog.logMessage(msg, "GeoGig", level=QgsMessageLog.CRITICAL)
+            raise GeoGigException(msg)
+
+    def _apicall(self, command, payload = {}, transaction = False):
+        return execute(lambda: self.__apicall(command, payload, transaction))
+
+    def branches(self):
+        resp = self._apicall("branch", {"list":True})
+        return [b["name"] for b in _ensurelist(resp["Local"]["Branch"])]
+
+    def createbranch(self, ref, branch):
+        self._apicall("branch", {"branchName":branch, "source": ref})
+
+    def deletebranch(self, branch):
+        self._apicall("updateref", {"name": branch, "delete": True})
+
+    def tags(self):
+        r = self._apicall("tag", {})
+        if "Tag" in r:
+            tags = {t["name"]: t["commitid"] for t in _ensurelist(r["Tag"])}
+        else:
+            tags = {}
+        return tags
+
+    def createtag(self, ref, tag):
+        r = requests.post(self.url + "tag", params = {"commit":ref, "name": tag, "message": tag}, json = {})
+        r.raise_for_status()
+
+    def deletetag(self, tag):
+        self._apicall("updateref", {"name": tag, "delete": True})
+
+    def diff(self, oldRefSpec, newRefSpec, pathFilter = None):
+        payload = {"oldRefSpec": oldRefSpec, "newRefSpec": newRefSpec}
+        if pathFilter is not None:
+            payload["pathFilter"]= pathFilter
+        changes = []
+        payload["page"] = 0
+        while True:
+            resp = self._apicall("diff", payload)
+            if "diff" in resp and resp["diff"]:
+                for d in _ensurelist(resp["diff"]):
+                    path = d["newPath"] or d["path"]
+                    changes.append(Diffentry(self, oldRefSpec, newRefSpec,
+                                                path, d["changeType"]))
+                payload["page"] += 1
+            else:
+                break
+        return changes
+
+    def _downloadfile(self, taskid, filename):
+        url  = self.rootUrl + "tasks/%s/download" % str(taskid)
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
+        with open(filename, 'wb') as f:
+            total = r.headers.get('content-length')
+            if total is None:
+                startProgressBar("Transferring geopkg from GeoGig server", 0)
+                r.raw.decode_content = True
+                shutil.copyfileobj(r.raw, f)
+            else:
+                startProgressBar("Transferring geopkg from GeoGig server", 100)
+                dl = 0
+                total = float(total)
+                for data in r.iter_content(chunk_size=4096):
+                    dl += len(data)
+                    f.write(data)
+                    done = int(100 * dl / total)
+                    setProgressValue(done)
+                    if isProgressCanceled():
+                        return
+
+        closeProgressBar()
+
+    def exportdiff(self, oldRef, newRef, filename, layername = None):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        params = {"oldRef": oldRef, "newRef": newRef, "format": "gpkg"}
+        if layername is not None:
+            params["path"] = layername
+        url  = self.url + "export-diff.json"
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        taskid = r.json()["task"]["id"]
+        checker = TaskChecker(self.rootUrl, taskid, "Creating diff files in server")
+        loop = QEventLoop()
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
+        self._downloadfile(taskid, filename)
+        QApplication.restoreOverrideCursor()
+
+    def featurediff(self, oldTreeish, newTreeish, path, allAttrs = True):
+        payload = {"oldTreeish": _resolveref(oldTreeish), "newTreeish": _resolveref(newTreeish),
+                   "path": path, "all": allAttrs}
+        resp = self._apicall("featurediff", payload)
+        return _ensurelist(resp["diff"])
+
+    def feature(self, path, ref):
+        payload = {"oldTreeish": _resolveref(ref), "newTreeish": _resolveref(ref), "path": path, "all": True}
+        resp = self._apicall("featurediff", payload)
+        featurediff = _ensurelist(resp["diff"])
+        return {f["attributename"]: f.get("oldvalue", None) for f in featurediff}
+
+    def log(self, until = None, path = None, limit = None):
+        payload = {"path": path} if path is not None else {}
+        if until is not None:
+            payload["until"]= _resolveref(until)
+        if limit is not None:
+            payload["limit"] = limit
+        payload["countChanges"] = True
+        commits = []
+        payload["page"] = 0
+        while True:
+            try:
+                resp = self._apicall("log", payload)
+            except HTTPError as e:
+                #TODO more accurate error treatment
+                return []
+            if "commit" in resp and resp["commit"]:
+                for c in _ensurelist(resp["commit"]):
+                    commits.append(self._parseCommit(c))
+                payload["page"] += 1
+            else:
+                break
+
+        Commit.addToCache(self.url, commits)
+        commits = setChildren(commits)
+
+        return commits
+
+    def _parseCommit(self, c):
+        parentslist = _ensurelist(c["parents"])
+        if parentslist == [""]:
+            parents = [NULL_ID]
+        else:
+            parents = [p for p in _ensurelist(c["parents"]["id"])]
+        committerdate = datetime.fromtimestamp(c["committer"]["timestamp"] / 1e3)
+        authordate = datetime.fromtimestamp(c["author"]["timestamp"] / 1e3)
+        return Commit(self, c["id"], c["tree"],
+                 parents, c["message"],
+                 c["author"]["name"], authordate,
+                 c["committer"]["name"], committerdate,
+                 c.get("adds", 0), c.get("removes", 0), c.get("modifies", 0))
+
+    def lastupdated(self):
+        try:
+            return self.log(limit = 1)[0].committerdate
+        except IndexError:
+            return None
+
+
+    def blame(self, path):
+        resp = self._apicall("blame", {"path":path})
+        attrs = resp["Blame"]["Attribute"]
+        blame = {}
+        for a in attrs:
+            blame[a["name"]] = (a["value"], self._parseCommit(a["commit"]))
+
+        return blame
+
+    def trees(self, commit=None):
+        commit = commit or self.HEAD
+        #TODO use commit
+        resp = self._apicall("ls-tree", {"onlyTrees":True, "path": commit})
+        if "node" not in list(resp.keys()):
+            return []
+        if isinstance(resp["node"], dict):
+            trees = [resp["node"]]
+        else:
+            trees = resp["node"]
+        return [t["path"] for t in trees]
+
+    def _checkoutbranch(self, branch, transactionId):
+        payload = {"branch": branch,"transactionId": transactionId}
+        r = requests.get(self.url + "checkout", params = payload)
+        self.__log(r.url, r.text, payload)
+        r.raise_for_status()
+
+    def removetree(self, path, user, email, branch = None):
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        if branch:
+            self._checkoutbranch(branch, transactionId)
+        payload = {"path":path, "recursive":"true", "output_format": "json",
+                   "transactionId": transactionId}
+        r = requests.get(self.url + "remove", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+
+        params = {"all": True, "message": "removed layer %s" % path,
+                  "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
+        r.raise_for_status()
+        if branch:
+            self._checkoutbranch("refs/heads/master", transactionId)
+        self.closeTransaction(transactionId)
+
+    def revparse(self, rev):
+        '''Returns the SHA-1 of a given element, represented as a string'''
+        if SHA_MATCHER.match(rev) is not None:
+            return rev
+        else:
+            return self._apicall("refparse", {"name": rev})["Ref"]["objectId"]
+
+    def _preparelayerdownload(self, layername, bbox = None, ref = None):
+        ref = _resolveref(ref) or self.HEAD
+        params = {"root": ref, "format": "gpkg", "table": layername,
+                  "path": layername, "interchange":True}
+        if bbox is not None:
+            trans = QgsCoordinateTransform(QgsCoordinateReferenceSystem(bbox[1]),
+                                            QgsCoordinateReferenceSystem("EPSG:4326"))
+            bbox4326 = trans.transform(bbox[0])
+            sbbox = ",".join([bbox4326.xMinimum(), bbox4326.xMaximum(),
+                             bbox4326.yMinimum(), bbox4326.yMaximum(), "EPSG:4326"])
+            params["bbox"] = sbbox
+        url  = self.url + "export.json"
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        return r.json()["task"]["id"]
+
+    def checkoutlayer(self, filename, layername, bbox = None, ref = None):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        taskid = self._preparelayerdownload(layername, bbox, ref)
+        checker = TaskChecker(self.rootUrl, taskid, "Preparing layer in server", 100)
+        loop = QEventLoop()
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_()
+        if checker.canceled:
+            QApplication.restoreOverrideCursor()
+            return
+        self._downloadfile(taskid, filename)
+        QApplication.restoreOverrideCursor()
+        closeProgressBar()
+
+    def saveaudittables(self, filename, layer):
+        newfilename = tempFilenameInTempFolder(os.path.basename(filename))
+
+        conn = sqlite3.connect(newfilename)
+        c = conn.cursor()
+        c.execute("ATTACH DATABASE ? AS db2", (filename,))
+        tables = ["%s_audit" % layer, "%s_fids" % layer, "geogig_audited_tables", "gpkg_geometry_columns"]
+        for table in tables:
+            c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % table)
+            c.execute(c.fetchone()[0])
+            c.execute("INSERT INTO main.%s SELECT * FROM db2.%s" % (table, table))
+
+        c.execute("SELECT sql FROM db2.sqlite_master WHERE type='table' AND name='%s'" % layer)
+        c.execute(c.fetchone()[0])
+        c.execute("SELECT * FROM db2.%s_audit WHERE audit_op<>3;" % layer)
+        changed = c.fetchall()
+        used = []
+        for feature in changed[::-1]:
+            if feature[0] not in used:
+                c.execute('INSERT INTO main.%s SELECT * FROM db2.%s WHERE fid=%s;' % (layer, layer, feature[0]))
+                used.append(feature[0])
+
+        conn.commit()
+        conn.close()
+
+        return newfilename
+
+    def importgeopkg(self, layer, branch, message, authorName, authorEmail, interchange):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        filename, layername = namesFromLayer(layer)
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self._checkoutbranch(branch, transactionId)
+        payload = {"authorEmail": authorEmail, "authorName": authorName,
+                   "message": message, 'destPath':layername, "format": "gpkg",
+                   "transactionId": transactionId}
+        # fix_print_with_import
+        if interchange:
+            payload["interchange"]= True
+            filename = self.saveaudittables(filename, layername)
+        files = {'fileUpload': (os.path.basename(filename), open(filename, 'rb'))}
+
+        encoder = MultipartEncoder(files)
+        total = float(encoder.len)
+        def callback(m):
+            if not isProgressCanceled():
+                done = int(100 * m.bytes_read / total)
+                setProgressValue(done)
+        monitor = MultipartEncoderMonitor(encoder, callback)
+        startProgressBar("Transferring geopkg to GeoGig server", 100)
+        r = requests.post(self.url + "import.json", params = payload, data=monitor,
+                  headers={'Content-Type': monitor.content_type})
+        if isProgressCanceled():
+            QApplication.restoreOverrideCursor()
+            return
+        self.__log(r.url, r.text, payload, "POST")
+        r.raise_for_status()
+        resp = r.json()
+        taskId = resp["task"]["id"]
+        if isinstance(layer, basestring):
+            layer = loadLayerNoCrsDialog(layer, "", "ogr")
+        checker = TaskChecker(self.rootUrl, taskId, "Importing geopkg into GeoGig server", layer.featureCount())
+        loop = QEventLoop()
+        checker.taskIsFinished.connect(loop.exit, Qt.QueuedConnection)
+        checker.start()
+        loop.exec_()
+        QApplication.restoreOverrideCursor()
+        if checker.canceled:
+            return
+        closeProgressBar()
+        if not checker.ok and "error" in checker.response["task"]:
+            errorMessage = checker.response["task"]["error"]["message"]
+            raise GeoGigException("Cannot import layer: %s" % errorMessage)
+        if interchange:
+            try:
+                nconflicts = checker.response["task"]["result"]["Merge"]["conflicts"]
+            except KeyError, e:
+                nconflicts = 0
+            if nconflicts:
+                mergeCommitId = self.HEAD
+                importCommitId = checker.response["task"]["result"]["import"]["importCommit"]["id"]
+                ancestor = checker.response["task"]["result"]["Merge"]["ancestor"]
+                remote = checker.response["task"]["result"]["Merge"]["ours"]
+                try:
+                    featureIds = checker.response["task"]["result"]["import"]["NewFeatures"]["type"][0].get("ids", [])
+                except:
+                    featureIds = []
+                con = sqlite3.connect(filename)
+                cursor = con.cursor()
+                geomField = cursor.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='%s';" % layername).fetchone()[0]
+
+                def _local(fid):
+                    cursor.execute("SELECT gpkg_fid FROM %s_fids WHERE geogig_fid='%s';" % (layername, fid))
+                    gpkgfid = int(cursor.fetchone()[0])
+                    request = QgsFeatureRequest()
+                    request.setFilterFid(gpkgfid)
+                    try:
+                        feature = next(layer.getFeatures(request))
+                    except:
+                        return None
+                    def _ensureNone(v):
+                        if v == NULL:
+                            return None
+                        else:
+                            return v
+                    local = {f.name():_ensureNone(feature[f.name()]) for f in layer.pendingFields()}
+                    try:
+                        local[geomField] = feature.geometry().exportToWkt()
+                    except:
+                        local[geomField] = None
+                    return local
+
+                conflicts = []
+                conflictsResponse = _ensurelist(checker.response["task"]["result"]["Merge"]["Feature"])
+                for c in conflictsResponse:
+                    if c["change"] == "CONFLICT":
+                        remoteFeatureId = c["ourvalue"]
+                        localFeatureId = c["theirvalue"]
+                        localFeature = _local(c["id"].split("/")[-1])
+                        conflicts.append(ConflictDiff(self, c["id"], ancestor, remote, importCommitId, localFeature,
+                                              localFeatureId, remoteFeatureId, transactionId))
+                cursor.close()
+                con.close()
+            else:
+                #self._checkoutbranch("master", transactionId)
+                self.closeTransaction(transactionId)
+                mergeCommitId = checker.response["task"]["result"]["newCommit"]["id"]
+                importCommitId = checker.response["task"]["result"]["importCommit"]["id"]
+                try:
+                    featureIds = checker.response["task"]["result"]["NewFeatures"]["type"][0].get("id", [])
+                except:
+                    featureIds = []
+                conflicts = []
+            featureIds = [(f["provided"], f["assigned"]) for f in featureIds]
+            return mergeCommitId, importCommitId, conflicts, featureIds
+        else:
+            self.closeTransaction(transactionId)
+
+    def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
+        merges = {k:{"value": v} for k,v in feature.items()}
+        payload = {"path": path, "ours": ours, "theirs": theirs,
+                   "merges": merges}
+        r = requests.post(self.url + "repo/mergefeature", json = payload)
+        self.__log(r.url, r.text, payload, "POST")
+        r.raise_for_status()
+        fid = r.text
+        self.resolveConflictWithFeatureId(path, fid, transactionId)
+
+    def resolveConflictWithFeatureId(self, path, fid, transactionId):
+        payload = {"path": path, "objectid": fid,
+                   "transactionId": transactionId}
+        r = requests.get(self.url + "resolveconflict", params = payload)
+        self.__log(r.url, r.text, payload)
+        r.raise_for_status()
+
+    def deleteFeature(self, path, transactionId):
+        payload = {"path": path, "transactionId": transactionId}
+        r = requests.get(self.url + "remove", params = payload)
+        self.__log(r.url, r.text, payload)
+        r.raise_for_status()
+
+    def commitAndCloseTransaction(self, user, email, message, transactionId):
+        params = {"all": True, "message": message, "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
+        r.raise_for_status()
+        self.closeTransaction(transactionId)
+
+    def closeTransaction(self, transactionId):
+        r = requests.get(self.url + "endTransaction", params = {"transactionId": transactionId})
+        self.__log(r.url, r.text, {"transactionId": transactionId})
+        r.raise_for_status()
+
+    def merge(self, branchToMerge, branchToMergeInto):
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        self._checkoutbranch(branchToMergeInto, transactionId)
+        payload = {"commit":branchToMerge, "transactionId": transactionId, "output_format":"json"}
+        r = requests.get(self.url + "merge", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+        response = r.json()["response"]["Merge"]
+        try:
+            nconflicts = response["conflicts"]
+        except KeyError:
+            nconflicts = 0
+        if nconflicts:
+            ancestor = response["ancestor"]
+            ours = response["ours"]
+            theirs = response["theirs"]
+
+            conflicts = []
+            conflictsResponse = _ensurelist(response["Feature"])
+            for c in conflictsResponse:
+                if c["change"] == "CONFLICT":
+                    conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
+                                    c["ourvalue"], c["theirvalue"], transactionId))
+            return conflicts
+        else:
+            self._checkoutbranch("master", transactionId)
+            self.closeTransaction(transactionId)
+            return []
+
+    def commitAndCloseMergeAndTransaction(self, user, email, message, transactionId):
+        params = {"all": True, "message": message, "transactionId": transactionId,
+                  "authorName": user, "authorEmail": email}
+        r = requests.get(self.url + "commit", params = params)
+        self.__log(r.url, r.text, params)
+        r.raise_for_status()
+        self._checkoutbranch("master", transactionId)
+        self.closeTransaction(transactionId)
+
+    def delete(self):
+        r = self._apicall("delete")
+        params = {"token": r["token"]}
+        r = requests.delete(self.url, params = params)
+        r.raise_for_status()
+
+    def addremote(self, name, url):
+        url = url.strip(" ")
+        payload = {"remoteURL": url, "remoteName": name}
+        self._apicall("remote", payload)
+
+    def removeremote(self, name):
+        payload = {"remove": True, "remoteName": name}
+        self._apicall("remote", payload)
+
+    def remotes(self):
+        payload = {"list": True, "verbose": True}
+        response = self._apicall("remote", payload)
+        if "Remote" in response:
+            remotes = _ensurelist(response["Remote"])
+            remotes = {r["name"]:r["url"] for r in remotes}
+            return remotes
+        else:
+            return {}
+
+    def push(self, remote, branch, remotebranch=None):
+        remotebranch = remotebranch or branch
+        ref = "%s:%s" % (branch, remotebranch)
+        payload = {"ref": ref, "remoteName": remote}
+        try:
+            r = self._apicall("push", payload)
+            success = r["success"]
+            if not success:
+                raise CannotPushException(r["error"])
+            if not r["dataPushed"]:
+                raise NothingToPushException()
+        except HTTPError, e:
+            raise CannotPushException(e.response.json()["response"]["error"])
+
+    def pull (self, remote, branch, localbranch=None):
+        localbranch = localbranch or branch
+        ref = "%s:%s" % (branch, localbranch)
+        r = requests.get(self.url + "beginTransaction", params = {"output_format":"json"})
+        r.raise_for_status()
+        transactionId = r.json()["response"]["Transaction"]["ID"]
+        self.__log(r.url, r.json(), params = {"output_format":"json"})
+        self._checkoutbranch(branch, transactionId)
+        payload = {"ref": ref, "remoteName": remote, "transactionId": transactionId, "output_format":"json"}
+        r = requests.get(self.url + "pull", params=payload)
+        r.raise_for_status()
+        self.__log(r.url, r.json(), payload)
+        response = r.json()["response"]
+        try:
+            nconflicts = response["Merge"]["conflicts"]
+        except KeyError:
+            nconflicts = 0
+        if nconflicts:
+            ancestor = response["Merge"]["ancestor"]
+            ours = response["Merge"]["ours"]
+            theirs = response["Merge"]["theirs"]
+            conflicts = []
+            conflictsResponse = _ensurelist(response["Merge"]["Feature"])
+            for c in conflictsResponse:
+                if c["change"] == "CONFLICT":
+                    conflicts.append(ConflictDiff(self, c["id"], ancestor, ours, theirs, None,
+                                    c["ourvalue"], c["theirvalue"], transactionId))
+            return conflicts
+        else:
+            self.closeTransaction(transactionId)
+            return []
+
+
+class TaskChecker(QObject):
+    taskIsFinished = pyqtSignal()
+    def __init__(self, url, taskid, text, maxvalue = 0):
+        QObject.__init__(self)
+        self.taskid = taskid
+        self.url = url + "tasks/%s.json" % str(self.taskid)
+        self.maxvalue = maxvalue
+        self.text = text
+        self.canceled = False
+        startProgressBar(text, maxvalue)
+
+    def start(self):
+        self.checkTask()
+
+    def checkTask(self):
+        if isProgressCanceled():
+            self.ok = True
+            self.canceled = True
+            closeProgressBar()
+            self.taskIsFinished.emit()
+        r = requests.get(self.url, stream=True)
+        r.raise_for_status()
+        self.response = r.json()
+        if self.response["task"]["status"] == "FINISHED":
+            self.ok = True
+            closeProgressBar()
+            self.taskIsFinished.emit()
+        elif self.response["task"]["status"] == "FAILED":
+            self.ok = False
+            self.taskIsFinished.emit()
+        else:
+            try:
+                progressTask = self.text or self.response["task"]["progress"]["task"]
+                progressAmount = int(self.response["task"]["progress"]["amount"])
+                if self.maxvalue:
+                    setProgressValue(progressAmount)
+                    setProgressText(progressTask)
+                else:
+                    text = "%s [%s]" % (progressTask, progressAmount)
+                    setProgressText(text)
+            except KeyError:
+                pass
+            QTimer.singleShot(500, self.checkTask)
+
+
+repos = []
+repoEndpoints = {}
+availableRepoEndpoints = {}
+
+
+def addRepo(repo):
+    global repos
+    repos.append(repo)
+
+
+def removeRepo(repo):
+    global repos
+    for r in repos:
+        if repo.url == r.url:
+            repos.remove(r)
+            break
+
+
+def addUser(user, password):
+    global repoEndpoints
+    global repos
+    _repos = execute(lambda: repositoriesForUser(user, password))
+    repos.extend(_repos)
+    return _repos
+
+
+def removeUser(user):
+    return
+    global repoEndpoints
+    global repos
+    url = repoEndpoints[title]
+    for repo in repos[::-1]:
+        if url in repo.rootUrl:
+            repos.remove(repo)
+
+    del repoEndpoints[title]
+    if title in availableRepoEndpoints:
+        del availableRepoEndpoints[title]
+
+def _userConfiguration(user, password):
+    userConfiguration = geogig_client.Configuration()
+    userConfiguration.username = user
+    userConfiguration.password = password
+    return _userConfiguration
+
+def repositoriesForUser(user, password):
+    reposApi = geogig_client.RepositoryManagementApi(geogig_client.ApiClient(userConfiguration))
+    reposList = reposApi.list_repositories(userConfiguration)
+    repos = [Repository(repoInfo) for repoInfo in reposList]
+    return repos
+
+
+def createRepoForUser(user, password, reponame):
+    apiClient = geogig_client.ApiClient(_userConfiguration(user, password))
+    reposApi = geogig_client.RepositoryManagementApi(apiClient)
+    repo = geogig_client.RepositoryInfo(identity=reponame)
+    response = reposApi.create_repository(user, repo)
+    return Repository(response)
+
+
+
+def refreshEndpoint(name):
+    return
+    global repos
+    global repoEndpoints
+    global availableRepoEndpoints
+    if name in availableRepoEndpoints:
+        del availableRepoEndpoints[name]
+    for repo in repos[::-1]:
+        if repo.group == name:
+            repos.remove(repo)
+    if name in repoEndpoints:
+        try:
+            _repos = execute(lambda: repositoriesFromUrl(repoEndpoints[name], name))
+            repos.extend(_repos)
+            availableRepoEndpoints[name] = repoEndpoints[name]
+        except:
+            pass
+
+def endpointRepos(name):
+    groupRepos = [r for r in repos if r.group == name]
+    return groupRepos
+
