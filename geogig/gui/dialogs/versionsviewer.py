@@ -48,8 +48,8 @@ else:
     from qgis.core import QgsSymbol as QgsSymbolV2
     from qgis.core import QgsSingleSymbolRenderer
 
-from qgis.core import QgsGeometry, QgsFeature, QgsMapLayerRegistry
-from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+from qgis.core import QgsGeometry, QgsFeature, QgsProject
+from qgis.gui import QgsMapCanvas, QgsMapToolPan
 
 from geogig import config
 from geogig.geogigwebapi.repository import GeoGigException
@@ -144,8 +144,8 @@ class VersionViewerDialog(BASE, WIDGET):
             else:
                 layer.setRenderer(QgsSingleSymbolRenderer(symbol))
             self.mapCanvas.setRenderFlag(False)
-            self.mapCanvas.setLayerSet([QgsMapCanvasLayer(layer)])
-            QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+            self.mapCanvas.setLayers([layer])
+            QgsProject.instance().addMapLayer(layer, False)
             self.mapCanvas.setExtent(layer.extent())
             self.mapCanvas.setRenderFlag(True)
             layers.append(layer)

@@ -31,7 +31,7 @@ import sqlite3
 
 from qgis.PyQt.QtWidgets import QInputDialog, QMessageBox
 
-from qgis.core import QgsMessageLog, QgsMapLayerRegistry, QgsVectorLayer
+from qgis.core import QgsMessageLog, QgsProject, QgsVectorLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -305,7 +305,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
 
         layer = loadLayerNoCrsDialog(source, layername, "ogr")
 
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
+        QgsProject.instance().addMapLayers([layer])
         iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
                           level=QgsMessageBar.INFO,
                           duration=5)
@@ -314,7 +314,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
         if os.path.exists(filename):
             addTrackedLayer(source, repo.url)
             layer = loadLayerNoCrsDialog(source, layername, "ogr")
-            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            QgsProject.instance().addMapLayers([layer])
             iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
                                           level=QgsMessageBar.INFO,
                                           duration=5)

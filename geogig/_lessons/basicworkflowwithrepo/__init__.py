@@ -3,7 +3,6 @@
 # (c) 2016 Boundless, http://boundlessgeo.com
 # This code is licensed under the GPL 2.0 license.
 #
-from qgis.core import QgsMapLayerRegistry
 from qgis.utils import iface
 
 from lessons.utils import layerFromName, unmodalWidget

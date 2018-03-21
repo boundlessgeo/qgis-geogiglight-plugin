@@ -27,14 +27,11 @@ __revision__ = '$Format:%H$'
 
 import os
 import sys
-import sqlite3
-import webbrowser
-from collections import defaultdict
 from functools import partial
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt, QUrl, QSize, QT_VERSION_STR
-from qgis.PyQt.QtGui import QIcon, QMessageBox, QPixmap
+from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QVBoxLayout,
                                  QAbstractItemView,
@@ -48,7 +45,8 @@ from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QPushButton,
                                  QApplication,
                                  QAction,
-                                 QMenu
+                                 QMenu,
+                                 QMessageBox
                                 )
 
 from qgis.core import QgsApplication, QgsMessageLog
@@ -162,7 +160,7 @@ class NavigatorDialog(BASE, WIDGET):
 
     def fillCombo(self):
         self.comboEndpoint.clear()
-        groups = repository.repoEndpoints.keys()
+        groups = list(repository.repoEndpoints.keys())
         #groups.insert(0, "Select a GeoGig server")
         self.comboEndpoint.addItems(groups)
 
@@ -504,10 +502,10 @@ class BranchItem(QTreeWidgetItem):
                 self.repo.push(remote, branch, self.branch)
                 config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
                                                level = QgsMessageBar.INFO, duration = 5)
-            except CannotPushException, e:
+            except CannotPushException as e:
                 config.iface.messageBar().pushMessage(str(e),
                                                level = QgsMessageBar.WARNING, duration = 5)
-            except NothingToPushException, e:
+            except NothingToPushException as e:
                 config.iface.messageBar().pushMessage("Nothing to push. Already up to date",
                                                level = QgsMessageBar.INFO, duration = 5)
 

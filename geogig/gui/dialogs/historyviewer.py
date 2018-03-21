@@ -193,7 +193,7 @@ class HistoryViewer(QTreeWidget):
 
     def deleteTags(self, item):
         tags = defaultdict(list)
-        for k, v in self.repo.tags().items():
+        for k, v in list(self.repo.tags().items()):
             tags[v].append(k)
         for tag in tags[item.commit.commitid]:
             self.repo.deletetag(tag)
@@ -376,7 +376,7 @@ class HistoryViewer(QTreeWidget):
         self.layername = layername
         self.clear()
         tags = defaultdict(list)
-        for k, v in self.repo.tags().items():
+        for k, v in list(self.repo.tags().items()):
             tags[v].append(k)
         self.commits = self.repo.log(until = branch, path = layername)
         self.computeGraph()

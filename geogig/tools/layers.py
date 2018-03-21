@@ -30,7 +30,7 @@ __revision__ = '$Format:%H$'
 import os
 import sqlite3
 
-from qgis.core import (QgsMapLayerRegistry,
+from qgis.core import (QgsProject,
                        QgsRasterLayer,
                        QgsVectorLayer,
                        QgsFeatureRequest,
@@ -62,7 +62,7 @@ def getGroups():
         groupName = rel[0]
         if groupName != '':
             groupLayers = rel[1]
-            groups[groupName] = [QgsMapLayerRegistry.instance().mapLayer(layerid) for layerid in groupLayers]
+            groups[groupName] = [QgsProject.instance().mapLayer(layerid) for layerid in groupLayers]
     return groups
 
 
@@ -234,5 +234,5 @@ def addDiffLayers(repo, commit, commit2, layernames):
 
             layer.dataProvider().addFeatures(featuresList)
             layer.updateExtents()
-            QgsMapLayerRegistry.instance().addMapLayers([layer])
+            QgsProject.instance().addMapLayers([layer])
             layer.loadNamedStyle(styles[layer.geometryType()])

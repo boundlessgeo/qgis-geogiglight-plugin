@@ -41,8 +41,8 @@ from qgis.PyQt.QtWidgets import (QHBoxLayout,
                                  QPushButton
                                 )
 
-from qgis.core import QgsMapLayerRegistry, QgsGeometry, QgsFeature
-from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+from qgis.core import QgsProject, QgsGeometry, QgsFeature
+from qgis.gui import QgsMapCanvas, QgsMapToolPan
 
 from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 from geogig.extlibs.qgiscommons2.gui import execute
@@ -189,7 +189,7 @@ class ConflictDialog(WIDGET, BASE):
         layers = [self.oursLayer, self.theirsLayer]
         for layer in layers:
             if layer is not None:
-                QgsMapLayerRegistry.instance().removeMapLayer(layer.id())
+                QMessageBox.instance().removeMapLayer(layer.id())
         self.oursLayer = None
         self.theirsLayer = None
 
@@ -341,7 +341,7 @@ class ConflictDialog(WIDGET, BASE):
             pr.addFeatures([feat])
             self.oursLayer.loadNamedStyle(style)
             self.oursLayer.updateExtents()
-            QgsMapLayerRegistry.instance().addMapLayer(self.oursLayer, False)
+            QMessageBox.instance().addMapLayer(self.oursLayer, False)
         else:
             self.oursLayer = None
         if self.theirsgeom is not None:
@@ -354,7 +354,7 @@ class ConflictDialog(WIDGET, BASE):
             pr.addFeatures([feat])
             self.theirsLayer.loadNamedStyle(style)
             self.theirsLayer.updateExtents()
-            QgsMapLayerRegistry.instance().addMapLayer(self.theirsLayer, False)
+            QgsProject.instance().addMapLayer(self.theirsLayer, False)
         else:
             self.theirsLayer = None
 
@@ -366,7 +366,7 @@ class ConflictDialog(WIDGET, BASE):
             if lay is not None and chk.isChecked():
                 toShow.append(lay)
         self.mapCanvas.setRenderFlag(False)
-        self.mapCanvas.setLayerSet([QgsMapCanvasLayer(layer) for layer in toShow])
+        self.mapCanvas.setLayers(toShow)
         self.mapCanvas.setRenderFlag(True)
 
 

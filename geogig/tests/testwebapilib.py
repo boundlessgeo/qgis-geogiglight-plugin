@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+
 from builtins import str
 
 import os
@@ -106,7 +106,7 @@ class WebApiTests(unittest.TestCase):
 
     def testFeature(self):
         repo = _createSimpleTestRepo()
-        expected = {u'geometry': u'POINT (5 5)', u'n': 2}
+        expected = {'geometry': 'POINT (5 5)', 'n': 2}
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
         feature = repo.feature(path, repo.HEAD)
@@ -114,27 +114,27 @@ class WebApiTests(unittest.TestCase):
 
     def testTrees(self):
         repo = _createMultilayerTestRepo()
-        self.assertEquals(["points", "lines"], repo.trees())
+        self.assertEqual(["points", "lines"], repo.trees())
 
     def testTreesNonHead(self):
         repo = _createMultilayerTestRepo()
         log = repo.log()
         self.assertEqual(4, len(log))
         commitid = log[-1].commitid
-        self.assertEquals(["points"], repo.trees(commit = commitid))
+        self.assertEqual(["points"], repo.trees(commit = commitid))
 
     def testRemoveTree(self):
         repo = _createSimpleTestRepo(True)
-        self.assertEquals(["points"], repo.trees())
+        self.assertEqual(["points"], repo.trees())
         repo.removetree("points", "me", "me@email.com")
-        self.assertEquals([], repo.trees())
+        self.assertEqual([], repo.trees())
 
     def testRemoveTreeFromBranch(self):
         repo = _createSimpleTestRepo(True)
-        self.assertEquals(["points"], repo.trees("mybranch"))
+        self.assertEqual(["points"], repo.trees("mybranch"))
         repo.removetree("points", "me", "me@email.com", "mybranch")
-        self.assertEquals([], repo.trees("mybranch"))
-        self.assertEquals(["points"], repo.trees())
+        self.assertEqual([], repo.trees("mybranch"))
+        self.assertEqual(["points"], repo.trees())
 
     def testTags(self):
         repo = _createSimpleTestRepo()
@@ -162,10 +162,10 @@ class WebApiTests(unittest.TestCase):
     def testRemoveTags(self):
         repo = _createSimpleTestRepo(True)
         tags = repo.tags()
-        self.assertEquals(1, len(tags))
+        self.assertEqual(1, len(tags))
         repo.deletetag(list(tags.keys())[0])
         tags = repo.tags()
-        self.assertEquals(0, len(tags))
+        self.assertEqual(0, len(tags))
 
     def testDiff(self):
         repo = _createSimpleTestRepo()
@@ -187,9 +187,9 @@ class WebApiTests(unittest.TestCase):
         repo =_createSimpleTestRepo()
         log = repo.log()
         self.assertEqual(3, len(log))
-        expected = [{u'changetype': u'ADDED', u'attributename': u'n', u'newvalue': 2},
-                    {u'geometry': True, u'crs': u'EPSG:4326', u'changetype': u'ADDED',
-                     u'attributename': u'geometry', u'newvalue': u'POINT (5 5)'}]
+        expected = [{'changetype': 'ADDED', 'attributename': 'n', 'newvalue': 2},
+                    {'geometry': True, 'crs': 'EPSG:4326', 'changetype': 'ADDED',
+                     'attributename': 'geometry', 'newvalue': 'POINT (5 5)'}]
         diff = repo.diff(repo.log()[2].commitid, repo.log()[1].commitid)
         path = diff[0].path
         diff = repo.diff(log[-1].commitid, log[0].commitid, path)
@@ -213,24 +213,24 @@ class WebApiTests(unittest.TestCase):
 
     def testBranches(self):
         repo = _createSimpleTestRepo()
-        self.assertEquals(["master", "mybranch"], repo.branches())
+        self.assertEqual(["master", "mybranch"], repo.branches())
 
     def testBranchesInEmptyRepo(self):
         repo = _createEmptyTestRepo()
-        self.assertEquals(["master"], repo.branches())
+        self.assertEqual(["master"], repo.branches())
 
     def testCreateBranch(self):
         repo = _createSimpleTestRepo(True)
-        self.assertEquals(["master", "mybranch"], repo.branches())
+        self.assertEqual(["master", "mybranch"], repo.branches())
         repo.createbranch(repo.HEAD, "anotherbranch")
-        self.assertEquals({"master", "mybranch", "anotherbranch"}, set(repo.branches()))
+        self.assertEqual({"master", "mybranch", "anotherbranch"}, set(repo.branches()))
         self.assertEqual(repo.revparse(repo.HEAD), repo.revparse("anotherbranch"))
 
     def testRemoveBranch(self):
         repo = _createSimpleTestRepo(True)
-        self.assertEquals(["master", "mybranch"], repo.branches())
+        self.assertEqual(["master", "mybranch"], repo.branches())
         repo.deletebranch("mybranch")
-        self.assertEquals(["master"], repo.branches())
+        self.assertEqual(["master"], repo.branches())
 
     def testFirstImport(self):
         repo = _createEmptyTestRepo(True)
@@ -380,7 +380,7 @@ class WebApiTests(unittest.TestCase):
             layer2.changeAttributeValue(features2[1].id(), idx, 2001)
         layer3 = loadLayerNoCrsDialog(filename2, "points", "ogr")
         feature = next(layer3.getFeatures(QgsFeatureRequest(features2[0].id())))
-        self.assertEquals(1001, feature["n"])
+        self.assertEqual(1001, feature["n"])
         _, _, conflicts, _ = repo.importgeopkg(layer2, "master", "another message", "me", "me@mysite.com", True)
         self.assertEqual(2, len(conflicts))
         self.assertEqual(conflicts[0].localFeature['n'], 1001)

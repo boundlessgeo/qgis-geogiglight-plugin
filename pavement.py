@@ -81,12 +81,13 @@ def read_requirements():
     return not_comments(0, idx), not_comments(idx+1, None)
 
 
-def _install(folder, options):
+@task
+def install(options):
     '''install plugin to qgis'''
     builddocs(options)
     plugin_name = options.plugin.name
     src = path(__file__).dirname() / plugin_name
-    dst = path('~').expanduser() / folder / 'python' / 'plugins' / plugin_name
+    dst = path('~').expanduser() / "Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins" / plugin_name
     src = src.abspath()
     dst = dst.abspath()
     if not hasattr(os, 'symlink'):
@@ -103,17 +104,6 @@ def _install(folder, options):
         if not docs_link.islink():
             docs.symlink(docs_link)
 
-@task
-def install(options):
-    _install(".qgis2", options)
-
-@task
-def installdev(options):
-    _install(".qgis-dev", options)
-
-@task
-def install3(options):
-    _install(".qgis3", options)
 
 @task
 @cmdopts([

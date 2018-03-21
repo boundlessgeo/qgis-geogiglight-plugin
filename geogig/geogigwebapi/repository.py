@@ -15,7 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
-from __future__ import print_function
+
 from builtins import str
 from builtins import object
 
@@ -465,7 +465,7 @@ class Repository(object):
         r.raise_for_status()
         resp = r.json()
         taskId = resp["task"]["id"]
-        if isinstance(layer, basestring):
+        if isinstance(layer, str):
             layer = loadLayerNoCrsDialog(layer, "", "ogr")
         checker = TaskChecker(self.rootUrl, taskId, "Importing geopkg into GeoGig server", layer.featureCount())
         loop = QEventLoop()
@@ -482,7 +482,7 @@ class Repository(object):
         if interchange:
             try:
                 nconflicts = checker.response["task"]["result"]["Merge"]["conflicts"]
-            except KeyError, e:
+            except KeyError as e:
                 nconflicts = 0
             if nconflicts:
                 mergeCommitId = self.HEAD
@@ -545,7 +545,7 @@ class Repository(object):
             self.closeTransaction(transactionId)
 
     def resolveConflictWithFeature(self, path, feature, ours, theirs, transactionId):
-        merges = {k:{"value": v} for k,v in feature.items()}
+        merges = {k:{"value": v} for k,v in list(feature.items())}
         payload = {"path": path, "ours": ours, "theirs": theirs,
                    "merges": merges}
         r = requests.post(self.url + "repo/mergefeature", json = payload)
@@ -657,7 +657,7 @@ class Repository(object):
                 raise CannotPushException(r["error"])
             if not r["dataPushed"]:
                 raise NothingToPushException()
-        except HTTPError, e:
+        except HTTPError as e:
             raise CannotPushException(e.response.json()["response"]["error"])
 
     def pull (self, remote, branch, localbranch=None):
@@ -783,7 +783,7 @@ def removeRepoEndpoint(title):
 
 def saveRepoEndpoints():
     filename = os.path.join(userFolder(), "repositories")
-    towrite=[{"url": url, "title": title} for title,url in repoEndpoints.items()]
+    towrite=[{"url": url, "title": title} for title,url in list(repoEndpoints.items())]
     with open(filename, "w") as f:
         f.write(json.dumps(towrite))
 

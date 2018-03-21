@@ -34,7 +34,7 @@ from qgis.PyQt.QtCore import Qt, QSettings
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton, QMessageBox
 
-from qgis.core import QgsMapLayerRegistry, QgsApplication
+from qgis.core import QgsProject, QgsApplication
 
 from geogig import config
 from geogig.gui.dialogs.navigatordialog import NavigatorDialog
@@ -62,8 +62,8 @@ def trackLayer(layer):
         setAsNonRepoLayer(layer)
 
 def layerRemoved(layer):
-    if QgsMapLayerRegistry is not None:
-        layer = QgsMapLayerRegistry.instance().mapLayer(layer)
+    if QgsProject is not None:
+        layer = QgsProject.instance().mapLayer(layer)
         removeLayerActions(layer)
 
 class GeoGigPlugin(object):
@@ -74,7 +74,7 @@ class GeoGigPlugin(object):
         readSettings()
         config.initConfigParams()
 
-        layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
+        layers = list(QgsProject.instance().mapLayers().values())
         for layer in layers:
             trackLayer(layer)
         try:
@@ -89,8 +89,8 @@ class GeoGigPlugin(object):
     def unload(self):
         navigatorInstance.setVisible(False)
         try:
-            QgsMapLayerRegistry.instance().layerWasAdded.disconnect(trackLayer)
-            QgsMapLayerRegistry.instance().layerRemoved.disconnect(layerRemoved)
+            QgsProject.instance().layerWasAdded.disconnect(trackLayer)
+            QgsProject.instance().layerRemoved.disconnect(layerRemoved)
         except:
             pass
 
@@ -100,7 +100,7 @@ class GeoGigPlugin(object):
         self.iface.removePluginMenu("&GeoGig", self.explorerAction)
         self.iface.removePluginMenu("&GeoGig", self.toolAction)
 
-        layers = list(QgsMapLayerRegistry.instance().mapLayers().values())
+        layers = list(QgsProject.instance().mapLayers().values())
         for layer in layers:
             removeLayerActions(layer)
         removeNonexistentTrackedLayers()
@@ -126,8 +126,8 @@ class GeoGigPlugin(object):
     def initGui(self):
         readTrackedLayers()
 
-        QgsMapLayerRegistry.instance().layerWasAdded.connect(trackLayer)
-        QgsMapLayerRegistry.instance().layerRemoved.connect(layerRemoved)
+        QgsProject.instance().layerWasAdded.connect(trackLayer)
+        QgsProject.instance().layerRemoved.connect(layerRemoved)
 
         icon = QIcon(os.path.dirname(__file__) + "/ui/resources/geogig.png")
         self.explorerAction = navigatorInstance.toggleViewAction()

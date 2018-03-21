@@ -15,7 +15,7 @@
 *                                                                         *
 ***************************************************************************
 """
-from __future__ import absolute_import
+
 from builtins import str
 
 __author__ = 'Victor Olaya'
@@ -167,7 +167,7 @@ def setChildren(commits):
                 if commit.commitid not in parent._children:
                     parent._children.append(commit.commitid)
                     addCommit(parent)
-        except Exception, e:
+        except Exception as e:
             pass
 
     addCommit(commits[0])

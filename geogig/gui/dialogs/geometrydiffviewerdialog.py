@@ -32,8 +32,8 @@ import difflib
 from qgis.PyQt.QtCore import Qt, QSettings, QAbstractTableModel
 from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QTableView, QDialog, QHBoxLayout, QCheckBox
 from qgis.PyQt.QtGui import QBrush
-from qgis.core import QgsFeature, QgsMapLayerRegistry, QgsGeometry, QgsPoint, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
-from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapCanvasLayer
+from qgis.core import QgsFeature, QgsProject, QgsGeometry, QgsPoint, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
+from qgis.gui import QgsMapCanvas, QgsMapToolPan
 
 from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
 from geogig.extlibs.qgiscommons2.gui import execute
@@ -112,8 +112,8 @@ class GeometryDiffViewerDialog(QDialog):
         if self.baseLayersCheck.isChecked():
             layers.extend(self.baseLayers)
 
-        self.mapLayers = [QgsMapCanvasLayer(lay) for lay in layers]
-        self.canvas.setLayerSet(self.mapLayers)
+        self.mapLayers = layers
+        self.canvas.setLayers(self.mapLayers)
         self.canvas.refresh()
 
     def createLayers(self):
@@ -147,7 +147,7 @@ class GeometryDiffViewerDialog(QDialog):
             layer.loadNamedStyle(style)
             layer.updateExtents()
             self.diffLayers.append(layer)
-            QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+            QgsProject.instance().addMapLayer(layer, False)
             extent.combineExtentWith(geom.boundingBox())
 
         self.nodesLayer = loadLayerNoCrsDialog("Point?crs=%s&field=changetype:string" % self.crs.authid(), "points", "memory")
@@ -171,7 +171,7 @@ class GeometryDiffViewerDialog(QDialog):
 
         pr.addFeatures(feats)
         self.nodesLayer.loadNamedStyle(pointsStyle)
-        QgsMapLayerRegistry.instance().addMapLayer(self.nodesLayer, False)
+        QgsProject.instance().addMapLayer(self.nodesLayer, False)
 
         self.baseLayers = []
         root = QgsProject.instance().layerTreeRoot()

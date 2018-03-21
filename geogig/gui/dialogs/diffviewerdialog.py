@@ -186,7 +186,7 @@ class DiffViewerDialog(WIDGET, BASE):
                                             FEATURE_MODIFIED:modifiedItem}
             item = FeatureItem(layername, featureid)
             layerSubItems[layername][c.changetype].addChild(item)
-        for layername, item in layerItems.iteritems():
+        for layername, item in layerItems.items():
             for i in [FEATURE_ADDED, FEATURE_REMOVED, FEATURE_MODIFIED]:
                 subItem = layerSubItems[layername][i]
                 item.addChild(subItem)

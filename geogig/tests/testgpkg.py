@@ -5,7 +5,7 @@ import shutil
 from osgeo import ogr
 
 from qgis.utils import iface
-from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPoint
 
 from geogig.extlibs.qgiscommons2.files import tempFilename
 from geogig.extlibs.qgiscommons2.layers import loadLayerNoCrsDialog
@@ -22,7 +22,7 @@ class GeoPackageEditTests(unittest.TestCase):
         dest = self._copyTestLayer()
         iface.newProject()
         layer = loadLayerNoCrsDialog(dest, "points", "ogr")
-        QgsMapLayerRegistry.instance().addMapLayers([layer])
+        QgsProject.instance().addMapLayers([layer])
         return layer
 
     def _getOgrTestLayer(self):
