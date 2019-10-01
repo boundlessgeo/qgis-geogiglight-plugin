@@ -56,38 +56,38 @@ _infoActions = {}
 def setAsRepoLayer(layer):
     removeLayerActions(layer)
     canConnect = addInfoActions(layer)
-    separatorAction = QAction("", config.iface.legendInterface())
+    separatorAction = QAction("", config.iface.mainWindow())
     separatorAction.setSeparator(True)
-    config.iface.legendInterface().addLegendLayerAction(separatorAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(separatorAction, layer)
-    syncAction = QAction("Sync layer with branch...", config.iface.legendInterface())
+    config.iface.addCustomActionForLayerType(separatorAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(separatorAction, layer)
+    syncAction = QAction("Sync layer with branch...", config.iface.mainWindow())
     syncAction.triggered.connect(partial(syncLayer, layer))
-    config.iface.legendInterface().addLegendLayerAction(syncAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(syncAction, layer)
-    changeVersionAction = QAction("Change to a different commit...", config.iface.legendInterface())
+    config.iface.addCustomActionForLayerType(syncAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(syncAction, layer)
+    changeVersionAction = QAction("Change to a different commit...", config.iface.mainWindow())
     changeVersionAction.triggered.connect(partial(changeVersion, layer))
-    config.iface.legendInterface().addLegendLayerAction(changeVersionAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(changeVersionAction, layer)
-    revertChangeAction = QAction("Revert commit...", config.iface.legendInterface())
+    config.iface.addCustomActionForLayerType(changeVersionAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(changeVersionAction, layer)
+    revertChangeAction = QAction("Revert commit...", config.iface.mainWindow())
     revertChangeAction.triggered.connect(partial(revertChange, layer))
-    config.iface.legendInterface().addLegendLayerAction(revertChangeAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(revertChangeAction, layer)
-    changesAction = QAction("Show local changes...", config.iface.legendInterface())
+    config.iface.addCustomActionForLayerType(revertChangeAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(revertChangeAction, layer)
+    changesAction = QAction("Show local changes...", config.iface.mainWindow())
     changesAction.triggered.connect(partial(showLocalChanges, layer))
-    config.iface.legendInterface().addLegendLayerAction(changesAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(changesAction, layer)
-    revertAction = QAction("Revert local changes", config.iface.legendInterface())
+    config.iface.addCustomActionForLayerType(changesAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(changesAction, layer)
+    revertAction = QAction("Revert local changes", config.iface.mainWindow())
     revertAction.triggered.connect(partial(revertLocalChanges, layer))
-    config.iface.legendInterface().addLegendLayerAction(revertAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(revertAction, layer)
+    config.iface.addCustomActionForLayerType(revertAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(revertAction, layer)
     _actions[layer.id()] = [separatorAction, syncAction, changeVersionAction, revertChangeAction, changesAction, revertAction]
     for action in _actions[layer.id()]:
         action.setEnabled(canConnect)
     if not canConnect:
-        refreshAction = QAction("Retry connecting...", config.iface.legendInterface())
+        refreshAction = QAction("Retry connecting...", config.iface.mainWindow())
         refreshAction.triggered.connect(lambda: setAsRepoLayer(layer))
-        config.iface.legendInterface().addLegendLayerAction(refreshAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-        config.iface.legendInterface().addLegendLayerActionForLayer(refreshAction, layer)
+        config.iface.addCustomActionForLayerType(refreshAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+        config.iface.addCustomActionForLayer(refreshAction, layer)
         _actions[layer.id()].append(refreshAction)
     _actions[layer.id()].extend(_infoActions[layer.id()])
     repoWatcher.layerUpdated.connect(updateInfoActions)
@@ -99,29 +99,29 @@ def addInfoActions(layer):
     _infoActions[layer.id()] = []
     try:
         commit = Commit.fromref(repo, commitId)
-        messageAction = QAction("Message: '%s'" % commit.message.splitlines()[0], config.iface.legendInterface())
-        f = messageAction.font();
-        f.setBold(True);
-        messageAction.setFont(f);
-        config.iface.legendInterface().addLegendLayerAction(messageAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-        config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
+        messageAction = QAction("Message: '%s'" % commit.message.splitlines()[0], config.iface.mainWindow())
+        f = messageAction.font()
+        f.setBold(True)
+        messageAction.setFont(f)
+        config.iface.addCustomActionForLayerType(messageAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+        config.iface.addCustomActionForLayer(messageAction, layer)
         _infoActions[layer.id()].append(messageAction)
     except Exception as e:
         QgsMessageLog.logMessage("Cannot connect to server when creating GeoGig layer context:\n %s" % str(e), level=QgsMessageLog.WARNING)
-        messageAction = QAction("Error: Cannot connect with repository", config.iface.legendInterface())
-        f = messageAction.font();
-        f.setBold(True);
-        messageAction.setFont(f);
-        config.iface.legendInterface().addLegendLayerAction(messageAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-        config.iface.legendInterface().addLegendLayerActionForLayer(messageAction, layer)
+        messageAction = QAction("Error: Cannot connect with repository", config.iface.mainWindow())
+        f = messageAction.font()
+        f.setBold(True)
+        messageAction.setFont(f)
+        config.iface.addCustomActionForLayerType(messageAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+        config.iface.addCustomActionForLayer(messageAction, layer)
         _infoActions[layer.id()].append(messageAction)
         return False
-    shaAction = QAction("Commit ID: %s" % commitId, config.iface.legendInterface())
-    f = shaAction.font();
-    f.setBold(True);
-    shaAction.setFont(f);
-    config.iface.legendInterface().addLegendLayerAction(shaAction, "GeoGig", "id1", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(shaAction, layer)
+    shaAction = QAction("Commit ID: %s" % commitId, config.iface.mainWindow())
+    f = shaAction.font()
+    f.setBold(True)
+    shaAction.setFont(f)
+    config.iface.addCustomActionForLayerType(shaAction, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(shaAction, layer)
     _infoActions[layer.id()].append(shaAction)
     return True
 
@@ -130,12 +130,12 @@ def updateInfoActions(layer):
 
 def setAsNonRepoLayer(layer):
     removeLayerActions(layer)
-    action = QAction("Import to GeoGig...", config.iface.legendInterface())
+    action = QAction("Import to GeoGig...", config.iface.mainWindow())
     action.triggered.connect(partial(addLayer, layer))
     if layer.type() != QgsMapLayer.VectorLayer:
         action.setEnabled(False)
-    config.iface.legendInterface().addLegendLayerAction(action, "GeoGig", "id2", QgsMapLayer.VectorLayer, False)
-    config.iface.legendInterface().addLegendLayerActionForLayer(action, layer)
+    config.iface.addCustomActionForLayerType(action, "GeoGig", QgsMapLayer.VectorLayer, False)
+    config.iface.addCustomActionForLayer(action, layer)
     _actions[layer.id()] = [action]
     try:
         repoWatcher.layerUpdated.disconnect(updateInfoActions)
@@ -147,7 +147,7 @@ def removeLayerActions(layer):
         return
     try:
         for action in _actions[layer.id()]:
-            config.iface.legendInterface().removeLegendLayerAction(action)
+            config.iface.removeCustomActionForLayerType(action)
         _actions[layer.id()] = []
         _infoActions[layer.id()] = []
     except KeyError:
