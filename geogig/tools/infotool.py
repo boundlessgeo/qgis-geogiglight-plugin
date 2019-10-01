@@ -28,7 +28,7 @@ __revision__ = '$Format:%H$'
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QMenu, QAction, QMessageBox
-from qgis.core import QgsVectorLayer, QgsRectangle, QgsFeatureRequest
+from qgis.core import QgsVectorLayer, QgsRectangle, QgsFeatureRequest, Qgis
 from qgis.gui import QgsMapTool, QgsMessageBar
 
 from geogig import config
@@ -49,11 +49,11 @@ class MapToolGeoGigInfo(QgsMapTool):
         layer = config.iface.activeLayer()
         if layer is None or not isinstance(layer, QgsVectorLayer):
             config.iface.messageBar().pushMessage("No layer selected or the current active layer is not a valid vector layer",
-                                                  level = QgsMessageBar.WARNING, duration = 5)
+                                                  level = Qgis.Warning, duration = 5)
             return
         if not layertracking.isRepoLayer(layer):
             config.iface.messageBar().pushMessage("The current active layer is not being tracked as part of a GeoGig repo",
-                                                  level = QgsMessageBar.WARNING, duration = 5)
+                                                  level = Qgis.Warning, duration = 5)
             return
 
         trackedlayer = layertracking.getTrackingInfo(layer)

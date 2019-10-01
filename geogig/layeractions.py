@@ -29,7 +29,7 @@ from functools import partial
 
 from qgis.PyQt.QtWidgets import QAction, QMessageBox
 
-from qgis.core import QgsMapLayer, QgsVectorLayer ,QgsMessageLog
+from qgis.core import QgsMapLayer, QgsVectorLayer, QgsMessageLog, Qgis
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -182,7 +182,7 @@ def revertChange(layer):
         layer.reload()
         layer.triggerRepaint()
         config.iface.messageBar().pushMessage("GeoGig", "Commit changes have been reverted in local layer",
-                                                      level=QgsMessageBar.INFO,
+                                                      level=Qgis.Info,
                                                       duration=5)
         commitdialog.suggestedMessage = "Reverted changes from commit %s [%s] " % (commit.commitid, commit.message)
 
@@ -207,7 +207,7 @@ def changeVersion(layer):
             else:
                 repo.checkoutlayer(tracking.geopkg, tracking.layername, None, dlg.ref)
                 config.iface.messageBar().pushMessage("GeoGig", "Layer has been updated to commit %s" % dlg.ref,
-                                                       level=QgsMessageBar.INFO,
+                                                       level=Qgis.Info,
                                                        duration=5)
                 layer.reload()
                 layer.triggerRepaint()
@@ -243,13 +243,13 @@ def revertLocalChanges(layer):
         commitid = getCommitId(layer)
         repo.checkoutlayer(tracking.geopkg, tracking.layername, None, commitid)
         config.iface.messageBar().pushMessage("GeoGig", "Local changes have been discarded",
-                                                      level=QgsMessageBar.INFO,
+                                                      level=Qgis.Info,
                                                       duration=5)
         layer.reload()
         layer.triggerRepaint()
     else:
         config.iface.messageBar().pushMessage("GeoGig", "No local changes were found",
-                                                      level=QgsMessageBar.INFO,
+                                                      level=Qgis.Info,
                                                       duration=5)
 
 def showLocalChanges(layer):

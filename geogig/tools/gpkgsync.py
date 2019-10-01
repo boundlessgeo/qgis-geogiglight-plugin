@@ -31,7 +31,7 @@ import sqlite3
 
 from qgis.PyQt.QtWidgets import QInputDialog, QMessageBox
 
-from qgis.core import QgsMessageLog, QgsProject, QgsVectorLayer
+from qgis.core import QgsMessageLog, QgsProject, QgsVectorLayer, Qgis
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -155,7 +155,7 @@ def syncLayer(layer):
     repoWatcher.repoChanged.emit(repo)
 
     iface.messageBar().pushMessage("GeoGig", "Layer has been correctly synchronized",
-                                                  level=QgsMessageBar.INFO,
+                                                  level=Qgis.Info,
                                                   duration=5)
     repoWatcher.layerUpdated.emit(layer)
 
@@ -307,7 +307,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
 
         QgsProject.instance().addMapLayers([layer])
         iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
-                          level=QgsMessageBar.INFO,
+                          level=Qgis.Info,
                           duration=5)
     else:
         repo.checkoutlayer(filename, layername, bbox, ref)
@@ -316,7 +316,7 @@ def checkoutLayer(repo, layername, bbox, ref = None):
             layer = loadLayerNoCrsDialog(source, layername, "ogr")
             QgsProject.instance().addMapLayers([layer])
             iface.messageBar().pushMessage("GeoGig", "Layer correctly added to project",
-                                          level=QgsMessageBar.INFO,
+                                          level=Qgis.Info,
                                           duration=5)
 
     return layer

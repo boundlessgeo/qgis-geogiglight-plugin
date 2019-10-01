@@ -49,7 +49,7 @@ from qgis.PyQt.QtWidgets import (QHeaderView,
                                  QMessageBox
                                 )
 
-from qgis.core import QgsApplication, QgsMessageLog
+from qgis.core import QgsApplication, QgsMessageLog, Qgis
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -196,14 +196,14 @@ class NavigatorDialog(BASE, WIDGET):
                 repo = execute(lambda: createRepoAtUrl(url, group, name))
             except GeoGigException as e:
                 config.iface.messageBar().pushMessage("Error", str(e),
-                               level=QgsMessageBar.CRITICAL,
+                               level=Qgis.Critical,
                                duration=5)
                 return
             item = RepoItem(self, self.repoTree, repo)
             addRepo(repo)
             self.repoTree.addTopLevelItem(item)
             config.iface.messageBar().pushMessage("Create repository", "Repository correctly created",
-                                           level=QgsMessageBar.INFO,
+                                           level=Qgis.Info,
                                            duration=5)
 
     def editGeoGigServer(self):
@@ -430,7 +430,7 @@ class BranchItem(QTreeWidgetItem):
             self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
 
         iface.messageBar().pushMessage("GeoGig", "Branch has been correctly merged",
-                                              level=QgsMessageBar.INFO, duration=5)
+                                              level=Qgis.Info, duration=5)
         repoWatcher.repoChanged.emit(self.repo)
         
     def showHistory(self):
@@ -488,11 +488,11 @@ class BranchItem(QTreeWidgetItem):
                     return
                 self.repo.commitAndCloseMergeAndTransaction(user, email, "Resolved merge conflicts", conflicts[0].transactionId)
                 config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
+                                               level = Qgis.Info, duration = 5)
                 repoWatcher.repoChanged.emit(self.repo)
             else:
                 config.iface.messageBar().pushMessage("Changes have been correctly pulled from the connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
+                                               level = Qgis.Info, duration = 5)
                 repoWatcher.repoChanged.emit(self.repo)
 
     def push(self):
@@ -501,13 +501,13 @@ class BranchItem(QTreeWidgetItem):
             try:
                 self.repo.push(remote, branch, self.branch)
                 config.iface.messageBar().pushMessage("Changes have been correctly pushed to connection",
-                                               level = QgsMessageBar.INFO, duration = 5)
+                                               level = Qgis.Info, duration = 5)
             except CannotPushException as e:
                 config.iface.messageBar().pushMessage(str(e),
-                                               level = QgsMessageBar.WARNING, duration = 5)
+                                               level = Qgis.Warning, duration = 5)
             except NothingToPushException as e:
                 config.iface.messageBar().pushMessage("Nothing to push. Already up to date",
-                                               level = QgsMessageBar.INFO, duration = 5)
+                                               level = Qgis.Info, duration = 5)
 
 
 class LayerItem(QTreeWidgetItem):
@@ -576,7 +576,7 @@ class LayerItem(QTreeWidgetItem):
         #TODO remove triggers from layer
 
         config.iface.messageBar().pushMessage("Layer correctly removed from repository",
-                                               level = QgsMessageBar.INFO, duration = 5)
+                                               level = Qgis.Info, duration = 5)
 
         repoWatcher.repoChanged.emit(self.repo)
 

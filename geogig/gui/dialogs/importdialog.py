@@ -28,7 +28,7 @@ __revision__ = '$Format:%H$'
 import os
 from datetime import datetime
 
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, Qgis
 
 from qgis.PyQt.QtWidgets import (QDialog,
                                  QVBoxLayout,
@@ -169,7 +169,7 @@ class ImportDialog(QDialog):
             self.repo.importgeopkg(newLayer, branch, message, user, email, False)
         except GeoGigException as e:
             iface.messageBar().pushMessage("Error", str(e),
-                                           level=QgsMessageBar.CRITICAL,
+                                           level=Qgis.Critical,
                                            duration=5)
             self.close()
             return
@@ -178,7 +178,7 @@ class ImportDialog(QDialog):
 
         self.ok = True
         iface.messageBar().pushMessage("Layer was correctly added to repository",
-                                       level=QgsMessageBar.INFO,
+                                       level=Qgis.Info,
                                        duration=5)
         self.close()
 
