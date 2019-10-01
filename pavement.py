@@ -84,9 +84,9 @@ def setup(options):
         try:
             ret = subprocess.check_call(
                 [sys.executable, '-m', 'pip', 'install', '--upgrade',
-                 '--no-deps', '-t', f'{ext_libs.abspath()}', req])
+                 '--no-deps', '-t', ext_libs.abspath(), req])
         except subprocess.CalledProcessError:
-            error(f"Error installing {req} with pip.")
+            error("Error installing {0} with pip.".format(req))
             sys.exit(1)
 
 
@@ -280,9 +280,9 @@ def install_devtools(options):
         try:
             ret = subprocess.check_call(
                 [sys.executable, '-m', 'pip', 'install', '--upgrade',
-                 '--no-deps', '-t', f'{ext_libs.abspath()}', req])
+                 '--no-deps', '-t', ext_libs.abspath(), req])
         except subprocess.CalledProcessError:
-            error(f"Error installing {req} with pip.")
+            error("Error installing {0} with pip.".format(req))
             sys.exit(1)
 
 
