@@ -1,45 +1,77 @@
+# -*- coding: utf-8 -*-
+"""
+***************************************************************************
+    pavement.py
+    ---------------------
+    Date          : September 2019
+    Copyright     : (C) 2016 Boundless, 2019 Planet Inc, https://planet.com
+***************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************
+"""
+__author__ = 'Planet Federal'
+__date__ = 'September 2019'
+__copyright__ = '(C) 2019 Planet Inc, https://planet.com'
+
+# This will get replaced with a git SHA1 when you do a git archive
+__revision__ = '$Format:%H$'
+
 import os
+import sys
 import fnmatch
+# import shutil
 import zipfile
+import subprocess
+# import requests
 import json
 from collections import defaultdict
 
-from paver.easy import *
 # this pulls in the sphinx target
-from paver.doctools import html
+# noinspection PyPackageRequirements
+from paver.easy import *
+# noinspection PyPackageRequirements
+# from paver.doctools import html
 
 
 options(
-    plugin = Bunch(
-        name = 'geogig',
-        ext_libs = path('geogig/extlibs'),
-        ext_src = path('geogig/ext-src'),
-        source_dir = path('geogig'),
-        package_dir = path('.'),
-        tests = ['test'],
-        excludes = [
+    plugin=Bunch(
+        name='geogig',
+        ext_libs=path('geogig/extlibs'),
+        ext_src=path('geogig/ext-src'),
+        source_dir=path('geogig'),
+        package_dir=path('.'),
+        tests=['test'],
+        excludes=[
+            '*.pyc',
+            '.git',
+            '.DS_Store',
             'ext-src',
-            '*.pyc'
         ],
         # skip certain files inadvertently found by exclude pattern globbing
-        skip_exclude=[],
+        skip_exclude=[]
     ),
 
-    sphinx = Bunch(
-        docroot = path('docs'),
-        sourcedir = path('docs/source'),
-        builddir = path('docs/build')
+    sphinx=Bunch(
+        docroot=path('docs'),
+        sourcedir=path('docs/source'),
+        builddir=path('docs/build')
     )
+
 )
 
 
-
+# noinspection PyUnusedLocal,PyShadowingNames,DuplicatedCode
 @task
 @cmdopts([
     ('clean', 'c', 'clean out dependencies first'),
 ])
 def setup(options):
-    '''install dependencies'''
+    # noinspection PyBroadException
     clean = getattr(options, 'clean', False)
     ext_libs = options.plugin.ext_libs
     ext_src = options.plugin.ext_src
@@ -47,47 +79,40 @@ def setup(options):
         ext_libs.rmtree()
     ext_libs.makedirs()
     runtime, test = read_requirements()
-
-    try:
-        import pip
-    except:
-        error('FATAL: Unable to import pip, please install it first!')
-        sys.exit(1)
-
-    os.environ['PYTHONPATH']=str(ext_libs.abspath())
+    os.environ['PYTHONPATH'] = ext_libs.abspath()
     for req in runtime + test:
-        pip.main(['install',
-                  '--upgrade',
-                  '-t',
-                  ext_libs.abspath(),
-                  req])
-
-    initFile = os.path.join(ext_libs.abspath(), "__init__.py")
-    with open(initFile, "w") as f:
-        f.write("")
+        try:
+            ret = subprocess.check_call(
+                [sys.executable, '-m', 'pip', 'install', '--upgrade',
+                 '--no-deps', '-t', f'{ext_libs.abspath()}', req])
+        except subprocess.CalledProcessError:
+            error(f"Error installing {req} with pip.")
+            sys.exit(1)
 
 
-
-def read_requirements():
-    '''return a list of runtime and list of test requirements'''
-    lines = open('requirements.txt').readlines()
-    lines = [ l for l in [ l.strip() for l in lines] if l ]
-    divider = '# test requirements'
-    try:
-        idx = lines.index(divider)
-    except ValueError:
-        raise BuildFailure('expected to find "%s" in requirements.txt' % divider)
-    not_comments = lambda s,e: [ l for l in lines[s:e] if l[0] != '#']
-    return not_comments(0, idx), not_comments(idx+1, None)
-
-
+# noinspection PyShadowingNames
 @task
 def install(options):
-    '''install plugin to qgis'''
-    builddocs(options)
+    """install plugin to qgis"""
+    if options.sphinx.docroot.exists():
+        builddocs(options)
     plugin_name = options.plugin.name
     src = path(__file__).dirname() / plugin_name
-    dst = path('~').expanduser() / "Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins" / plugin_name
+    if os.name == 'nt':
+        default_profile_plugins = \
+            "~/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins"
+    elif sys.platform == 'darwin':
+        default_profile_plugins = \
+            "~/Library/Application Support/QGIS/QGIS3" \
+            "/profiles/default/python/plugins"
+    else:
+        default_profile_plugins = \
+            "~/.local/share/QGIS/QGIS3/profiles/default/python/plugins"
+
+    dst_plugins = path(default_profile_plugins).expanduser()
+    if not dst_plugins.exists():
+        os.makedirs(dst_plugins, exist_ok=True)
+    dst = dst_plugins / plugin_name
     src = src.abspath()
     dst = dst.abspath()
     if not hasattr(os, 'symlink'):
@@ -95,37 +120,66 @@ def install(options):
         src.copytree(dst)
     elif not dst.exists():
         src.symlink(dst)
-        # Symlink the build folder to the parent
-        docs = path('..') / '..' / "docs" / 'build' / 'html'
-        docs_dest = path(__file__).dirname() / plugin_name / "docs"
-        docs_link = docs_dest / 'html'
-        if not docs_dest.exists():
-            docs_dest.mkdir()
-        if not docs_link.islink():
-            docs.symlink(docs_link)
+        if options.sphinx.docroot.exists():
+            # Symlink the docs build folder to the parent
+            docs = path('..') / '..' / "docs" / 'build' / 'html'
+            docs_dest = path(__file__).dirname() / plugin_name / "docs"
+            docs_link = docs_dest / 'html'
+            if not docs_dest.exists():
+                docs_dest.mkdir()
+            if not docs_link.islink():
+                docs.symlink(docs_link)
 
 
+def read_requirements(dev=False):
+    """Return a list of runtime and list of test requirements"""
+    reqs = 'requirements.txt'
+    if dev:
+        reqs = 'requirements-dev.txt'
+    lines = open(reqs).readlines()
+    lines = [l for l in [l.strip() for l in lines] if l]
+    divider = '# test requirements'
+
+    try:
+        idx = lines.index(divider)
+    except ValueError:
+        raise BuildFailure(
+            'Expected to find "%s" in requirements.txt' % divider)
+
+    not_comments = lambda s, e: [l for l in lines[s:e] if l[0] != '#']
+    return not_comments(0, idx), not_comments(idx + 1, None)
+
+
+# noinspection PyShadowingNames
 @task
 @cmdopts([
     ('tests', 't', 'Package tests with plugin'),
 ])
 def package(options):
-    '''create package for plugin'''
-    builddocs(options)
-    package_file = options.plugin.package_dir / ('%s.zip' % options.plugin.name)
-    with zipfile.ZipFile(package_file, "w", zipfile.ZIP_DEFLATED) as zip:
+    """Create plugin package"""
+    if options.sphinx.docroot.exists():
+        builddocs(options)
+    package_file = options.plugin.package_dir / \
+        ('%s.zip' % options.plugin.name)
+    if os.path.exists(package_file):
+        os.remove(package_file)
+    with zipfile.ZipFile(package_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         if not hasattr(options.package, 'tests'):
             options.plugin.excludes.extend(options.plugin.tests)
-        _make_zip(zip, options)
+        _make_zip(zf, options)
     return package_file
 
 
-def _make_zip(zipFile, options):
+# noinspection PyShadowingNames
+def _make_zip(zipfile, options):
     excludes = set(options.plugin.excludes)
     skips = options.plugin.skip_exclude
 
     src_dir = options.plugin.source_dir
-    exclude = lambda p: any([path(p).fnmatch(e) for e in excludes])
+    # noinspection PyShadowingNames
+    exclude = lambda p: any([fnmatch.fnmatch(p, e) for e in excludes])
+
+    # noinspection PyShadowingNames
     def filter_excludes(root, items):
         if not items:
             return []
@@ -140,18 +194,22 @@ def _make_zip(zipFile, options):
     for root, dirs, files in os.walk(src_dir):
         for f in filter_excludes(root, files):
             relpath = os.path.relpath(root)
-            zipFile.write(path(root) / f, path(relpath) / f)
+            zipfile.write(path(root) / f, path(relpath) / f)
         filter_excludes(root, dirs)
 
     for root, dirs, files in os.walk(options.sphinx.builddir):
         for f in files:
-            relpath = os.path.join(options.plugin.name, "docs", os.path.relpath(root, options.sphinx.builddir))
-            zipFile.write(path(root) / f, path(relpath) / f)
+            relpath = os.path.join(
+                options.plugin.name, "docs",
+                os.path.relpath(root, options.sphinx.builddir))
+            zipfile.write(path(root) / f, path(relpath) / f)
 
 
+# noinspection PyShadowingNames
 def create_settings_docs(options):
     settings_file = path(options.plugin.name) / "settings.json"
     doc_file = options.sphinx.sourcedir / "settingsconf.rst"
+    # noinspection PyBroadException
     try:
         with open(settings_file) as f:
             settings = json.load(f)
@@ -160,7 +218,7 @@ def create_settings_docs(options):
     grouped = defaultdict(list)
     for setting in settings:
         grouped[setting["group"]].append(setting)
-    with open (doc_file, "w") as f:
+    with open(doc_file, "w") as f:
         f.write(".. _plugin_settings:\n\n"
                 "Plugin settings\n===============\n\n"
                 "The plugin can be adjusted using the following settings, "
@@ -182,12 +240,14 @@ def create_settings_docs(options):
                         % (setting["label"], setting["description"]))
 
 
+# noinspection PyShadowingNames
 @task
 @cmdopts([
     ('clean', 'c', 'clean out built artifacts first'),
     ('sphinx_theme=', 's', 'Sphinx theme to use in documentation'),
 ])
 def builddocs(options):
+    # noinspection PyBroadException
     try:
         # May fail if not in a git repo
         sh("git submodule init")
@@ -207,24 +267,31 @@ def builddocs(options):
                                               options.sphinx.sourcedir,
                                               options.sphinx.builddir))
 
+
+# noinspection PyUnusedLocal,PyShadowingNames,DuplicatedCode
 @task
-def install_devtools():
-    """Install development tools
-    """
-    try:
-        import pip
-    except:
-        error('FATAL: Unable to import pip, please install it first!')
-        sys.exit(1)
+def install_devtools(options):
+    """Install development tools"""
+    ext_libs = options.plugin.ext_libs
+    ext_libs.makedirs()
+    runtime, test = read_requirements(dev=True)
+    os.environ['PYTHONPATH'] = ext_libs.abspath()
+    for req in runtime + test:
+        try:
+            ret = subprocess.check_call(
+                [sys.executable, '-m', 'pip', 'install', '--upgrade',
+                 '--no-deps', '-t', f'{ext_libs.abspath()}', req])
+        except subprocess.CalledProcessError:
+            error(f"Error installing {req} with pip.")
+            sys.exit(1)
 
-    pip.main(['install', '-r', 'requirements-dev.txt'])
 
-
+# noinspection PyPackageRequirements
 @task
 @consume_args
 def pep8(args):
-    """Check code for PEP8 violations
-    """
+    """Check code for PEP8 violations"""
+    # noinspection PyBroadException
     try:
         import pep8
     except:
@@ -233,7 +300,7 @@ def pep8(args):
 
     # Errors to ignore
     ignore = ['E203', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127',
-        'E128', 'E402']
+              'E128', 'E402']
     styleguide = pep8.StyleGuide(ignore=ignore,
                                  exclude=['*/extlibs/*', '*/ext-src/*'],
                                  repeat=True, max_line_length=79,
@@ -243,11 +310,12 @@ def pep8(args):
     styleguide.options.report.print_statistics()
 
 
+# noinspection PyPackageRequirements
 @task
 @consume_args
 def autopep8(args):
-    """Format code according to PEP8
-    """
+    """Format code according to PEP8"""
+    # noinspection PyBroadException
     try:
         import autopep8
     except:
@@ -271,19 +339,22 @@ def autopep8(args):
             autopep8.fix_file(p, options=cmd_args)
 
 
+# noinspection PyPackageRequirements
 @task
 @consume_args
 def pylint(args):
-    """Check code for errors and coding standard violations
-    """
+    """Check code for errors and coding standard violations"""
+    # noinspection PyBroadException
     try:
         from pylint import lint
     except:
         error('pylint not found! Run "paver install_devtools".')
         sys.exit(1)
 
-    if not 'rcfile' in args:
-        args.append('--rcfile=pylintrc')
+    if 'rcfile' not in args:
+        rcfile = options.plugin.source_dir / 'tests' / 'pylintrc'
+        if rcfile.exists():
+            args.append('--rcfile={0}'.format(rcfile))
 
     args.append(options.plugin.source_dir)
     lint.Run(args)
